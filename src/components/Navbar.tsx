@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Heart, User, Menu, X, Home, ShoppingBag } from "lucide-react";
+import { Search, Heart, User, Menu, X, Home, ShoppingBag, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
   { to: "/", label: "Beranda", icon: Home },
@@ -12,6 +13,16 @@ const navLinks = [
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
+
+  const getDashboardLink = () => {
+    if (!user) return "/login";
+    if (user.role === "admin") return "/admin";
+    if (user.role === "owner") return "/owner-dashboard";
+    return "/dashboard";
+  };
+
+  const dashboardLink = getDashboardLink();
 
   return (
     <>
@@ -43,18 +54,27 @@ export function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
+            {user?.role === "admin" && (
+              <Link
+                to="/admin"
+                className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                title="Admin Panel"
+              >
+                <ShieldCheck className="w-5 h-5" />
+              </Link>
+            )}
             <Link
-              to="/favorites"
+              to={user ? (user.role === "owner" ? "/owner-dashboard/favorites" : "/dashboard/favorites") : "/login"}
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <Heart className="w-5 h-5" />
             </Link>
             <Link
-              to="/dashboard"
+              to={dashboardLink}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
             >
               <User className="w-4 h-4" />
-              Masuk
+              {user ? (user.role === "admin" ? "Admin" : "Dashboard") : "Masuk"}
             </Link>
           </div>
 
@@ -85,7 +105,7 @@ export function Navbar() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                     location.pathname === link.to
                       ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-secondary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                   }`}
                 >
                   <link.icon className="w-4 h-4" />
@@ -94,7 +114,7 @@ export function Navbar() {
               ))}
               <hr className="my-2 border-border" />
               <Link
-                to="/favorites"
+                to={user ? (user.role === "owner" ? "/owner-dashboard/favorites" : "/dashboard/favorites") : "/login"}
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary"
               >
@@ -102,12 +122,12 @@ export function Navbar() {
                 Favorit
               </Link>
               <Link
-                to="/dashboard"
+                to={dashboardLink}
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium mt-2"
               >
                 <User className="w-4 h-4" />
-                Masuk
+                {user ? (user.role === "admin" ? "Admin Panel" : "Dashboard") : "Masuk ke Akun"}
               </Link>
             </nav>
           </motion.div>

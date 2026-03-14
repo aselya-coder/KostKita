@@ -1,10 +1,14 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, MapPin, MessageCircle, Tag, User } from "lucide-react";
+import { ArrowLeft, MapPin, MessageCircle, Tag, User, Heart } from "lucide-react";
 import { mockMarketplaceItems, formatPrice } from "@/data/mockData";
+import { BackButton } from "@/components/BackButton";
+import { useFavorites } from "@/hooks/useFavorites";
+import { motion } from "framer-motion";
 
 const ItemDetail = () => {
   const { id } = useParams();
   const item = mockMarketplaceItems.find((i) => i.id === id);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   if (!item) {
     return (
@@ -15,15 +19,25 @@ const ItemDetail = () => {
     );
   }
 
+  const liked = isFavorite(item.id);
+
   const waLink = `https://wa.me/${item.sellerPhone}?text=${encodeURIComponent(
     `Hi ${item.sellerName}, saya tertarik dengan ${item.title} di KosKita. Apakah masih tersedia?`
   )}`;
 
   return (
     <div className="container py-8 pb-24 md:pb-8">
-      <Link to="/marketplace" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
-        <ArrowLeft className="w-4 h-4" /> Kembali
-      </Link>
+      <div className="flex items-center justify-between mb-6">
+        <BackButton to="/marketplace" className="mb-0" />
+        <motion.button
+          whileTap={{ scale: 0.8 }}
+          onClick={() => toggleFavorite(item.id)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full ring-1 ring-foreground/10 text-sm"
+        >
+          <Heart className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+          {liked ? "Tersimpan" : "Simpan"}
+        </motion.button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="rounded-2xl overflow-hidden ring-1 ring-foreground/5">
@@ -41,9 +55,14 @@ const ItemDetail = () => {
           </div>
 
           <div className="py-4 border-y border-border space-y-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors w-fit"
+            >
               <MapPin className="w-4 h-4" /> {item.location}
-            </div>
+            </a>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <User className="w-4 h-4" /> {item.sellerName}
             </div>

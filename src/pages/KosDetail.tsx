@@ -3,11 +3,13 @@ import { ArrowLeft, Heart, MapPin, Star, Wifi, Wind, MessageCircle, Users, DoorO
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { mockKosListings, formatPrice } from "@/data/mockData";
+import { BackButton } from "@/components/BackButton";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const KosDetail = () => {
   const { id } = useParams();
   const kos = mockKosListings.find((k) => k.id === id);
-  const [liked, setLiked] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   if (!kos) {
     return (
@@ -18,6 +20,8 @@ const KosDetail = () => {
     );
   }
 
+  const liked = isFavorite(kos.id);
+
   const waLink = `https://wa.me/${kos.ownerPhone}?text=${encodeURIComponent(
     `Hi, saya tertarik dengan ${kos.title} di KosKita. Apakah masih tersedia?`
   )}`;
@@ -27,16 +31,14 @@ const KosDetail = () => {
       {/* Image gallery */}
       <div className="container pt-6">
         <div className="flex items-center justify-between mb-4">
-          <Link to="/search" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Kembali
-          </Link>
+          <BackButton to="/search" className="mb-0" />
           <motion.button
             whileTap={{ scale: 0.8 }}
-            onClick={() => setLiked(!liked)}
+            onClick={() => toggleFavorite(kos.id)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-full ring-1 ring-foreground/10 text-sm"
           >
             <Heart className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-            Simpan
+            {liked ? "Tersimpan" : "Simpan"}
           </motion.button>
         </div>
 
@@ -64,9 +66,14 @@ const KosDetail = () => {
             <h1 className="font-display font-bold text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.1] tracking-[-0.02em] text-foreground">
               {kos.title}
             </h1>
-            <p className="flex items-center gap-1 text-muted-foreground mt-2">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(kos.location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-muted-foreground mt-2 hover:text-primary transition-colors w-fit"
+            >
               <MapPin className="w-4 h-4" /> {kos.location}
-            </p>
+            </a>
           </div>
 
           <div className="flex items-center gap-6 py-4 border-y border-border">

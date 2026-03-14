@@ -1,5 +1,24 @@
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "owner" | "student";
+  avatar?: string;
+  phone?: string;
+  location?: string;
+  createdAt: string;
+}
+
+export interface Favorite {
+  id: string;
+  userId: string;
+  type: "kos" | "item";
+  targetId: string;
+}
+
 export interface KosListing {
   id: string;
+  ownerId?: string;
   title: string;
   location: string;
   price: number;
@@ -12,10 +31,12 @@ export interface KosListing {
   rules: string[];
   type: "putra" | "putri" | "campur";
   availableRooms: number;
+  status?: "pending" | "approved" | "rejected";
 }
 
 export interface MarketplaceItem {
   id: string;
+  sellerId?: string;
   title: string;
   price: number;
   image: string;
@@ -26,7 +47,41 @@ export interface MarketplaceItem {
   location: string;
   description: string;
   createdAt: string;
+  status?: "active" | "sold" | "removed";
 }
+
+export const mockUsers: User[] = [
+  {
+    id: "u1",
+    name: "Admin KosKita",
+    email: "admin@koskita.com",
+    role: "admin",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=admin",
+    createdAt: "2023-01-01",
+  },
+  {
+    id: "u2",
+    name: "Haji Sulam",
+    email: "sulam@owner.com",
+    role: "owner",
+    phone: "6281234567890",
+    location: "Depok",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=owner1",
+    createdAt: "2023-05-10",
+  },
+  {
+    id: "u3",
+    name: "Budi Mahasiswa",
+    email: "budi@student.com",
+    role: "student",
+    phone: "6289876543210",
+    location: "Yogyakarta",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=student1",
+    createdAt: "2023-08-15",
+  },
+];
+
+export const mockFavorites: Favorite[] = [];
 
 export const mockKosListings: KosListing[] = [
   {

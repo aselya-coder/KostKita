@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { Heart, Home, ShoppingBag, Settings, LogOut } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 
 const Dashboard = () => {
   return (
     <div className="container py-8">
+      <BackButton to="/" />
       <h1 className="font-display font-bold text-2xl text-foreground mb-1">Dashboard</h1>
       <p className="text-sm text-muted-foreground mb-8">Kelola akun dan aktivitas kamu</p>
 

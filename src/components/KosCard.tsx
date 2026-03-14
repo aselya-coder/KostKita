@@ -3,6 +3,7 @@ import { Heart, MapPin, Wifi, Wind, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { type KosListing, formatPrice } from "@/data/mockData";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface KosCardProps {
   kos: KosListing;
@@ -14,8 +15,10 @@ const amenityIcons: Record<string, typeof Wifi> = {
 };
 
 export function KosCard({ kos }: KosCardProps) {
-  const [liked, setLiked] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [imgIdx, setImgIdx] = useState(0);
+
+  const liked = isFavorite(kos.id);
 
   return (
     <motion.div
@@ -55,7 +58,7 @@ export function KosCard({ kos }: KosCardProps) {
 
       <motion.button
         whileTap={{ scale: 0.8 }}
-        onClick={() => setLiked(!liked)}
+        onClick={() => toggleFavorite(kos.id)}
         className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
       >
         <Heart
@@ -65,24 +68,32 @@ export function KosCard({ kos }: KosCardProps) {
         />
       </motion.button>
 
-      <Link to={`/kos/${kos.id}`} className="block p-4">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-lg text-price text-foreground">
-            {formatPrice(kos.price)}
-            <span className="text-sm font-normal text-muted-foreground">/bln</span>
-          </span>
-          <span className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Star className="w-3.5 h-3.5 fill-accent text-accent" />
-            {kos.rating}
-          </span>
-        </div>
-        <h3 className="font-display font-semibold text-base leading-snug tracking-tight truncate text-foreground">
-          {kos.title}
-        </h3>
-        <p className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+      <div className="p-4">
+        <Link to={`/kos/${kos.id}`} className="block">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-lg text-price text-foreground">
+              {formatPrice(kos.price)}
+              <span className="text-sm font-normal text-muted-foreground">/bln</span>
+            </span>
+            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Star className="w-3.5 h-3.5 fill-accent text-accent" />
+              {kos.rating}
+            </span>
+          </div>
+          <h3 className="font-display font-semibold text-base leading-snug tracking-tight truncate text-foreground">
+            {kos.title}
+          </h3>
+        </Link>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(kos.location)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-1 text-sm text-muted-foreground mt-1 hover:text-primary transition-colors w-fit"
+        >
           <MapPin className="w-3.5 h-3.5" />
           {kos.location}
-        </p>
+        </a>
         <div className="flex items-center gap-3 mt-3">
           {kos.amenities.slice(0, 4).map((amenity) => {
             const Icon = amenityIcons[amenity];
@@ -94,7 +105,7 @@ export function KosCard({ kos }: KosCardProps) {
             );
           })}
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 }
