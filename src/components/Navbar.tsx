@@ -28,7 +28,15 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
+          <Link 
+            to="/" 
+            className="flex items-center gap-2"
+            onClick={() => {
+              if (location.pathname === "/") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          >
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Home className="w-4 h-4 text-primary-foreground" />
             </div>
