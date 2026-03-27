@@ -3,7 +3,7 @@ import { type User, mockUsers } from "@/data/mockData";
 
 interface AuthContextType {
   user: User | null;
-  login: (role: User["role"]) => void;
+  login: (email: string, password: string) => boolean;
   logout: () => void;
   isLoading: boolean;
 }
@@ -27,13 +27,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = (role: User["role"]) => {
-    // Find the user from mock data based on role
-    const foundUser = mockUsers.find((u) => u.role === role);
+  const login = (email: string, password: string) => {
+    // Find the user from mock data based on email and password
+    const foundUser = mockUsers.find((u) => u.email === email && u.password === password);
     if (foundUser) {
       setUser(foundUser);
       localStorage.setItem("koskita_user", JSON.stringify(foundUser));
+      return true;
     }
+    return false;
   };
 
   const logout = () => {

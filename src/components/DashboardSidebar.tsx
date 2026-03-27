@@ -10,7 +10,9 @@ import {
   Building2, 
   BarChart3, 
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  HelpCircle,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -102,6 +104,36 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
             </Link>
           );
         })}
+
+        <div className="pt-4 mt-4 border-t border-border">
+          <p className="px-3 mb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            Bantuan
+          </p>
+          <Link
+            to="/faq"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              location.pathname === "/faq"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            )}
+          >
+            <HelpCircle className="w-4 h-4" />
+            FAQ
+          </Link>
+          <Link
+            to="/contact"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              location.pathname === "/contact"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            )}
+          >
+            <MessageSquare className="w-4 h-4" />
+            Kontak Kami
+          </Link>
+        </div>
       </nav>
 
       <div className="p-4 border-t border-border">

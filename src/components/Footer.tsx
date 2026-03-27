@@ -34,8 +34,8 @@ export function Footer() {
           <div>
             <h4 className="font-display font-semibold text-sm mb-4 text-foreground">Bantuan</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">FAQ</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Kontak</a></li>
+              <li><Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link></li>
+              <li><Link to="/contact" className="hover:text-foreground transition-colors">Kontak</Link></li>
             </ul>
           </div>
         </div>

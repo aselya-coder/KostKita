@@ -17,6 +17,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Favorites from "./pages/Favorites";
 import Owner from "./pages/Owner";
+import FAQ from "./pages/FAQ";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +64,8 @@ const AppContent = () => {
           {/* Legacy routes or redirects could go here if needed */}
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/owner" element={<Owner />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/contact" element={<Contact />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>

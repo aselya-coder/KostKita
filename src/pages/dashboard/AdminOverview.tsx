@@ -1,12 +1,29 @@
 import { Users, Building2, ShoppingBag, ShieldAlert, TrendingUp } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
-import { mockUsers, mockKosListings, mockMarketplaceItems } from "@/data/mockData";
+import { mockUsers, mockKosListings, mockMarketplaceItems, mockReports } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AdminOverview() {
   const { user } = useAuth();
+
+  const pendingListings = [
+    ...mockKosListings.filter(k => k.status === "pending").map(k => ({
+      id: k.id,
+      name: k.title,
+      user: mockUsers.find(u => u.id === k.ownerId)?.name || "Unknown",
+      type: "Kos",
+      date: "2024-03-12"
+    })),
+    ...mockMarketplaceItems.filter(i => i.status === "pending").map(i => ({
+      id: i.id,
+      name: i.title,
+      user: i.sellerName,
+      type: "Market",
+      date: "2024-03-11"
+    }))
+  ].slice(0, 5);
 
   return (
     <div className="space-y-8">
@@ -18,27 +35,31 @@ export default function AdminOverview() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard 
           title="Total Users" 
-          value={mockUsers.length + 124} 
+          value={mockUsers.length} 
           icon={Users} 
           trend={{ value: 12, isUp: true }}
+          to="/admin/users"
         />
         <StatsCard 
           title="Boarding Houses" 
-          value={mockKosListings.length + 45} 
+          value={mockKosListings.length} 
           icon={Building2} 
           trend={{ value: 4, isUp: true }}
+          to="/admin/kos"
         />
         <StatsCard 
           title="Marketplace Items" 
-          value={mockMarketplaceItems.length + 89} 
+          value={mockMarketplaceItems.length} 
           icon={ShoppingBag} 
           trend={{ value: 18, isUp: true }}
+          to="/admin/marketplace"
         />
         <StatsCard 
           title="Pending Reports" 
-          value="7" 
+          value={mockReports.filter(r => r.status === "new").length} 
           icon={ShieldAlert} 
           trend={{ value: 2, isUp: false }}
+          to="/admin/reports"
         />
       </div>
 
@@ -59,11 +80,7 @@ export default function AdminOverview() {
                 </tr>
               </thead>
               <tbody className="divide-y border-border">
-                {[
-                  { name: "Kos Modern Sudirman", user: "Haji Sulam", type: "Kos", date: "2024-03-12" },
-                  { name: "MacBook Pro M1", user: "Budi Mahasiswa", type: "Market", date: "2024-03-11" },
-                  { name: "Kos Putri Melati 2", user: "Haji Sulam", type: "Kos", date: "2024-03-10" },
-                ].map((item, i) => (
+                {pendingListings.map((item, i) => (
                   <tr key={i} className="hover:bg-secondary/30 transition-colors">
                     <td className="px-6 py-4 font-medium text-foreground">{item.name}</td>
                     <td className="px-6 py-4 text-muted-foreground">{item.user}</td>
@@ -82,6 +99,13 @@ export default function AdminOverview() {
                     </td>
                   </tr>
                 ))}
+                {pendingListings.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
+                      Tidak ada listing baru yang menunggu persetujuan.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -105,11 +129,15 @@ export default function AdminOverview() {
             ))}
           </div>
           <hr className="my-6 border-border" />
-          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-            System Settings
+          <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all">
+            <Link to="/admin/system-settings">
+              System Settings
+            </Link>
           </Button>
         </div>
       </div>
     </div>
   );
 }
+
+import { Link } from "react-router-dom";

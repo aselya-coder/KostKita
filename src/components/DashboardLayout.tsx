@@ -3,7 +3,7 @@ import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardHeader } from "./DashboardHeader";
 import { type User as UserType } from "@/data/mockData";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Home, LogOut } from "lucide-react";
+import { Home, LogOut, HelpCircle, MessageSquare } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -92,6 +92,38 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 </Link>
               );
             })}
+
+            <div className="pt-4 mt-4 border-t border-border">
+              <p className="px-3 mb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Bantuan
+              </p>
+              <Link
+                to="/faq"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  location.pathname === "/faq"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                )}
+              >
+                <HelpCircle className="w-4 h-4" />
+                FAQ
+              </Link>
+              <Link
+                to="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  location.pathname === "/contact"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                )}
+              >
+                <MessageSquare className="w-4 h-4" />
+                Kontak Kami
+              </Link>
+            </div>
           </nav>
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
             <button 

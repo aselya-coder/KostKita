@@ -6,6 +6,19 @@ import OwnerOverview from "@/pages/dashboard/OwnerOverview";
 import AdminOverview from "@/pages/dashboard/AdminOverview";
 import PlaceholderPage from "@/pages/dashboard/PlaceholderPage";
 import Favorites from "@/pages/Favorites";
+import MyBoardingHouses from "@/pages/dashboard/MyBoardingHouses";
+import AddBoardingHouse from "@/pages/dashboard/AddBoardingHouse";
+import MyMarketplaceItems from "@/pages/dashboard/MyMarketplaceItems";
+import SellItem from "@/pages/dashboard/SellItem";
+import Profile from "@/pages/dashboard/Profile";
+import Settings from "@/pages/dashboard/Settings";
+import Notifications from "@/pages/dashboard/Notifications";
+import Inquiries from "@/pages/dashboard/Inquiries";
+import UserManagement from "@/pages/dashboard/UserManagement";
+import KosManagement from "@/pages/dashboard/KosManagement";
+import MarketplaceModeration from "@/pages/dashboard/MarketplaceModeration";
+import Reports from "@/pages/dashboard/Reports";
+import SystemSettings from "@/pages/dashboard/SystemSettings";
 import { useAuth } from "@/context/AuthContext";
 
 export function DashboardRouter() {
@@ -28,11 +41,12 @@ export function DashboardRouter() {
         {role === "student" && (
           <>
             <Route index element={<StudentOverview />} />
-            <Route path="my-items" element={<PlaceholderPage title="My Marketplace Items" />} />
-            <Route path="sell-item" element={<PlaceholderPage title="Sell Item" />} />
+            <Route path="my-items" element={<MyMarketplaceItems />} />
+            <Route path="sell-item" element={<SellItem />} />
             <Route path="favorites" element={<Favorites />} />
-            <Route path="profile" element={<PlaceholderPage title="My Profile" />} />
-            <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </>
         )}
@@ -41,13 +55,15 @@ export function DashboardRouter() {
         {role === "owner" && (
           <>
             <Route index element={<OwnerOverview />} />
-            <Route path="my-kos" element={<PlaceholderPage title="My Boarding Houses" />} />
-            <Route path="add-kos" element={<PlaceholderPage title="Add Boarding House" />} />
-            <Route path="my-items" element={<PlaceholderPage title="My Marketplace Items" />} />
-            <Route path="sell-item" element={<PlaceholderPage title="Sell Item" />} />
+            <Route path="my-kos" element={<MyBoardingHouses />} />
+            <Route path="add-kos" element={<AddBoardingHouse />} />
+            <Route path="inquiries" element={<Inquiries />} />
+            <Route path="my-items" element={<MyMarketplaceItems />} />
+            <Route path="sell-item" element={<SellItem />} />
             <Route path="favorites" element={<Favorites />} />
-            <Route path="profile" element={<PlaceholderPage title="My Profile" />} />
-            <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<Navigate to="/owner-dashboard" replace />} />
           </>
         )}
@@ -56,12 +72,14 @@ export function DashboardRouter() {
         {role === "admin" && (
           <>
             <Route index element={<AdminOverview />} />
-            <Route path="users" element={<PlaceholderPage title="User Management" />} />
-            <Route path="kos" element={<PlaceholderPage title="Kos Management" />} />
-            <Route path="marketplace" element={<PlaceholderPage title="Marketplace Moderation" />} />
-            <Route path="reports" element={<PlaceholderPage title="Reports" />} />
-            <Route path="profile" element={<PlaceholderPage title="Admin Profile" />} />
-            <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="kos" element={<KosManagement />} />
+            <Route path="marketplace" element={<MarketplaceModeration />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="system-settings" element={<SystemSettings />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </>
         )}

@@ -9,6 +9,12 @@ import { useAuth } from "@/context/AuthContext";
 const Register = () => {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<"student" | "owner" | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: ""
+  });
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -17,14 +23,34 @@ const Register = () => {
     setStep(2);
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (role) {
       // In a real app, you'd send data to API
-      // For now, we'll just mock a successful registration and login
-      login(role);
-      const path = role === "owner" ? "/owner-dashboard" : "/dashboard";
-      navigate(path);
+      // For now, we'll simulate registration by adding to a temporary state or just logging in
+      // Since we don't have a backend, we'll just mock the login with the new credentials
+      // Note: This won't actually add the user to mockUsers, but for demo purposes we'll "login"
+      
+      // We'll manually set the user in AuthContext for this session
+      const mockNewUser = {
+        id: "u" + Date.now(),
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: role,
+        phone: formData.phone,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      
+      localStorage.setItem("koskita_user", JSON.stringify(mockNewUser));
+      window.location.href = role === "owner" ? "/owner-dashboard" : "/dashboard";
     }
   };
 
@@ -102,9 +128,12 @@ const Register = () => {
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       required
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
                       type="text"
                       placeholder="Masukkan nama lengkap"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                     />
                   </div>
                 </div>
@@ -115,9 +144,12 @@ const Register = () => {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       required
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
                       type="email"
                       placeholder="nama@email.com"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                     />
                   </div>
                 </div>
@@ -128,9 +160,12 @@ const Register = () => {
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       required
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
                       type="tel"
                       placeholder="0812xxxx"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                     />
                   </div>
                 </div>
@@ -141,9 +176,12 @@ const Register = () => {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       required
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
                       type="password"
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                     />
                   </div>
                 </div>

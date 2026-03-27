@@ -2,6 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password?: string;
   role: "admin" | "owner" | "student";
   avatar?: string;
   phone?: string;
@@ -14,6 +15,17 @@ export interface Favorite {
   userId: string;
   type: "kos" | "item";
   targetId: string;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  time: string;
+  isRead: boolean;
+  type: "inquiry" | "sale" | "system" | "favorite";
+  link?: string;
 }
 
 export interface KosListing {
@@ -47,14 +59,43 @@ export interface MarketplaceItem {
   location: string;
   description: string;
   createdAt: string;
-  status?: "active" | "sold" | "removed";
+  status?: "active" | "sold" | "removed" | "pending";
 }
+
+export interface Inquiry {
+  id: string;
+  ownerId: string;
+  senderName: string;
+  senderPhone: string;
+  propertyName: string;
+  message: string;
+  time: string;
+  status: "new" | "replied" | "archived";
+}
+
+export interface Report {
+  id: string;
+  type: "user" | "kos" | "item";
+  targetName: string;
+  reporterName: string;
+  reason: string;
+  time: string;
+  status: "new" | "resolved" | "dismissed";
+}
+
+export const mockReports: Report[] = [
+  { id: "r1", type: "user", targetName: "Budi Mahasiswa", reporterName: "Sari", reason: "Spam pesan tidak jelas", time: "2 jam yang lalu", status: "new" },
+  { id: "r2", type: "item", targetName: "Laptop ASUS VivoBook", reporterName: "Andi", reason: "Deskripsi barang tidak sesuai asli", time: "5 jam yang lalu", status: "new" },
+  { id: "r3", type: "kos", targetName: "Kos Harmoni Residence", reporterName: "Rina", reason: "Fasilitas tidak sesuai yang dicantumkan", time: "1 hari yang lalu", status: "resolved" },
+  { id: "r4", type: "item", targetName: "Sepeda Lipat Polygon", reporterName: "Budi", reason: "Penjual sulit dihubungi", time: "2 hari yang lalu", status: "dismissed" },
+];
 
 export const mockUsers: User[] = [
   {
     id: "u1",
     name: "Admin KosKita",
     email: "admin@koskita.com",
+    password: "admin123",
     role: "admin",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=admin",
     createdAt: "2023-01-01",
@@ -63,6 +104,7 @@ export const mockUsers: User[] = [
     id: "u2",
     name: "Haji Sulam",
     email: "sulam@owner.com",
+    password: "owner123",
     role: "owner",
     phone: "6281234567890",
     location: "Depok",
@@ -73,6 +115,7 @@ export const mockUsers: User[] = [
     id: "u3",
     name: "Budi Mahasiswa",
     email: "budi@student.com",
+    password: "student123",
     role: "student",
     phone: "6289876543210",
     location: "Yogyakarta",
@@ -83,9 +126,63 @@ export const mockUsers: User[] = [
 
 export const mockFavorites: Favorite[] = [];
 
+export const mockNotifications: Notification[] = [
+  {
+    id: "n1",
+    userId: "u2", // Haji Sulam (Owner)
+    title: "Pertanyaan Baru",
+    message: "Budi Mahasiswa tertarik dengan Kos Harmoni Residence.",
+    time: "10 menit yang lalu",
+    isRead: false,
+    type: "inquiry",
+    link: "/owner-dashboard/inquiries",
+  },
+  {
+    id: "n2",
+    userId: "u2",
+    title: "Barang Terjual",
+    message: "Sepeda Lipat Polygon Anda telah laku terjual!",
+    time: "2 jam yang lalu",
+    isRead: true,
+    type: "sale",
+    link: "/owner-dashboard/my-items",
+  },
+  {
+    id: "n3",
+    userId: "u3", // Budi (Student)
+    title: "Kos Favorit Turun Harga",
+    message: "Kos Putri Melati yang Anda simpan kini lebih murah.",
+    time: "1 jam yang lalu",
+    isRead: false,
+    type: "favorite",
+    link: "/dashboard/favorites",
+  },
+  {
+    id: "n4",
+    userId: "u3",
+    title: "Pesan Baru",
+    message: "Haji Sulam membalas pertanyaan Anda.",
+    time: "5 jam yang lalu",
+    isRead: true,
+    type: "inquiry",
+    link: "/dashboard",
+  },
+  {
+    id: "n5",
+    userId: "u1", // Admin
+    title: "Laporan Baru",
+    message: "Ada 1 laporan konten yang perlu dimoderasi.",
+    time: "30 menit yang lalu",
+    isRead: false,
+    type: "system",
+    link: "/admin/reports",
+  },
+];
+
 export const mockKosListings: KosListing[] = [
   {
     id: "1",
+    ownerId: "u2",
     title: "Kos Harmoni Residence",
     location: "Jl. Margonda Raya, Depok",
     price: 1500000,
@@ -104,6 +201,7 @@ export const mockKosListings: KosListing[] = [
   },
   {
     id: "2",
+    ownerId: "u2",
     title: "Kos Putri Melati",
     location: "Jl. Kaliurang KM 5, Yogyakarta",
     price: 900000,
@@ -114,7 +212,7 @@ export const mockKosListings: KosListing[] = [
     amenities: ["WiFi", "Kamar Mandi Dalam", "Dapur Bersama"],
     rating: 4.5,
     isPremium: false,
-    ownerPhone: "6289876543210",
+    ownerPhone: "6281234567890",
     description: "Kos putri bersih dan nyaman dekat UGM. Akses mudah ke kampus dan pusat kota.",
     rules: ["Khusus putri", "Jam malam 22:00", "Tamu lawan jenis di ruang tamu saja"],
     type: "putri",
@@ -122,6 +220,7 @@ export const mockKosListings: KosListing[] = [
   },
   {
     id: "3",
+    ownerId: "u2",
     title: "Kos Eksekutif Sudirman",
     location: "Jl. Sudirman No. 45, Bandung",
     price: 2200000,
@@ -132,7 +231,7 @@ export const mockKosListings: KosListing[] = [
     amenities: ["WiFi", "AC", "Kamar Mandi Dalam", "Parkir", "Laundry", "CCTV"],
     rating: 4.9,
     isPremium: true,
-    ownerPhone: "6281122334455",
+    ownerPhone: "6281234567890",
     description: "Kos eksekutif full furnished dekat ITB. Fasilitas premium dengan keamanan 24 jam.",
     rules: ["Tidak boleh membawa hewan", "Deposit 1 bulan"],
     type: "campur",
@@ -190,36 +289,100 @@ export const mockKosListings: KosListing[] = [
     description: "Kos premium di area strategis Gejayan dekat UGM dan UNY.",
     rules: ["Deposit 1 bulan", "Tidak boleh membawa hewan"],
     type: "campur",
-    availableRooms: 2,
+    availableRooms: 1,
+  },
+  {
+    id: "7",
+    ownerId: "u2",
+    title: "Kos Baru Menunggu",
+    location: "Jl. Baru No. 1, Jakarta",
+    price: 2000000,
+    images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80"],
+    amenities: ["WiFi", "AC"],
+    rating: 0,
+    isPremium: false,
+    ownerPhone: "6281234567890",
+    description: "Kos baru yang sedang menunggu persetujuan admin.",
+    rules: ["No rules yet"],
+    type: "campur",
+    availableRooms: 10,
+    status: "pending",
+  },
+];
+
+export const mockInquiries: Inquiry[] = [
+  {
+    id: "iq1",
+    ownerId: "u2",
+    senderName: "Budi Mahasiswa",
+    senderPhone: "6289876543210",
+    propertyName: "Kos Harmoni Residence",
+    message: "Halo, apakah kamar kos masih tersedia untuk bulan depan?",
+    time: "10 menit yang lalu",
+    status: "new",
+  },
+  {
+    id: "iq2",
+    ownerId: "u2",
+    senderName: "Ani Safitri",
+    senderPhone: "6287654321098",
+    propertyName: "Kos Putri Melati",
+    message: "Saya ingin tanya apakah boleh membawa laptop dan rice cooker?",
+    time: "1 jam yang lalu",
+    status: "replied",
+  },
+  {
+    id: "iq3",
+    ownerId: "u2",
+    senderName: "Dedi Kurniawan",
+    senderPhone: "6285432109876",
+    propertyName: "Kos Eksekutif Sudirman",
+    message: "Apakah harga sudah termasuk biaya listrik dan WiFi?",
+    time: "3 jam yang lalu",
+    status: "replied",
+  },
+  {
+    id: "iq4",
+    ownerId: "u2",
+    senderName: "Rina Amelia",
+    senderPhone: "6283210987654",
+    propertyName: "Kos Harmoni Residence",
+    message: "Boleh survei lokasi besok sore jam 4?",
+    time: "1 hari yang lalu",
+    status: "archived",
   },
 ];
 
 export const mockMarketplaceItems: MarketplaceItem[] = [
   {
     id: "m1",
+    sellerId: "u3",
     title: "Textbook Kalkulus Purcell Ed. 9",
     price: 75000,
     image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80",
     category: "Buku",
     condition: "Bekas - Baik",
-    sellerPhone: "6281234567890",
-    sellerName: "Andi",
-    location: "Depok",
+    sellerPhone: "6289876543210",
+    sellerName: "Budi Mahasiswa",
+    location: "Yogyakarta",
     description: "Buku kalkulus Purcell edisi 9, ada sedikit coretan pensil tapi masih sangat layak.",
     createdAt: "2024-01-15",
+    status: "active",
   },
   {
     id: "m2",
+    sellerId: "u3",
     title: "Laptop ASUS VivoBook 14",
     price: 4500000,
     image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80",
     category: "Elektronik",
     condition: "Bekas - Sangat Baik",
     sellerPhone: "6289876543210",
-    sellerName: "Sari",
+    sellerName: "Budi Mahasiswa",
     location: "Yogyakarta",
     description: "Laptop ASUS VivoBook 14 inch, i5 Gen 10, RAM 8GB, SSD 512GB. Masih mulus.",
     createdAt: "2024-01-10",
+    status: "active",
   },
   {
     id: "m3",

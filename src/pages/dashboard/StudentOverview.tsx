@@ -6,6 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function StudentOverview() {
   const { user } = useAuth();
+  
+  const myItems = mockMarketplaceItems.filter(item => item.sellerPhone === user?.phone);
 
   return (
     <div className="space-y-8">
@@ -17,27 +19,31 @@ export default function StudentOverview() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard 
           title="My Listings" 
-          value="2" 
+          value={myItems.length} 
           icon={ShoppingBag} 
           description="Active items for sale"
+          to="/dashboard/my-items"
         />
         <StatsCard 
           title="Favorites" 
           value="5" 
           icon={Heart} 
           description="Saved boarding houses"
+          to="/dashboard/favorites"
         />
         <StatsCard 
           title="Messages" 
           value="12" 
           icon={MessageCircle} 
           trend={{ value: 8, isUp: true }}
+          to="/dashboard/notifications"
         />
         <StatsCard 
           title="Active Search" 
           value="1" 
           icon={Clock} 
           description="Boarding house alerts"
+          to="/search"
         />
       </div>
 
@@ -50,7 +56,7 @@ export default function StudentOverview() {
             </Link>
           </div>
           <div className="divide-y border-border">
-            {mockMarketplaceItems.slice(0, 2).map((item) => (
+            {myItems.slice(0, 3).map((item) => (
               <div key={item.id} className="p-4 flex items-center gap-4 hover:bg-secondary/50 transition-colors">
                 <img src={item.image} alt={item.title} className="w-12 h-12 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
@@ -58,10 +64,15 @@ export default function StudentOverview() {
                   <p className="text-xs text-muted-foreground">{formatPrice(item.price)}</p>
                 </div>
                 <span className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">
-                  Active
+                  {item.status || "Active"}
                 </span>
               </div>
             ))}
+            {myItems.length === 0 && (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                Belum ada barang yang dijual.
+              </div>
+            )}
           </div>
         </div>
 
