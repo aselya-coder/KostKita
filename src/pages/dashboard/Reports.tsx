@@ -1,29 +1,102 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BackButton } from "@/components/BackButton";
 import { AlertTriangle, User, MessageCircle, ShoppingBag, Home, CheckCircle2, Trash2, ShieldAlert, Clock, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { mockReports, Report } from "@/data/mockData";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function Reports() {
-  const [reports, setReports] = useState<Report[]>(mockReports);
-
+  const [reports, setReports] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "new">("all");
+
+  const fetchReports = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching reports:', error);
+      toast.error("Gagal mengambil data laporan");
+    } else {
+      // Map basic data
+      const formatted = (data || []).map(r => ({
+        ...r,
+        reporterName: "User", // Placeholder if profile not joined
+        targetName: "Konten", // Placeholder
+        time: new Date(r.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+      }));
+      setReports(formatted);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchReports();
+
+    // REALTIME: Listen for report changes
+    const channel = supabase.channel('admin-reports-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, () => fetchReports())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const deleteReport = async (id: string) => {
+    if (confirm("Hapus laporan ini secara permanen dari database?")) {
+      const { error } = await supabase
+        .from('reports')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        toast.error("Gagal menghapus laporan");
+      } else {
+        setReports(prev => prev.filter(r => r.id !== id));
+        toast.success("Laporan berhasil dihapus permanen");
+      }
+    }
+  };
 
   const filteredReports = reports.filter(r => 
     activeTab === "all" ? true : r.status === "new"
   );
 
-  const resolveReport = (id: string) => {
-    setReports(prev => prev.map(r => 
-      r.id === id ? { ...r, status: "resolved" } : r
-    ));
+  const resolveReport = async (id: string) => {
+    const { error } = await supabase
+      .from('reports')
+      .update({ status: 'resolved' })
+      .eq('id', id);
+    
+    if (error) {
+      toast.error("Gagal memproses laporan");
+    } else {
+      setReports(prev => prev.map(r => 
+        r.id === id ? { ...r, status: "resolved" } : r
+      ));
+      toast.success("Laporan diselesaikan");
+    }
   };
 
-  const dismissReport = (id: string) => {
-    setReports(prev => prev.map(r => 
-      r.id === id ? { ...r, status: "dismissed" } : r
-    ));
+  const dismissReport = async (id: string) => {
+    const { error } = await supabase
+      .from('reports')
+      .update({ status: 'dismissed' })
+      .eq('id', id);
+    
+    if (error) {
+      toast.error("Gagal menolak laporan");
+    } else {
+      setReports(prev => prev.map(r => 
+        r.id === id ? { ...r, status: "dismissed" } : r
+      ));
+      toast.success("Laporan ditolak");
+    }
   };
 
   const getTypeIcon = (type: string) => {
@@ -123,27 +196,41 @@ export default function Reports() {
                     {report.reason}
                   </div>
 
-                  {report.status === "new" && (
+                  <div className="flex items-center justify-between mt-auto">
                     <div className="flex items-center gap-2">
                       <Button 
+                        variant="ghost" 
                         size="sm" 
-                        variant="outline"
-                        className="rounded-lg h-8 text-xs font-bold"
-                        onClick={() => dismissReport(report.id)}
+                        className="text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => deleteReport(report.id)}
                       >
-                        <Trash2 className="w-3 h-3 mr-1.5" />
-                        Abaikan
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="rounded-lg h-8 text-xs font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
-                        onClick={() => resolveReport(report.id)}
-                      >
-                        <CheckCircle2 className="w-3 h-3 mr-1.5" />
-                        Tindak Lanjuti
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Hapus Laporan
                       </Button>
                     </div>
-                  )}
+
+                    {report.status === "new" && (
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="rounded-lg h-8 text-xs font-bold"
+                          onClick={() => dismissReport(report.id)}
+                        >
+                          <Trash2 className="w-3 h-3 mr-1.5" />
+                          Abaikan
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="rounded-lg h-8 text-xs font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                          onClick={() => resolveReport(report.id)}
+                        >
+                          <CheckCircle2 className="w-3 h-3 mr-1.5" />
+                          Tindak Lanjuti
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {report.status === "new" && (

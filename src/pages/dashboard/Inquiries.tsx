@@ -1,32 +1,75 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { mockInquiries, Inquiry } from "@/data/mockData";
+import { type Inquiry } from "@/data/mockData";
+import { getInquiries, updateInquiryStatus, deleteInquiry as deleteInquiryService } from "@/services/inquiries";
 import { BackButton } from "@/components/BackButton";
 import { cn } from "@/lib/utils";
 import { MessageCircle, Phone, Home, Clock, Trash2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 export default function Inquiries() {
   const { user } = useAuth();
-  const [inquiries, setInquiries] = useState<Inquiry[]>(
-    mockInquiries.filter(iq => iq.ownerId === user?.id)
-  );
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "new">("all");
+
+  const fetchInquiries = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    const data = await getInquiries(user.id);
+    setInquiries(data);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchInquiries();
+
+    // Subscribe to REALTIME changes for inquiries
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'inquiries',
+          filter: `owner_id=eq.${user?.id}`
+        },
+        () => {
+          // Refresh data whenever anything changes in the database
+          fetchInquiries();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const deleteInquiry = async (id: string) => {
+    if (confirm("Hapus pesan ini?")) {
+      const { success } = await deleteInquiryService(id);
+      if (success) {
+        setInquiries(prev => prev.filter(iq => iq.id !== id));
+      }
+    }
+  };
+
+  const markAsReplied = async (id: string) => {
+    const { success } = await updateInquiryStatus(id, "replied");
+    if (success) {
+      setInquiries(prev => prev.map(iq => 
+        iq.id === id ? { ...iq, status: "replied" } : iq
+      ));
+    }
+  };
 
   const filteredInquiries = inquiries.filter(iq => 
     activeTab === "all" ? true : iq.status === "new"
   );
-
-  const deleteInquiry = (id: string) => {
-    setInquiries(prev => prev.filter(iq => iq.id !== id));
-  };
-
-  const markAsReplied = (id: string) => {
-    setInquiries(prev => prev.map(iq => 
-      iq.id === id ? { ...iq, status: "replied" } : iq
-    ));
-  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
@@ -82,7 +125,7 @@ export default function Inquiries() {
                   )}
                 >
                   <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center shrink-0 shadow-sm font-bold text-lg text-muted-foreground">
-                    {iq.senderName.charAt(0)}
+                    {iq.senderName ? iq.senderName.charAt(0) : "?"}
                   </div>
 
                   <div className="flex-1 min-w-0">

@@ -1,25 +1,29 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { mockUsers } from "@/data/mockData";
 import StudentOverview from "@/pages/dashboard/StudentOverview";
 import OwnerOverview from "@/pages/dashboard/OwnerOverview";
 import AdminOverview from "@/pages/dashboard/AdminOverview";
-import PlaceholderPage from "@/pages/dashboard/PlaceholderPage";
 import Favorites from "@/pages/Favorites";
-import MyBoardingHouses from "@/pages/dashboard/MyBoardingHouses";
-import AddBoardingHouse from "@/pages/dashboard/AddBoardingHouse";
+import { useAuth } from "@/context/AuthContext";
+
+// Student/Owner Dashboard Components
 import MyMarketplaceItems from "@/pages/dashboard/MyMarketplaceItems";
 import SellItem from "@/pages/dashboard/SellItem";
 import Profile from "@/pages/dashboard/Profile";
 import Settings from "@/pages/dashboard/Settings";
 import Notifications from "@/pages/dashboard/Notifications";
+
+// Owner Specific Components
+import MyBoardingHouses from "@/pages/dashboard/MyBoardingHouses";
+import AddBoardingHouse from "@/pages/dashboard/AddBoardingHouse";
 import Inquiries from "@/pages/dashboard/Inquiries";
+
+// Admin Specific Components
 import UserManagement from "@/pages/dashboard/UserManagement";
 import KosManagement from "@/pages/dashboard/KosManagement";
 import MarketplaceModeration from "@/pages/dashboard/MarketplaceModeration";
 import Reports from "@/pages/dashboard/Reports";
 import SystemSettings from "@/pages/dashboard/SystemSettings";
-import { useAuth } from "@/context/AuthContext";
 
 export function DashboardRouter() {
   const { user, isLoading } = useAuth();

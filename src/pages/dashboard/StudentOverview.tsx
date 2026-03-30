@@ -1,13 +1,33 @@
 import { ShoppingBag, Heart, MessageCircle, Clock } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
-import { mockMarketplaceItems, formatPrice } from "@/data/mockData";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
+import { getStudentDashboardStats } from "@/services/dashboard";
+import { getMarketplaceItems } from "@/services/marketplace";
+import { type MarketplaceItem, formatPrice } from "@/data/mockData";
 
 export default function StudentOverview() {
   const { user } = useAuth();
-  
-  const myItems = mockMarketplaceItems.filter(item => item.sellerPhone === user?.phone);
+  const [stats, setStats] = useState({ myListingsCount: 0, favoritesCount: 0 });
+  const [myItems, setMyItems] = useState<MarketplaceItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      const fetchData = async () => {
+        setIsLoading(true);
+        const [statsData, itemsData] = await Promise.all([
+          getStudentDashboardStats(user.id),
+          getMarketplaceItems(), // This fetches all, we filter locally
+        ]);
+        setStats(statsData);
+        setMyItems(itemsData.filter(item => item.sellerId === user.id));
+        setIsLoading(false);
+      };
+      fetchData();
+    }
+  }, [user]);
 
   return (
     <div className="space-y-8">
@@ -19,28 +39,28 @@ export default function StudentOverview() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard 
           title="My Listings" 
-          value={myItems.length} 
+          value={isLoading ? '...' : stats.myListingsCount} 
           icon={ShoppingBag} 
           description="Active items for sale"
           to="/dashboard/my-items"
         />
         <StatsCard 
           title="Favorites" 
-          value="5" 
+          value={isLoading ? '...' : stats.favoritesCount} 
           icon={Heart} 
           description="Saved boarding houses"
           to="/dashboard/favorites"
         />
         <StatsCard 
           title="Messages" 
-          value="12" 
+          value="0" 
           icon={MessageCircle} 
-          trend={{ value: 8, isUp: true }}
+          trend={{ value: 0, isUp: true }}
           to="/dashboard/notifications"
         />
         <StatsCard 
           title="Active Search" 
-          value="1" 
+          value="0" 
           icon={Clock} 
           description="Boarding house alerts"
           to="/search"

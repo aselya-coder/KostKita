@@ -23,50 +23,18 @@ const Login = () => {
     }
   }, [user, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    // Simulate small delay for better UX
-    setTimeout(() => {
-      const success = login(email, password);
-      if (!success) {
-        setError("Email atau password salah. Silakan coba lagi.");
-        setIsLoading(false);
-      }
-    }, 800);
+    const result = await login(email, password);
+    if (!result.success) {
+      setError(result.error || "Email atau password salah. Silakan coba lagi.");
+      setIsLoading(false);
+    }
+    // Success is handled by AuthContext listener/useEffect redirect
   };
-
-  const handleQuickLogin = (roleEmail: string, rolePass: string) => {
-    setEmail(roleEmail);
-    setPassword(rolePass);
-    setError("");
-  };
-
-  const demoAccounts = [
-    {
-      role: "Student",
-      email: "budi@student.com",
-      password: "student123",
-      icon: GraduationCap,
-      color: "bg-emerald-50 text-emerald-600",
-    },
-    {
-      role: "Owner",
-      email: "sulam@owner.com",
-      password: "owner123",
-      icon: Building2,
-      color: "bg-blue-50 text-blue-600",
-    },
-    {
-      role: "Admin",
-      email: "admin@koskita.com",
-      password: "admin123",
-      icon: ShieldCheck,
-      color: "bg-purple-50 text-purple-600",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-4">
@@ -151,24 +119,6 @@ const Login = () => {
           {/* Decorative Background */}
           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="mt-8">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-center mb-4">Atau Gunakan Akun Demo</p>
-          <div className="grid grid-cols-3 gap-3">
-            {demoAccounts.map((acc) => (
-              <button
-                key={acc.role}
-                onClick={() => handleQuickLogin(acc.email, acc.password)}
-                className="p-3 rounded-2xl bg-card border border-border hover:border-primary hover:shadow-md transition-all text-center group"
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 ${acc.color}`}>
-                  <acc.icon className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary transition-colors">{acc.role}</span>
-              </button>
-            ))}
-          </div>
         </div>
 
         <div className="mt-12 text-center text-sm text-muted-foreground">

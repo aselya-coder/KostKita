@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { KosCard } from "@/components/KosCard";
-import { mockKosListings } from "@/data/mockData";
+import { getKosListings } from "@/services/kos";
+import { type KosListing } from "@/data/mockData";
 import { motion, AnimatePresence } from "framer-motion";
 
 const priceRanges = [
@@ -22,6 +23,18 @@ const SearchKos = () => {
   const [priceIdx, setPriceIdx] = useState(0);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [kosListings, setKosListings] = useState<KosListing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchKos = async () => {
+      setIsLoading(true);
+      const data = await getKosListings();
+      setKosListings(data);
+      setIsLoading(false);
+    };
+    fetchKos();
+  }, []);
 
   const toggleAmenity = (a: string) => {
     setSelectedAmenities((prev) =>
@@ -30,7 +43,7 @@ const SearchKos = () => {
   };
 
   const filtered = useMemo(() => {
-    return mockKosListings.filter((kos) => {
+    return kosListings.filter((kos) => {
       const matchesQuery =
         !query ||
         kos.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -42,7 +55,7 @@ const SearchKos = () => {
         selectedAmenities.every((a) => kos.amenities.includes(a));
       return matchesQuery && matchesPrice && matchesAmenities;
     });
-  }, [query, priceIdx, selectedAmenities]);
+  }, [query, priceIdx, selectedAmenities, kosListings]);
 
   return (
     <div className="container py-8">
@@ -128,11 +141,22 @@ const SearchKos = () => {
 
       {/* Results */}
       <p className="text-sm text-muted-foreground mb-4">
-        {filtered.length} kos ditemukan
-        {query ? ` untuk "${query}"` : ""}
+        {isLoading ? "Mencari kos..." : `${filtered.length} kos ditemukan`}
+        {query && !isLoading ? ` untuk "${query}"` : ""}
       </p>
 
-      {filtered.length > 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-card rounded-2xl p-4 space-y-3 animate-pulse">
+              <div className="h-48 bg-secondary rounded-xl"></div>
+              <div className="h-5 w-3/4 bg-secondary rounded-md"></div>
+              <div className="h-4 w-1/2 bg-secondary rounded-md"></div>
+              <div className="h-6 w-1/3 bg-secondary rounded-md"></div>
+            </div>
+          ))}
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((kos) => (
             <KosCard key={kos.id} kos={kos} />

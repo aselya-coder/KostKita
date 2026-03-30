@@ -1,57 +1,65 @@
 import { useState, useEffect } from "react";
-import { type Notification, mockNotifications } from "@/data/mockData";
+import { type Notification } from "@/data/mockData";
 import { useAuth } from "@/context/AuthContext";
+import { 
+  getNotifications, 
+  markNotificationAsRead as markAsReadService, 
+  markAllNotificationsAsRead as markAllAsReadService,
+  deleteNotification as deleteNotifService 
+} from "@/services/notifications";
 
 export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load and sync notifications
-  useEffect(() => {
+  const fetchNotifications = async () => {
     if (!user) return;
-
-    const savedStatus = localStorage.getItem(`koskita_notif_status_${user.id}`);
-    const readIds = savedStatus ? JSON.parse(savedStatus) : [];
-    
-    // Filter notifs for current user and apply read status from localStorage
-    const userNotifs = mockNotifications
-      .filter(n => n.userId === user.id)
-      .map(n => ({
-        ...n,
-        isRead: readIds.includes(n.id) || n.isRead
-      }));
-
-    setNotifications(userNotifs);
-  }, [user]);
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev => {
-      const updated = prev.map(n => n.id === id ? { ...n, isRead: true } : n);
-      
-      // Save read status to localStorage
-      const readIds = updated.filter(n => n.isRead).map(n => n.id);
-      if (user) {
-        localStorage.setItem(`koskita_notif_status_${user.id}`, JSON.stringify(readIds));
-      }
-      
-      return updated;
-    });
+    setIsLoading(true);
+    const data = await getNotifications(user.id);
+    // Map database fields to interface if needed
+    const mappedData = data.map((n: any) => ({
+      id: n.id,
+      userId: n.user_id,
+      title: n.title,
+      message: n.message,
+      time: new Date(n.created_at).toLocaleString(), // Simple formatting
+      isRead: n.is_read,
+      type: n.type,
+      link: n.link
+    }));
+    setNotifications(mappedData);
+    setIsLoading(false);
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => {
-      const updated = prev.map(n => ({ ...n, isRead: true }));
-      
-      const readIds = updated.map(n => n.id);
-      if (user) {
-        localStorage.setItem(`koskita_notif_status_${user.id}`, JSON.stringify(readIds));
-      }
-      
-      return updated;
-    });
+  useEffect(() => {
+    fetchNotifications();
+  }, [user]);
+
+  const markAsRead = async (id: string) => {
+    const { success } = await markAsReadService(id);
+    if (success) {
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    const { success } = await markAllAsReadService(user.id);
+    if (success) {
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    }
+  };
+
+  const deleteNotif = async (id: string) => {
+    const { success } = await deleteNotifService(id);
+    if (success) {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  return { notifications, unreadCount, markAsRead, markAllAsRead, setNotifications };
+  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, deleteNotif, fetchNotifications };
 }

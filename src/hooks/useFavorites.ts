@@ -1,30 +1,40 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { getFavorites, addFavorite, removeFavorite } from "@/services/favorites";
 
-export function useFavorites() {
+export function useFavorites(type: 'kos' | 'item') {
+  const { user } = useAuth();
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load favorites from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("koskita_favorites");
-    if (saved) {
-      try {
-        setFavorites(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse favorites", e);
-      }
+  const fetchFavorites = useCallback(async () => {
+    if (user) {
+      setIsLoading(true);
+      const favs = await getFavorites(user.id);
+      setFavorites(favs);
+      setIsLoading(false);
     }
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]);
 
   const isFavorite = (id: string) => favorites.includes(id);
 
-  const toggleFavorite = (id: string) => {
-    const newFavorites = favorites.includes(id)
-      ? favorites.filter((favId) => favId !== id)
-      : [...favorites, id];
+  const toggleFavorite = async (id: string) => {
+    if (!user) return; // Or prompt to login
+
+    const isFav = isFavorite(id);
     
-    setFavorites(newFavorites);
-    localStorage.setItem("koskita_favorites", JSON.stringify(newFavorites));
+    if (isFav) {
+      setFavorites(prev => prev.filter(favId => favId !== id));
+      await removeFavorite(user.id, id);
+    } else {
+      setFavorites(prev => [...prev, id]);
+      await addFavorite(user.id, id, type);
+    }
   };
 
-  return { favorites, isFavorite, toggleFavorite };
+  return { favorites, isFavorite, toggleFavorite, isLoading };
 }

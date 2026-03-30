@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { mockMarketplaceItems, MarketplaceItem, formatPrice } from "@/data/mockData";
+import { useState, useEffect } from "react";
+import { formatPrice } from "@/data/mockData";
 import { BackButton } from "@/components/BackButton";
 import { Search, ShoppingBag, Eye, Trash2, AlertTriangle, CheckCircle2, MoreVertical, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -14,17 +16,47 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function MarketplaceModeration() {
-  const [items, setItems] = useState<MarketplaceItem[]>(mockMarketplaceItems);
+  const [items, setItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const fetchItems = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('marketplace_items')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching items:', error);
+      toast.error("Gagal mengambil data marketplace");
+    } else {
+      setItems(data || []);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
   const filteredItems = items.filter(i => 
-    i.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    i.sellerName.toLowerCase().includes(searchQuery.toLowerCase())
+    i.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const removeItem = (id: string) => {
+  const removeItem = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus barang ini dari marketplace?")) {
-      setItems(prev => prev.filter(i => i.id !== id));
+      const { error } = await supabase
+        .from('marketplace_items')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        toast.error("Gagal menghapus barang");
+      } else {
+        setItems(prev => prev.filter(i => i.id !== id));
+        toast.success("Barang berhasil dihapus");
+      }
     }
   };
 

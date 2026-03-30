@@ -15,7 +15,7 @@ const amenityIcons: Record<string, typeof Wifi> = {
 };
 
 export function KosCard({ kos }: KosCardProps) {
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite } = useFavorites('kos');
   const [imgIdx, setImgIdx] = useState(0);
 
   const liked = isFavorite(kos.id);

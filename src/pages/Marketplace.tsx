@@ -1,24 +1,37 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, X } from "lucide-react";
 import { MarketplaceCard } from "@/components/MarketplaceCard";
-import { mockMarketplaceItems } from "@/data/mockData";
+import { getMarketplaceItems } from "@/services/marketplace";
+import { type MarketplaceItem } from "@/data/mockData";
 
 const categories = ["Semua", "Buku", "Elektronik", "Furnitur", "Kendaraan"];
 
 const Marketplace = () => {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Semua");
+  const [items, setItems] = useState<MarketplaceItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      setIsLoading(true);
+      const data = await getMarketplaceItems();
+      setItems(data);
+      setIsLoading(false);
+    };
+    fetchItems();
+  }, []);
 
   const filtered = useMemo(() => {
-    return mockMarketplaceItems.filter((item) => {
+    return items.filter((item) => {
       const matchesQuery =
         !query ||
         item.title.toLowerCase().includes(query.toLowerCase()) ||
-        item.location.toLowerCase().includes(query.toLowerCase());
+        (item.location && item.location.toLowerCase().includes(query.toLowerCase()));
       const matchesCat = category === "Semua" || item.category === category;
       return matchesQuery && matchesCat;
     });
-  }, [query, category]);
+  }, [query, category, items]);
 
   return (
     <div className="container py-8">
@@ -59,9 +72,21 @@ const Marketplace = () => {
         ))}
       </div>
 
-      <p className="text-sm text-muted-foreground mb-4">{filtered.length} barang ditemukan</p>
+      <p className="text-sm text-muted-foreground mb-4">
+        {isLoading ? "Mencari barang..." : `${filtered.length} barang ditemukan`}
+      </p>
 
-      {filtered.length > 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-card rounded-2xl p-3 space-y-2 animate-pulse">
+              <div className="h-32 bg-secondary rounded-xl"></div>
+              <div className="h-4 w-3/4 bg-secondary rounded-md"></div>
+              <div className="h-5 w-1/2 bg-secondary rounded-md"></div>
+            </div>
+          ))}
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map((item) => (
             <MarketplaceCard key={item.id} item={item} />

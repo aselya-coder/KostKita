@@ -153,7 +153,7 @@ export function DashboardHeader({ user, onMobileMenuOpen }: DashboardHeaderProps
             <Button variant="ghost" className="p-1 rounded-full flex items-center gap-3">
               <Avatar className="w-8 h-8">
                 <AvatarImage src={user.avatar} />
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{user?.name ? user.name.charAt(0) : "U"}</AvatarFallback>
               </Avatar>
               <div className="hidden lg:flex flex-col items-start text-left">
                 <span className="text-sm font-semibold text-foreground leading-none">

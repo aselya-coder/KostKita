@@ -1,13 +1,56 @@
-import { User, Mail, Phone, MapPin, Calendar, Shield, Camera } from "lucide-react";
+import { useState, useRef } from "react";
+import { User, Mail, Phone, MapPin, Calendar, Shield, Camera, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BackButton } from "@/components/BackButton";
+import { uploadFile } from "@/services/storage";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function Profile() {
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   if (!user) return null;
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setIsUploading(true);
+
+      const fileName = `avatar-${Date.now()}-${file.name.replace(/\s/g, '_')}`;
+      const path = `${user.id}/${fileName}`;
+      
+      const { url, error } = await uploadFile('avatars', path, file);
+
+      if (error) {
+        toast.error("Failed to upload avatar");
+        setIsUploading(false);
+        return;
+      }
+
+      if (url) {
+        // Update profile in database
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ avatar: url })
+          .eq('id', user.id);
+
+        if (updateError) {
+          toast.error("Failed to update profile");
+        } else {
+          toast.success("Avatar updated successfully!");
+          // The AuthContext should ideally handle the user state update, 
+          // but for now, we might need to refresh or the user will see it on next load
+          // In a real app, you'd update the context user object.
+          window.location.reload(); 
+        }
+      }
+      setIsUploading(false);
+    }
+  };
 
   const basePath = user.role === "admin" ? "/admin" : user.role === "owner" ? "/owner-dashboard" : "/dashboard";
 
@@ -26,11 +69,22 @@ export default function Profile() {
             <div className="relative inline-block mx-auto mb-4">
               <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
                 <AvatarImage src={user.avatar} />
-                <AvatarFallback className="text-2xl">{user.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="text-2xl">{user?.name ? user.name.charAt(0) : "U"}</AvatarFallback>
               </Avatar>
-              <button className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors border-2 border-background">
-                <Camera className="w-4 h-4" />
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors border-2 border-background disabled:opacity-50"
+              >
+                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
               </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleAvatarChange} 
+                accept="image/*" 
+                className="hidden" 
+              />
             </div>
             <h3 className="text-lg font-display font-bold">{user.name}</h3>
             <p className="text-sm text-muted-foreground capitalize mb-4">{user.role}</p>
@@ -89,7 +143,20 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold ml-1">City / Region</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold ml-1">City / Region</label>
+                  {user.location && (
+                    <a 
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(user.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-primary hover:underline flex items-center gap-1 font-bold uppercase tracking-tighter"
+                    >
+                      <MapPin className="w-3 h-3" />
+                      Cek di Maps
+                    </a>
+                  )}
+                </div>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input 

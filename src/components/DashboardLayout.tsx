@@ -2,8 +2,8 @@ import { ReactNode, useState } from "react";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardHeader } from "./DashboardHeader";
 import { type User as UserType } from "@/data/mockData";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Home, LogOut, HelpCircle, MessageSquare } from "lucide-react";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Home, LogOut, HelpCircle, MessageSquare, LayoutDashboard, Users, Building, ShoppingBag, Package, Heart, User as UserIcon } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -71,6 +71,9 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 </span>
               </Link>
             </SheetTitle>
+            <SheetDescription className="sr-only">
+              Menu navigasi untuk dashboard KosKita.
+            </SheetDescription>
           </SheetHeader>
           <nav className="p-4 space-y-1">
             {getMobileSidebarItems().map((item) => {

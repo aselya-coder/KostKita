@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { mockUsers, User } from "@/data/mockData";
+import { useState, useEffect } from "react";
 import { BackButton } from "@/components/BackButton";
 import { Search, UserPlus, MoreVertical, Shield, User as UserIcon, Mail, Calendar, Trash2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -15,17 +16,57 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching users:', error);
+      toast.error("Gagal mengambil data pengguna");
+    } else {
+      setUsers(data || []);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchUsers();
+
+    // REALTIME: Listen for profile changes
+    const channel = supabase.channel('public-profiles-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchUsers())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+    u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const deleteUser = (id: string) => {
+  const deleteUser = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus pengguna ini?")) {
-      setUsers(prev => prev.filter(u => u.id !== id));
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        toast.error("Gagal menghapus pengguna");
+      } else {
+        setUsers(prev => prev.filter(u => u.id !== id));
+        toast.success("Pengguna berhasil dihapus");
+      }
     }
   };
 
@@ -76,7 +117,7 @@ export default function UserManagement() {
                     <div className="flex items-center gap-3">
                       <Avatar className="w-10 h-10 border border-border">
                         <AvatarImage src={u.avatar} />
-                        <AvatarFallback>{u.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>{u.name ? u.name.charAt(0) : "U"}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
                         <p className="font-semibold text-foreground truncate">{u.name}</p>

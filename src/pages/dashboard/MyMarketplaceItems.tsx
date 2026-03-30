@@ -1,17 +1,70 @@
-import { Plus, ShoppingBag, Edit2, Trash2, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Tag, MapPin, Edit2, Trash2, Eye, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { mockMarketplaceItems, formatPrice } from "@/data/mockData";
+import { formatPrice } from "@/data/mockData";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/BackButton";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function MyMarketplaceItems() {
   const { user } = useAuth();
+  const [myItems, setMyItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Filter items by current seller (using sellerPhone as proxy)
-  const myItems = mockMarketplaceItems.filter(item => item.sellerPhone === user?.phone);
-  
+  const fetchMyItems = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('marketplace_items')
+      .select('*')
+      .eq('seller_id', user.id);
+    
+    if (error) {
+      console.error('Error fetching items:', error);
+    } else {
+      setMyItems(data || []);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchMyItems();
+
+    // REALTIME: Listen for changes in marketplace_items
+    const channel = supabase
+      .channel('my-items-changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'marketplace_items', 
+        filter: `seller_id=eq.${user?.id}` 
+      }, () => fetchMyItems())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Hapus barang ini secara permanen?")) {
+      const { error } = await supabase
+        .from('marketplace_items')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        toast.error("Failed to delete item");
+      } else {
+        setMyItems(prev => prev.filter(item => item.id !== id));
+        toast.success("Item deleted");
+      }
+    }
+  };
+
   const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
 
   return (
@@ -56,7 +109,14 @@ export default function MyMarketplaceItems() {
                         />
                         <div className="min-w-0">
                           <p className="font-semibold truncate max-w-[200px]">{item.title}</p>
-                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{item.location}</p>
+                          <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-muted-foreground truncate max-w-[200px] block hover:text-primary transition-colors"
+                          >
+                            {item.location}
+                          </a>
                         </div>
                       </div>
                     </td>
@@ -89,7 +149,13 @@ export default function MyMarketplaceItems() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDelete(item.id)}
+                          title="Hapus Barang"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

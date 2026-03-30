@@ -9,7 +9,7 @@ interface MarketplaceCardProps {
 }
 
 export function MarketplaceCard({ item }: MarketplaceCardProps) {
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite } = useFavorites('item');
   const liked = isFavorite(item.id);
 
   return (

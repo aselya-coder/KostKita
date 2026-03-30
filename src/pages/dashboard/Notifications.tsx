@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Notifications() {
   const navigate = useNavigate();
-  const { notifications, markAsRead, markAllAsRead, setNotifications } = useNotifications();
+  const { notifications, markAsRead, markAllAsRead, deleteNotif, isLoading } = useNotifications();
   const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
 
   const handleNotifClick = (n: any) => {
@@ -23,13 +23,6 @@ export default function Notifications() {
   const filteredNotifications = notifications.filter(n => 
     activeTab === "all" ? true : !n.isRead
   );
-
-  const deleteNotif = (id: string) => {
-    setNotifications(prev => {
-      const updated = prev.filter(n => n.id !== id);
-      return updated;
-    });
-  };
 
   const getNotifIcon = (type: string) => {
     switch (type) {

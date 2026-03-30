@@ -1,13 +1,77 @@
-import { Building2, Users, MessageCircle, BarChart3 } from "lucide-react";
+import { Building2, Users, MessageCircle, BarChart3, Trash2, Edit2, Eye } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
-import { mockKosListings, mockInquiries, formatPrice } from "@/data/mockData";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
+import { getOwnerDashboardStats } from "@/services/dashboard";
+import { getKosListings, deleteKosListing } from "@/services/kos";
+import { getInquiries } from "@/services/inquiries";
+import { type KosListing, type Inquiry, formatPrice } from "@/data/mockData";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function OwnerOverview() {
   const { user } = useAuth();
-  
-  const ownerInquiries = mockInquiries.filter(iq => iq.ownerId === user?.id).slice(0, 3);
+  const [stats, setStats] = useState({ propertiesCount: 0, inquiriesCount: 0 });
+  const [myKos, setMyKos] = useState<KosListing[]>([]);
+  const [ownerInquiries, setOwnerInquiries] = useState<Inquiry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchData = async () => {
+    if (!user) return;
+    try {
+      const [statsData, kosData, inquiriesData] = await Promise.all([
+        getOwnerDashboardStats(user.id),
+        getKosListings(user.id),
+        getInquiries(user.id)
+      ]);
+      setStats({
+        propertiesCount: kosData.length,
+        inquiriesCount: inquiriesData.length
+      });
+      setMyKos(kosData);
+      setOwnerInquiries(inquiriesData.slice(0, 5));
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteKos = async (id: string) => {
+    if (confirm("Hapus properti ini secara permanen?")) {
+      const { success } = await deleteKosListing(id);
+      if (success) {
+        setMyKos(prev => prev.filter(k => k.id !== id));
+        toast.success("Property deleted");
+        fetchData(); // Refresh stats
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+
+      // REALTIME: Listen for changes in kos_listings and inquiries
+      const kosChannel = supabase
+        .channel('owner-kos-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings', filter: `owner_id=eq.${user.id}` }, () => fetchData())
+        .subscribe();
+
+      const inquiryChannel = supabase
+        .channel('owner-inquiry-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'inquiries', filter: `owner_id=eq.${user.id}` }, () => fetchData())
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(kosChannel);
+        supabase.removeChannel(inquiryChannel);
+      };
+    }
+  }, [user]);
 
   return (
     <div className="space-y-8">
@@ -19,28 +83,28 @@ export default function OwnerOverview() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard 
           title="Properties" 
-          value="3" 
+          value={isLoading ? '...' : stats.propertiesCount} 
           icon={Building2} 
           description="Boarding houses listed"
           to="/owner-dashboard/my-kos"
         />
         <StatsCard 
           title="Total Inquiries" 
-          value={mockInquiries.filter(iq => iq.ownerId === user?.id).length} 
+          value={isLoading ? '...' : stats.inquiriesCount} 
           icon={MessageCircle} 
-          trend={{ value: 12, isUp: true }}
+          trend={{ value: 0, isUp: true }}
           to="/owner-dashboard/inquiries"
         />
         <StatsCard 
           title="Occupancy Rate" 
-          value="85%" 
+          value={isLoading ? '...' : (myKos.length > 0 ? "85%" : "0%")} 
           icon={Users} 
-          trend={{ value: 5, isUp: true }}
+          trend={{ value: 0, isUp: true }}
           to="/owner-dashboard/my-kos"
         />
         <StatsCard 
           title="Revenue (Est.)" 
-          value="Rp 12.5M" 
+          value={isLoading ? '...' : (myKos.length > 0 ? "Rp 12.5M" : "Rp 0")} 
           icon={BarChart3} 
           description="Monthly estimated"
           to="/owner-dashboard/my-kos"
@@ -56,16 +120,27 @@ export default function OwnerOverview() {
             </Link>
           </div>
           <div className="divide-y border-border">
-            {mockKosListings.slice(0, 3).map((kos) => (
+            {myKos.slice(0, 3).map((kos) => (
               <div key={kos.id} className="p-4 flex items-center gap-4 hover:bg-secondary/50 transition-colors">
                 <img src={kos.images[0]} alt={kos.title} className="w-12 h-12 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-medium text-foreground truncate">{kos.title}</h4>
                   <p className="text-xs text-muted-foreground">{kos.location}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-foreground">{kos.availableRooms} Left</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Rooms</p>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
+                    <Link to={`/kos/${kos.id}`}>
+                      <Eye className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => handleDeleteKos(kos.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             ))}
@@ -79,7 +154,7 @@ export default function OwnerOverview() {
               <div key={inquiry.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center font-bold text-muted-foreground">
-                    {inquiry.senderName.charAt(0)}
+                    {inquiry.senderName ? inquiry.senderName.charAt(0) : "?"}
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">{inquiry.senderName}</p>
@@ -111,6 +186,3 @@ export default function OwnerOverview() {
     </div>
   );
 }
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";

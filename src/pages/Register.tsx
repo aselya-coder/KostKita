@@ -15,8 +15,10 @@ const Register = () => {
     phone: "",
     password: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signup } = useAuth();
 
   const handleRoleSelect = (selectedRole: "student" | "owner") => {
     setRole(selectedRole);
@@ -30,27 +32,24 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (role) {
-      // In a real app, you'd send data to API
-      // For now, we'll simulate registration by adding to a temporary state or just logging in
-      // Since we don't have a backend, we'll just mock the login with the new credentials
-      // Note: This won't actually add the user to mockUsers, but for demo purposes we'll "login"
+      setIsLoading(true);
+      setError("");
       
-      // We'll manually set the user in AuthContext for this session
-      const mockNewUser = {
-        id: "u" + Date.now(),
+      const result = await signup(formData.email, formData.password, {
         name: formData.name,
-        email: formData.email,
-        password: formData.password,
         role: role,
         phone: formData.phone,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      
-      localStorage.setItem("koskita_user", JSON.stringify(mockNewUser));
-      window.location.href = role === "owner" ? "/owner-dashboard" : "/dashboard";
+      });
+
+      if (result.success) {
+        navigate(role === "owner" ? "/owner-dashboard" : "/dashboard");
+      } else {
+        setError(result.error || "Gagal mendaftar. Silakan coba lagi.");
+        setIsLoading(false);
+      }
     }
   };
 
@@ -122,6 +121,15 @@ const Register = () => {
               className="bg-card border border-border rounded-2xl p-8 shadow-sm"
             >
               <form onSubmit={handleSubmit} className="space-y-5">
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm"
+                  >
+                    {error}
+                  </motion.div>
+                )}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground ml-1">Nama Lengkap</label>
                   <div className="relative">
@@ -186,9 +194,13 @@ const Register = () => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full py-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base mt-4 shadow-lg shadow-primary/20 group">
-                  Daftar Sekarang
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                <Button 
+                  type="submit" 
+                  className="w-full py-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base mt-4 shadow-lg shadow-primary/20 group"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Mendaftar..." : "Daftar Sekarang"}
+                  {!isLoading && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
                 </Button>
               </form>
             </motion.div>

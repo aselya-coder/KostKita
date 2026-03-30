@@ -1,29 +1,107 @@
-import { Users, Building2, ShoppingBag, ShieldAlert, TrendingUp } from "lucide-react";
+import { Users, Building2, ShoppingBag, ShieldAlert, TrendingUp, CheckCircle2, XCircle, MapPin } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
-import { mockUsers, mockKosListings, mockMarketplaceItems, mockReports } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
+import { getAdminDashboardStats } from "@/services/dashboard";
+import { Link } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function AdminOverview() {
   const { user } = useAuth();
+  const [stats, setStats] = useState({ totalUsers: 0, totalKos: 0, totalItems: 0 });
+  const [pendingListings, setPendingListings] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const statsData = await getAdminDashboardStats();
+      setStats(statsData);
 
-  const pendingListings = [
-    ...mockKosListings.filter(k => k.status === "pending").map(k => ({
-      id: k.id,
-      name: k.title,
-      user: mockUsers.find(u => u.id === k.ownerId)?.name || "Unknown",
-      type: "Kos",
-      date: "2024-03-12"
-    })),
-    ...mockMarketplaceItems.filter(i => i.status === "pending").map(i => ({
-      id: i.id,
-      name: i.title,
-      user: i.sellerName,
-      type: "Market",
-      date: "2024-03-11"
-    }))
-  ].slice(0, 5);
+      // Fetch real pending listings from both tables
+      const [kosRes, itemsRes] = await Promise.all([
+        supabase.from('kos_listings').select('id, title, location, profiles(name), created_at').eq('status', 'pending'),
+        supabase.from('marketplace_items').select('id, title, location, profiles(name), created_at').eq('status', 'pending')
+      ]);
+
+      const formattedPending = [
+        ...(kosRes.data || []).map((k: any) => ({ 
+          id: k.id, 
+          name: k.title, 
+          location: k.location,
+          user: k.profiles?.name || 'Unknown', 
+          type: 'Kos', 
+          date: k.created_at 
+        })),
+        ...(itemsRes.data || []).map((i: any) => ({ 
+          id: i.id, 
+          name: i.title, 
+          location: i.location,
+          user: i.profiles?.name || 'Unknown', 
+          type: 'Item', 
+          date: i.created_at 
+        }))
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      setPendingListings(formattedPending);
+    } catch (error) {
+      console.error("Error fetching admin data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+
+    // Realtime for pending listings
+    const kosChannel = supabase.channel('admin-kos-pending')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings' }, () => fetchData())
+      .subscribe();
+    
+    const itemsChannel = supabase.channel('admin-items-pending')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_items' }, () => fetchData())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(kosChannel);
+      supabase.removeChannel(itemsChannel);
+    };
+  }, []);
+
+  const handleApprove = async (id: string, type: string) => {
+    const table = type === 'Kos' ? 'kos_listings' : 'marketplace_items';
+    const { error } = await supabase.from(table).update({ status: type === 'Kos' ? 'approved' : 'active' }).eq('id', id);
+    
+    if (error) {
+      toast.error(`Gagal menyetujui ${type}`);
+    } else {
+      toast.success(`${type} disetujui!`);
+      fetchData();
+    }
+  };
+
+  const handleReject = async (id: string, type: string) => {
+    if (confirm(`Hapus/Tolak ${type} ini?`)) {
+      const table = type === 'Kos' ? 'kos_listings' : 'marketplace_items';
+      const { error } = await supabase.from(table).delete().eq('id', id);
+      
+      if (error) {
+        toast.error(`Gagal menghapus ${type}`);
+      } else {
+        toast.success(`${type} berhasil dihapus!`);
+        fetchData();
+      }
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  };
 
   return (
     <div className="space-y-8">
@@ -35,30 +113,30 @@ export default function AdminOverview() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard 
           title="Total Users" 
-          value={mockUsers.length} 
+          value={isLoading ? '...' : stats.totalUsers} 
           icon={Users} 
-          trend={{ value: 12, isUp: true }}
+          trend={{ value: 0, isUp: true }}
           to="/admin/users"
         />
         <StatsCard 
           title="Boarding Houses" 
-          value={mockKosListings.length} 
+          value={isLoading ? '...' : stats.totalKos} 
           icon={Building2} 
-          trend={{ value: 4, isUp: true }}
+          trend={{ value: 0, isUp: true }}
           to="/admin/kos"
         />
         <StatsCard 
           title="Marketplace Items" 
-          value={mockMarketplaceItems.length} 
+          value={isLoading ? '...' : stats.totalItems} 
           icon={ShoppingBag} 
-          trend={{ value: 18, isUp: true }}
+          trend={{ value: 0, isUp: true }}
           to="/admin/marketplace"
         />
         <StatsCard 
           title="Pending Reports" 
-          value={mockReports.filter(r => r.status === "new").length} 
+          value="0" // Replace with real data
           icon={ShieldAlert} 
-          trend={{ value: 2, isUp: false }}
+          trend={{ value: 0, isUp: false }}
           to="/admin/reports"
         />
       </div>
@@ -82,7 +160,22 @@ export default function AdminOverview() {
               <tbody className="divide-y border-border">
                 {pendingListings.map((item, i) => (
                   <tr key={i} className="hover:bg-secondary/30 transition-colors">
-                    <td className="px-6 py-4 font-medium text-foreground">{item.name}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-foreground">{item.name}</span>
+                        {item.location && (
+                          <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                          >
+                            <MapPin className="w-2.5 h-2.5" />
+                            {item.location}
+                          </a>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-muted-foreground">{item.user}</td>
                     <td className="px-6 py-4">
                       <span className={cn(
@@ -92,10 +185,26 @@ export default function AdminOverview() {
                         {item.type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-muted-foreground">{item.date}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{formatDate(item.date)}</td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">Approve</Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">Reject</Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={() => handleApprove(item.id, item.type)}
+                      >
+                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                        Approve
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleReject(item.id, item.type)}
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Reject
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -139,5 +248,3 @@ export default function AdminOverview() {
     </div>
   );
 }
-
-import { Link } from "react-router-dom";

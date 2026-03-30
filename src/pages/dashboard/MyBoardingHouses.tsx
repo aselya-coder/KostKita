@@ -1,16 +1,56 @@
-import { Plus, Building2, Edit2, Trash2, Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { mockKosListings, formatPrice } from "@/data/mockData";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Plus, Building2, Edit2, Trash2, Eye } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { cn } from "@/lib/utils";
+import { type KosListing, formatPrice } from "@/data/mockData";
+import { getKosListings, deleteKosListing } from "@/services/kos";
+import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export default function MyBoardingHouses() {
   const { user } = useAuth();
-  
-  // Filter kos by current owner (using ownerPhone as a proxy since ownerId might be missing in some mock data)
-  const myKos = mockKosListings.filter(kos => kos.ownerPhone === user?.phone);
+  const [myKos, setMyKos] = useState<KosListing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchMyKos = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    const data = await getKosListings(user.id);
+    setMyKos(data);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchMyKos();
+
+    // REALTIME: Listen for changes in kos_listings
+    const channel = supabase
+      .channel('my-kos-changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'kos_listings', 
+        filter: `owner_id=eq.${user?.id}` 
+      }, () => fetchMyKos())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Hapus properti ini secara permanen?")) {
+      const { success } = await deleteKosListing(id);
+      if (success) {
+        setMyKos(prev => prev.filter(k => k.id !== id));
+        toast.success("Property deleted");
+      }
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -84,10 +124,18 @@ export default function MyBoardingHouses() {
                             <Eye className="w-4 h-4" />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                          <Edit2 className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
+                          <Link to={`/owner-dashboard/edit-kos/${kos.id}`}>
+                            <Edit2 className="w-4 h-4" />
+                          </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDelete(kos.id)}
+                          title="Hapus Properti"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

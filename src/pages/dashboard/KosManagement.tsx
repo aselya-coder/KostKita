@@ -1,29 +1,98 @@
-import { useState } from "react";
-import { mockKosListings, KosListing, formatPrice } from "@/data/mockData";
+import { useState, useEffect } from "react";
+import { type KosListing, formatPrice } from "@/data/mockData";
 import { BackButton } from "@/components/BackButton";
-import { CheckCircle2, XCircle, Search, Home, MapPin, Eye, Star, ShieldCheck, Clock, Building2 } from "lucide-react";
+import { CheckCircle2, XCircle, Search, Home, MapPin, Eye, Star, ShieldCheck, Clock, Building2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function KosManagement() {
-  const [listings, setListings] = useState<KosListing[]>(mockKosListings);
+  const [listings, setListings] = useState<KosListing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "approved">("all");
 
-  const filteredListings = listings.filter(l => 
-    activeTab === "all" ? true : l.status === activeTab || (!l.status && activeTab === "approved")
-  );
-
-  const approveListing = (id: string) => {
-    setListings(prev => prev.map(l => 
-      l.id === id ? { ...l, status: "approved" } : l
-    ));
+  const fetchListings = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('kos_listings')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching listings:', error);
+      toast.error("Gagal mengambil data kos");
+    } else {
+      setListings(data as any || []);
+    }
+    setIsLoading(false);
   };
 
-  const rejectListing = (id: string) => {
-    setListings(prev => prev.map(l => 
-      l.id === id ? { ...l, status: "rejected" } : l
-    ));
+  useEffect(() => {
+    fetchListings();
+
+    // REALTIME: Listen for any changes in kos_listings
+    const channel = supabase.channel('admin-kos-management')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings' }, () => fetchListings())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const filteredListings = listings.filter(l => 
+    activeTab === "all" ? true : l.status === activeTab
+  );
+
+  const deleteListing = async (id: string) => {
+    if (confirm("Hapus kos ini secara permanen dari database? Tindakan ini tidak dapat dibatalkan.")) {
+      const { error } = await supabase
+        .from('kos_listings')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting listing:', error);
+        toast.error("Gagal menghapus kos");
+      } else {
+        setListings(prev => prev.filter(l => l.id !== id));
+        toast.success("Kos berhasil dihapus permanen");
+      }
+    }
+  };
+
+  const approveListing = async (id: string) => {
+    const { error } = await supabase
+      .from('kos_listings')
+      .update({ status: 'approved' })
+      .eq('id', id);
+    
+    if (error) {
+      toast.error("Gagal menyetujui kos");
+    } else {
+      setListings(prev => prev.map(l => 
+        l.id === id ? { ...l, status: "approved" } : l
+      ));
+      toast.success("Kos disetujui");
+    }
+  };
+
+  const rejectListing = async (id: string) => {
+    const { error } = await supabase
+      .from('kos_listings')
+      .update({ status: 'rejected' })
+      .eq('id', id);
+    
+    if (error) {
+      toast.error("Gagal menolak kos");
+    } else {
+      setListings(prev => prev.map(l => 
+        l.id === id ? { ...l, status: "rejected" } : l
+      ));
+      toast.success("Kos ditolak");
+    }
   };
 
   return (
@@ -101,10 +170,15 @@ export default function KosManagement() {
                         )}
                       </h3>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(kos.location)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors"
+                        >
                           <MapPin className="w-3 h-3" />
                           {kos.location}
-                        </span>
+                        </a>
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Home className="w-3 h-3" />
                           {kos.availableRooms} Kamar Tersisa
@@ -129,12 +203,23 @@ export default function KosManagement() {
                   </div>
 
                   <div className="flex items-center justify-between mt-auto">
-                    <Button variant="ghost" size="sm" asChild className="text-xs text-muted-foreground hover:text-primary">
-                      <Link to={`/kos/${kos.id}`}>
-                        <Eye className="w-4 h-4 mr-2" />
-                        Lihat Detail
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => deleteListing(kos.id)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Hapus Permanen
+                      </Button>
+                      <Button variant="ghost" size="sm" asChild className="text-xs text-muted-foreground hover:text-primary">
+                        <Link to={`/kos/${kos.id}`}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Lihat Detail
+                        </Link>
+                      </Button>
+                    </div>
                     
                     {kos.status === "pending" && (
                       <div className="flex items-center gap-2">
