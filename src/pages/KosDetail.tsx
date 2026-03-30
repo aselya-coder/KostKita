@@ -9,7 +9,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 const KosDetail = () => {
   const { id } = useParams();
   const kos = mockKosListings.find((k) => k.id === id);
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite } = useFavorites('kos');
 
   if (!kos) {
     return (

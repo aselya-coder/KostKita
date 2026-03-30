@@ -58,6 +58,12 @@ export default function SellItem() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '');
+    const formatted = raw ? parseInt(raw).toLocaleString('id-ID') : '';
+    setFormData(p => ({ ...p, price: formatted }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -150,12 +156,10 @@ export default function SellItem() {
                 <input 
                   name="price"
                   value={formData.price}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '');
-                    setFormData(p => ({ ...p, price: val ? parseInt(val).toLocaleString('id-ID') : '' }));
-                  }}
+                  onChange={handlePriceChange}
                   required
-                  type="text" 
+                  type="text"
+                  inputMode="numeric"
                   placeholder="0" 
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
@@ -189,17 +193,23 @@ export default function SellItem() {
             <div className="space-y-2">
               <div className="flex items-center justify-between px-1">
                 <label className="text-sm font-semibold">Location</label>
-                {formData.location && (
-                  <a 
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] text-primary hover:underline flex items-center gap-1 font-bold uppercase"
-                  >
-                    <MapPin className="w-3 h-3" />
-                    Cek di Maps
-                  </a>
-                )}
+                <a 
+                  href={formData.location
+                    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location)}`
+                    : undefined}
+                  onClick={!formData.location ? (e) => e.preventDefault() : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-disabled={!formData.location}
+                  className={`text-[10px] flex items-center gap-1 font-bold uppercase transition-opacity ${
+                    formData.location
+                      ? 'text-primary hover:underline cursor-pointer'
+                      : 'text-muted-foreground opacity-40 cursor-not-allowed pointer-events-none'
+                  }`}
+                >
+                  <MapPin className="w-3 h-3" />
+                  Cek di Maps
+                </a>
               </div>
               <input 
                 name="location"
@@ -207,6 +217,8 @@ export default function SellItem() {
                 onChange={handleChange}
                 required
                 type="text" 
+                inputMode="text"
+                autoComplete="street-address"
                 placeholder="e.g. Depok, Sleman" 
                 className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
@@ -229,9 +241,9 @@ export default function SellItem() {
 
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
           <h3 className="font-display font-bold text-lg border-b border-border pb-4">Media</h3>
-          <div 
-            onClick={() => fileInputRef.current?.click()}
-            className="relative flex items-center justify-center border-2 border-dashed border-border rounded-2xl p-12 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group overflow-hidden min-h-[200px]"
+          <label
+            htmlFor="sell-item-image"
+            className="relative flex items-center justify-center border-2 border-dashed border-border rounded-2xl p-8 sm:p-12 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group overflow-hidden min-h-[200px]"
           >
             {previewUrl ? (
               <div className="absolute inset-0 w-full h-full">
@@ -255,8 +267,9 @@ export default function SellItem() {
                 <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
               </div>
             )}
-          </div>
+          </label>
           <input 
+            id="sell-item-image"
             type="file" 
             ref={fileInputRef} 
             onChange={handleImageChange} 

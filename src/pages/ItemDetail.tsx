@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 const ItemDetail = () => {
   const { id } = useParams();
   const item = mockMarketplaceItems.find((i) => i.id === id);
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite } = useFavorites('item');
 
   if (!item) {
     return (

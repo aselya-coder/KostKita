@@ -81,6 +81,7 @@ export function DashboardRouter() {
             <Route path="marketplace" element={<MarketplaceModeration />} />
             <Route path="reports" element={<Reports />} />
             <Route path="system-settings" element={<SystemSettings />} />
+            <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
             <Route path="notifications" element={<Notifications />} />

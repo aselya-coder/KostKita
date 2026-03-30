@@ -46,6 +46,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           { title: "Boarding Houses", href: "/admin/kos", icon: Building2 },
           { title: "Marketplace", href: "/admin/marketplace", icon: ShoppingBag },
           { title: "Reports", href: "/admin/reports", icon: ShieldAlert },
+          { title: "Favorites", href: "/admin/favorites", icon: Heart },
         ];
       case "owner":
         return [
