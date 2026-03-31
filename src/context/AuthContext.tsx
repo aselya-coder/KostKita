@@ -1,16 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { type User } from "@/data/mockData";
 import { supabase } from "@/lib/supabase";
-
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (email: string, password: string, metadata: Partial<User>) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
-  isLoading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthError, User as SupabaseUser } from "@supabase/supabase-js";
+import { AuthContext, type AuthContextType } from "./AuthContextType";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -70,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const fetchUserProfile = async (supabaseUser: any) => {
+  const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
     if (!supabaseUser) return;
     
     try {
@@ -101,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const mapSupabaseUser = (supabaseUser: any): User => {
+  const mapSupabaseUser = (supabaseUser: SupabaseUser): User => {
     return {
       id: supabaseUser.id,
       email: supabaseUser.email || "",
@@ -124,13 +116,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       if (data.user) {
-        await fetchUserProfile(data.user);
+        // The onAuthStateChange listener will handle setting the user state.
         return { success: true };
       }
       return { success: false, error: "Login failed" };
-    } catch (error: any) {
-      console.error("Login error:", error.message);
-      return { success: false, error: error.message };
+    } catch (error) {
+      console.error("Login error:", (error as AuthError).message);
+      return { success: false, error: (error as AuthError).message };
     }
   };
 
@@ -152,13 +144,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
-        await fetchUserProfile(data.user);
-        return { success: true };
+        // Immediately try to log in after successful signup
+        const loginResponse = await login(email, password);
+        return loginResponse;
       }
       return { success: false, error: "Signup failed" };
-    } catch (error: any) {
-      console.error("Signup error:", error.message);
-      return { success: false, error: error.message };
+    } catch (error) {
+      console.error("Signup error:", (error as AuthError).message);
+      return { success: false, error: (error as AuthError).message };
     }
   };
 
@@ -172,12 +165,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 }
