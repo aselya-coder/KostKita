@@ -1,7 +1,7 @@
 import { Building2, Users, MessageCircle, BarChart3, Trash2, Edit2, Eye } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContextType";
 import { useState, useEffect } from "react";
 import { getOwnerDashboardStats } from "@/services/dashboard";
 import { getKosListings, deleteKosListing } from "@/services/kos";

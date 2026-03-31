@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { type Notification } from "@/data/mockData";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContextType";
 import { 
   getNotifications, 
   markNotificationAsRead as markAsReadService, 

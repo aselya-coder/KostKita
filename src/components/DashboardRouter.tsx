@@ -4,7 +4,7 @@ import StudentOverview from "@/pages/dashboard/StudentOverview";
 import OwnerOverview from "@/pages/dashboard/OwnerOverview";
 import AdminOverview from "@/pages/dashboard/AdminOverview";
 import Favorites from "@/pages/Favorites";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 // Student/Owner Dashboard Components
 import MyMarketplaceItems from "@/pages/dashboard/MyMarketplaceItems";

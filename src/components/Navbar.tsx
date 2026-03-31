@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Search, Heart, User, Menu, X, Home, ShoppingBag, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContextType";
 
 const navLinks = [
   { to: "/", label: "Beranda", icon: Home },

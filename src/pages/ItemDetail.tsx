@@ -1,14 +1,42 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, MapPin, MessageCircle, Tag, User, Heart } from "lucide-react";
-import { mockMarketplaceItems, formatPrice } from "@/data/mockData";
+import { useEffect, useState } from "react";
+import { type MarketplaceItem, formatPrice } from "@/data/mockData";
+import { getItemById } from "@/services/marketplace";
 import { BackButton } from "@/components/BackButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { motion } from "framer-motion";
 
 const ItemDetail = () => {
   const { id } = useParams();
-  const item = mockMarketplaceItems.find((i) => i.id === id);
+  const [item, setItem] = useState<MarketplaceItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { isFavorite, toggleFavorite } = useFavorites('item');
+
+  useEffect(() => {
+    const fetchItem = async () => {
+      if (!id) return;
+      setIsLoading(true);
+      try {
+        const data = await getItemById(id);
+        setItem(data);
+      } catch (error) {
+        console.error("Failed to fetch item details:", error);
+        setItem(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchItem();
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="container py-20 text-center">
+        <p className="text-muted-foreground">Memuat data barang...</p>
+      </div>
+    );
+  }
 
   if (!item) {
     return (

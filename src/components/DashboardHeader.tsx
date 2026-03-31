@@ -1,5 +1,5 @@
 import { Bell, Menu, Search, User, LogOut, Settings as SettingsIcon, UserCircle, MessageCircle, ShoppingBag, Info, Heart, Home } from "lucide-react";
-import { type User as UserType } from "@/data/mockData";
+import { type User as UserType, type Notification } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +35,7 @@ export function DashboardHeader({ user, onMobileMenuOpen }: DashboardHeaderProps
     navigate("/");
   };
 
-  const handleNotifClick = (n: any) => {
+  const handleNotifClick = (n: Notification) => {
     markAsRead(n.id);
     if (n.link) {
       navigate(n.link);

@@ -18,34 +18,31 @@ export function MarketplaceCard({ item }: MarketplaceCardProps) {
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className="group relative rounded-2xl bg-card shadow-card hover:shadow-card-hover ring-1 ring-foreground/5 overflow-hidden transition-shadow duration-300"
     >
-      <div className="relative aspect-square overflow-hidden">
-        <Link to={`/item/${item.id}`}>
+      <Link to={`/item/${item.id}`}>
+        <div className="relative aspect-square overflow-hidden">
           <img
             src={item.image}
             alt={item.title}
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             loading="lazy"
           />
-        </Link>
-        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs font-medium text-foreground">
-          {item.category}
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs font-medium text-foreground">
+            {item.category}
+          </div>
         </div>
-        
-        <motion.button
-          whileTap={{ scale: 0.8 }}
-          onClick={(e) => {
-            e.preventDefault();
-            toggleFavorite(item.id);
-          }}
-          className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors z-10"
-        >
-          <Heart
-            className={`w-3.5 h-3.5 transition-colors ${
-              liked ? "fill-primary text-primary" : "text-foreground"
-            }`}
-          />
-        </motion.button>
-      </div>
+      </Link>
+      
+      <motion.button
+        whileTap={{ scale: 0.8 }}
+        onClick={() => toggleFavorite(item.id)}
+        className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors z-10"
+      >
+        <Heart
+          className={`w-3.5 h-3.5 transition-colors ${
+            liked ? "fill-primary text-primary" : "text-foreground"
+          }`}
+        />
+      </motion.button>
       <div className="p-4">
         <Link to={`/item/${item.id}`}>
           <span className="text-lg text-price text-foreground">{formatPrice(item.price)}</span>

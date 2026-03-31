@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContextType';
 import { supabase } from '@/lib/supabase';
 import { createMarketplaceItem } from '@/services/forms';
 import { uploadFile } from '@/services/storage';

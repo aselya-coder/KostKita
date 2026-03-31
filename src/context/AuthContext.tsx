@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { type User } from "@/data/mockData";
 import { supabase } from "@/lib/supabase";
 import { AuthError, User as SupabaseUser } from "@supabase/supabase-js";
@@ -11,20 +11,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Check active sessions and sets the user
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
 
         if (session?.user) {
-          // OPTIMISTIC: Set user immediately from metadata and hide loading
           const initialUser = mapSupabaseUser(session.user);
           if (mounted) {
             setUser(initialUser);
             setIsLoading(false);
           }
-          // Then fetch full profile in background
           fetchUserProfile(session.user);
         } else {
           if (mounted) setIsLoading(false);
@@ -37,16 +34,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkSession();
 
-    // Listen for changes on auth state (logged in, signed out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        // OPTIMISTIC: Set user immediately from metadata
         const initialUser = mapSupabaseUser(session.user);
         if (mounted) {
           setUser(initialUser);
           setIsLoading(false);
         }
-        // Then fetch full profile in background
         fetchUserProfile(session.user);
       } else {
         if (mounted) {
@@ -66,7 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabaseUser) return;
     
     try {
-      // Fetch full profile from DB
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("*")

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContextType";
 import { getFavorites, addFavorite, removeFavorite } from "@/services/favorites";
 
 export function useFavorites(type: 'kos' | 'item') {

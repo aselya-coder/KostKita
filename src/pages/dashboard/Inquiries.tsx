@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContextType";
 import { type Inquiry } from "@/data/mockData";
 import { getInquiries, updateInquiryStatus, deleteInquiry as deleteInquiryService } from "@/services/inquiries";
 import { BackButton } from "@/components/BackButton";

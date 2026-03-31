@@ -1,15 +1,42 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Heart, MapPin, Star, Wifi, Wind, MessageCircle, Users, DoorOpen, Shield } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { mockKosListings, formatPrice } from "@/data/mockData";
+import { useEffect, useState } from "react";
+import { getKosById } from "@/services/kos";
+import { type KosListing, formatPrice } from "@/data/mockData";
 import { BackButton } from "@/components/BackButton";
 import { useFavorites } from "@/hooks/useFavorites";
 
 const KosDetail = () => {
   const { id } = useParams();
-  const kos = mockKosListings.find((k) => k.id === id);
+  const [kos, setKos] = useState<KosListing | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { isFavorite, toggleFavorite } = useFavorites('kos');
+
+  useEffect(() => {
+    const fetchKos = async () => {
+      if (!id) return;
+      setIsLoading(true);
+      try {
+        const data = await getKosById(id);
+        setKos(data);
+      } catch (error) {
+        console.error("Failed to fetch kos details:", error);
+        setKos(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchKos();
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="container py-20 text-center">
+        <p className="text-muted-foreground">Memuat data kos...</p>
+      </div>
+    );
+  }
 
   if (!kos) {
     return (
@@ -42,15 +69,24 @@ const KosDetail = () => {
           </motion.button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 rounded-2xl overflow-hidden h-auto md:h-[50vh]">
-          <div className="md:col-span-2 md:row-span-2">
-            <img src={kos.images[0]} alt={kos.title} className="w-full h-full object-cover" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 rounded-2xl overflow-hidden h-auto md:h-[55vh]">
+          {/* Main Image */}
+          <div className="md:col-span-2 h-full">
+            <img src={kos.images[0]} alt={kos.title} className="w-full h-full object-contain" />
           </div>
-          {kos.images.slice(1).map((img, i) => (
-            <div key={i} className="hidden md:block">
-              <img src={img} alt={`${kos.title} ${i + 2}`} className="w-full h-full object-cover" />
-            </div>
-          ))}
+          {/* Small Images */}
+          <div className="hidden md:grid grid-rows-2 gap-2 h-full">
+            {kos.images[1] && (
+              <div className="h-full">
+                <img src={kos.images[1]} alt={`${kos.title} 2`} className="w-full h-full object-contain" />
+              </div>
+            )}
+            {kos.images[2] && (
+              <div className="h-full">
+                <img src={kos.images[2]} alt={`${kos.title} 3`} className="w-full h-full object-contain" />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -91,6 +127,26 @@ const KosDetail = () => {
             </div>
           </div>
 
+          {/* Pricing and CTA */}
+          <div className="p-6 rounded-2xl ring-1 ring-foreground/5 shadow-card space-y-4">
+            <div>
+              <span className="text-2xl text-price text-foreground">{formatPrice(kos.price)}</span>
+              <span className="text-muted-foreground text-sm"> / bulan</span>
+            </div>
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Chat via WhatsApp
+            </a>
+            <p className="text-xs text-muted-foreground text-center">
+              Langsung terhubung dengan pemilik kos
+            </p>
+          </div>
+
           <div>
             <h2 className="font-display font-semibold text-lg text-foreground mb-3">Deskripsi</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">{kos.description}</p>
@@ -123,47 +179,10 @@ const KosDetail = () => {
           </div>
         </div>
 
-        {/* Sidebar pricing (desktop) */}
-        <div className="hidden md:block">
-          <div className="sticky top-24 p-6 rounded-2xl ring-1 ring-foreground/5 shadow-card space-y-4">
-            <div>
-              <span className="text-2xl text-price text-foreground">{formatPrice(kos.price)}</span>
-              <span className="text-muted-foreground text-sm"> / bulan</span>
-            </div>
-            <a
-              href={waLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Chat via WhatsApp
-            </a>
-            <p className="text-xs text-muted-foreground text-center">
-              Langsung terhubung dengan pemilik kos
-            </p>
-          </div>
-        </div>
+
       </div>
 
-      {/* Mobile WhatsApp CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-foreground/5 md:hidden z-40">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-lg text-price text-foreground">{formatPrice(kos.price)}</span>
-            <span className="text-muted-foreground text-sm"> / bulan</span>
-          </div>
-          <a
-            href={waLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
-          >
-            <MessageCircle className="w-4 h-4" />
-            Chat via WhatsApp
-          </a>
-        </div>
-      </div>
+
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContextType';
 import { supabase } from '@/lib/supabase';
 import { createKosListing } from '@/services/forms';
 import { uploadMultipleFiles } from '@/services/storage';

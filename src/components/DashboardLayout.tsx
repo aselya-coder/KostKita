@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Home, LogOut, HelpCircle, MessageSquare, LayoutDashboard, Users, Building, ShoppingBag, Package, Heart, User as UserIcon } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContextType";
 
 interface DashboardLayoutProps {
   children: ReactNode;

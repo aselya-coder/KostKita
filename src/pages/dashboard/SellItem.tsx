@@ -4,7 +4,7 @@ import { Plus, ArrowRight, Camera, MapPin, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContextType";
 import { supabase } from "@/lib/supabase";
 import { uploadFile } from "@/services/storage";
 import { createMarketplaceItem } from "@/services/forms";

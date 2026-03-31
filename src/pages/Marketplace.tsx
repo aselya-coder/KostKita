@@ -15,23 +15,24 @@ const Marketplace = () => {
   useEffect(() => {
     const fetchItems = async () => {
       setIsLoading(true);
-      const data = await getMarketplaceItems();
+      const data = await getMarketplaceItems(category);
       setItems(data);
       setIsLoading(false);
     };
     fetchItems();
-  }, []);
+  }, [category]);
 
-  const filtered = useMemo(() => {
+  const filteredItems = useMemo(() => {
+    if (!query) {
+      return items;
+    }
     return items.filter((item) => {
-      const matchesQuery =
-        !query ||
+      return (
         item.title.toLowerCase().includes(query.toLowerCase()) ||
-        (item.location && item.location.toLowerCase().includes(query.toLowerCase()));
-      const matchesCat = category === "Semua" || item.category === category;
-      return matchesQuery && matchesCat;
+        (item.location && item.location.toLowerCase().includes(query.toLowerCase()))
+      );
     });
-  }, [query, category, items]);
+  }, [query, items]);
 
   return (
     <div className="container py-8">
@@ -73,7 +74,7 @@ const Marketplace = () => {
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">
-        {isLoading ? "Mencari barang..." : `${filtered.length} barang ditemukan`}
+        {isLoading ? "Mencari barang..." : `${filteredItems.length} barang ditemukan`}
       </p>
 
       {isLoading ? (
@@ -86,9 +87,9 @@ const Marketplace = () => {
             </div>
           ))}
         </div>
-      ) : filtered.length > 0 ? (
+      ) : filteredItems.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filtered.map((item) => (
+          {filteredItems.map((item) => (
             <MarketplaceCard key={item.id} item={item} />
           ))}
         </div>

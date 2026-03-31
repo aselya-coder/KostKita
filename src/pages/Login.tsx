@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContextType";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShieldCheck, Building2, GraduationCap, Home, ArrowRight, Mail, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";

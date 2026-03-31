@@ -15,7 +15,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContextType";
 
 interface SidebarItem {
   title: string;
