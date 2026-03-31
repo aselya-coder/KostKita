@@ -1,7 +1,7 @@
 import { ShoppingBag, Heart, MessageCircle, Clock } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { getStudentDashboardStats } from "@/services/dashboard";
 import { getMarketplaceItems } from "@/services/marketplace";

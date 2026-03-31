@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Building2, GraduationCap, Home, ArrowRight, User, Mail, Lock, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 
 const Register = () => {
   const [step, setStep] = useState(1);

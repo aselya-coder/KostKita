@@ -6,7 +6,8 @@ export interface User {
   role: "admin" | "owner" | "student";
   avatar?: string;
   phone?: string;
-  location?: string;
+  location: string;
+  about: string;
   createdAt: string;
 }
 
@@ -38,6 +39,7 @@ export interface KosListing {
   amenities: string[];
   rating: number;
   isPremium: boolean;
+  ownerName?: string;
   ownerPhone: string;
   description: string;
   rules: string[];
@@ -98,6 +100,8 @@ export const mockUsers: User[] = [
     password: "admin123",
     role: "admin",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=admin",
+    location: "",
+    about: "",
     createdAt: "2023-01-01",
   },
   {
@@ -108,6 +112,7 @@ export const mockUsers: User[] = [
     role: "owner",
     phone: "6281234567890",
     location: "Depok",
+    about: "Pemilik kos ramah dan suka berkebun.",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=owner1",
     createdAt: "2023-05-10",
   },
@@ -119,6 +124,7 @@ export const mockUsers: User[] = [
     role: "student",
     phone: "6289876543210",
     location: "Yogyakarta",
+    about: "Mahasiswa semester 5 yang sedang mencari inspirasi.",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=student1",
     createdAt: "2023-08-15",
   },

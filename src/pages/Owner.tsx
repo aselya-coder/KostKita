@@ -2,7 +2,7 @@ import { Building2, PlusCircle, LayoutDashboard } from "lucide-react";
 import { motion } from "framer-motion";
 import { BackButton } from "@/components/BackButton";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 
 const Owner = () => {
   const { user } = useAuth();

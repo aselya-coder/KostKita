@@ -1,17 +1,44 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { User, Mail, Phone, MapPin, Calendar, Shield, Camera, Loader2 } from "lucide-react";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BackButton } from "@/components/BackButton";
 import { uploadFile } from "@/services/storage";
+import { updateUserProfile } from "@/services/marketplace";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, fetchUserProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const [name, setName] = useState(user?.name || "");
+  const [phone, setPhone] = useState(user?.phone || "");
+  const [location, setLocation] = useState(user?.location || "");
+  const [about, setAbout] = useState(user?.about || "");
+
+  // Sync local state with user object from context
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setPhone(user.phone || "");
+      setLocation(user.location || "");
+      setAbout(user.about || "");
+    }
+  }, [user]);
+
+  // Sync local state with user object from context
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setPhone(user.phone || "");
+      setLocation(user.location || "");
+      setAbout(user.about || "");
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -45,10 +72,26 @@ export default function Profile() {
           // The AuthContext should ideally handle the user state update, 
           // but for now, we might need to refresh or the user will see it on next load
           // In a real app, you'd update the context user object.
-          window.location.reload(); 
+          await fetchUserProfile(); // Re-fetch user profile to update context
+          toast.success("Avatar updated successfully!");
         }
       }
       setIsUploading(false);
+    }
+  };
+
+  const handleProfileUpdate = async () => {
+    if (!user) return;
+
+    setIsUpdating(true);
+    try {
+      await updateUserProfile(user.id, { name, phone, location, about });
+      await fetchUserProfile(); // Re-fetch user profile to update context
+      toast.success("Profile updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update profile. Please try again.");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -113,7 +156,8 @@ export default function Profile() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input 
-                    defaultValue={user.name}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
@@ -136,7 +180,8 @@ export default function Profile() {
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input 
-                    defaultValue={user.phone}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
@@ -160,7 +205,8 @@ export default function Profile() {
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input 
-                    defaultValue={user.location || "Depok, Indonesia"}
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
@@ -171,14 +217,20 @@ export default function Profile() {
               <label className="text-sm font-semibold ml-1">About Me</label>
               <textarea 
                 rows={4}
+                value={about}
+                onChange={(e) => setAbout(e.target.value)}
                 placeholder="Tell us a bit about yourself..."
                 className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
               />
             </div>
 
             <div className="pt-4 flex justify-end">
-              <Button className="bg-primary hover:bg-primary/90 px-8 py-6 rounded-xl font-bold shadow-lg shadow-primary/20">
-                Save Changes
+              <Button 
+                onClick={handleProfileUpdate}
+                disabled={isUpdating || isUploading}
+                className="bg-primary hover:bg-primary/90 px-8 py-6 rounded-xl font-bold shadow-lg shadow-primary/20"
+              >
+                {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Changes"}
               </Button>
             </div>
           </div>

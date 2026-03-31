@@ -4,10 +4,11 @@ import { Plus, ArrowRight, Camera, MapPin, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { uploadFile } from "@/services/storage";
 import { createMarketplaceItem } from "@/services/forms";
+import { notifyAdmins } from '@/services/kos'; // Import the new function
 import { toast as sonnerToast } from "sonner";
 
 export default function SellItem() {
@@ -108,17 +109,19 @@ export default function SellItem() {
         seller_id: user.id,
         price: priceClean,
         image: url || '',
+        status: 'active', // Automatically approve the item
       });
 
       if (result.success) {
-        sonnerToast.success('Barang berhasil didaftarkan!');
+        sonnerToast.success('Barang berhasil dipublikasikan!');
         const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
         setTimeout(() => navigate(`${basePath}/my-items`), 1500);
       } else {
         throw new Error(result.error || 'Gagal menyimpan data barang.');
       }
-    } catch (error: any) {
-      sonnerToast.error(error.message || 'Terjadi kesalahan sistem.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Terjadi kesalahan sistem.';
+      sonnerToast.error(message);
     } finally {
       setIsLoading(false);
     }

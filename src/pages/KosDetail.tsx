@@ -49,7 +49,9 @@ const KosDetail = () => {
 
   const liked = isFavorite(kos.id);
 
-  const waLink = `https://wa.me/${kos.ownerPhone}?text=${encodeURIComponent(
+  // Sanitize phone number to remove any non-digit characters
+  const sanitizedPhone = kos.ownerPhone ? kos.ownerPhone.replace(/\D/g, '') : '';
+  const waLink = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(
     `Hi, saya tertarik dengan ${kos.title} di KosKita. Apakah masih tersedia?`
   )}`;
 
@@ -129,21 +131,30 @@ const KosDetail = () => {
 
           {/* Pricing and CTA */}
           <div className="p-6 rounded-2xl ring-1 ring-foreground/5 shadow-card space-y-4">
-            <div>
-              <span className="text-2xl text-price text-foreground">{formatPrice(kos.price)}</span>
-              <span className="text-muted-foreground text-sm"> / bulan</span>
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-2xl text-price text-foreground">{formatPrice(kos.price)}</span>
+                <span className="text-muted-foreground text-sm"> / bulan</span>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold">{kos.ownerName}</p>
+                <p className="text-xs text-muted-foreground">Pemilik Kos</p>
+              </div>
             </div>
             <a
               href={waLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
+              className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition-colors ${
+                !kos.ownerPhone ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'hover:bg-primary/90'
+              }`}
+              onClick={(e) => !kos.ownerPhone && e.preventDefault()}
             >
               <MessageCircle className="w-4 h-4" />
               Chat via WhatsApp
             </a>
             <p className="text-xs text-muted-foreground text-center">
-              Langsung terhubung dengan pemilik kos
+              {kos.ownerPhone ? "Langsung terhubung dengan pemilik kos" : "Nomor pemilik tidak tersedia"}
             </p>
           </div>
 

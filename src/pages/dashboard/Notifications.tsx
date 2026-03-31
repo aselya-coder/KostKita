@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import { MessageCircle, ShoppingBag, Info, Heart, Bell, CheckCircle2 } from "lucide-react";

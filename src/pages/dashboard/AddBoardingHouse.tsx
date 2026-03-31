@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 import { uploadMultipleFiles } from "@/services/storage";
 import { createKosListing } from "@/services/forms";
 import { supabase } from "@/lib/supabase";

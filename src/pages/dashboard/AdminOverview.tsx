@@ -2,7 +2,7 @@ import { Users, Building2, ShoppingBag, ShieldAlert, TrendingUp, CheckCircle2, X
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { getAdminDashboardStats } from "@/services/dashboard";
 import { Link } from "react-router-dom";

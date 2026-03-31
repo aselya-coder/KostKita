@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContextType';
-import { supabase } from '@/lib/supabase';
-import { createKosListing } from '@/services/forms';
+import { useAuth } from '@/hooks/useAuth';
+import { addKosListing } from '@/services/kos';
 import { uploadMultipleFiles } from '@/services/storage';
 import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ export default function AddKosPage() {
     price: '',
     type: 'campur' as 'putra' | 'putri' | 'campur',
     description: '',
-    available_rooms: '1',
+    availableRooms: '1',
   });
 
   // Cleanup object URLs to avoid memory leaks
@@ -35,7 +34,7 @@ export default function AddKosPage() {
     return () => {
       previewUrls.forEach(url => URL.revokeObjectURL(url));
     };
-  }, []);
+  }, [previewUrls]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -79,79 +78,50 @@ export default function AddKosPage() {
     }
 
     setIsLoading(true);
-    setUploadProgress(10);
-    setLoadingStatus('Mengecek profil user...');
-    
-    try {
-      console.log('Starting submission for user:', user.id);
-      
-      // 0. Verify profile exists (needed for RLS)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileError || !profile) {
-        console.error('Profile check failed:', profileError);
-        throw new Error('Profil tidak ditemukan. Harap lengkapi profil Anda terlebih dahulu.');
-      }
+    setLoadingStatus('Mengupload gambar...');
 
-      // 1. Upload Images to Supabase Storage
-      setLoadingStatus('Mengupload gambar (Step 1/2)...');
+    try {
+      // 1. Upload Images
       const { urls, errors } = await uploadMultipleFiles('kos-images', user.id, images);
       
+      if (errors.length > 0 && urls.length === 0) {
+        throw new Error(`Gagal mengupload semua gambar. Error: ${errors[0]}`);
+      }
       if (errors.length > 0) {
-        console.error('Storage errors during multi-upload:', errors);
-        if (urls.length === 0) {
-          throw new Error(`Gagal mengupload gambar: ${errors[0]}`);
-        }
         toast.warning(`${errors.length} gambar gagal diunggah, melanjutkan dengan yang berhasil.`);
       }
-      
-      console.log('Images uploaded successfully:', urls);
-      setUploadProgress(60);
-      setLoadingStatus('Menyimpan data kos ke database (Step 2/2)...');
 
-      // 2. Save Listing with Image URLs
+      setLoadingStatus('Menyimpan data kos...');
+
+      // 2. Prepare and Save Listing Data
       const priceClean = parseInt(formData.price.replace(/\D/g, ''));
-      if (isNaN(priceClean)) {
-        throw new Error('Harga tidak valid. Harap masukkan angka.');
-      }
-
-      const roomsClean = parseInt(formData.available_rooms);
-      if (isNaN(roomsClean)) {
-        throw new Error('Jumlah kamar tidak valid.');
-      }
+      const roomsClean = parseInt(formData.availableRooms);
 
       const listingData = {
-        ...formData,
-        owner_id: user.id,
+        title: formData.title,
+        location: formData.location,
         price: priceClean,
+        type: formData.type,
+        description: formData.description,
+        availableRooms: roomsClean,
         images: urls,
-        available_rooms: roomsClean,
+        // Default empty arrays for fields not in the form yet
         amenities: [], 
         rules: [],
       };
 
-      console.log('Final listing data to be sent:', listingData);
-      const result = await createKosListing(listingData);
+      // This now calls the new function which also handles logging
+      await addKosListing(user.id, listingData);
 
-      if (result.success) {
-        setUploadProgress(100);
-        setLoadingStatus('Berhasil!');
-        toast.success('Kos berhasil didaftarkan! Menunggu persetujuan admin.');
-        setTimeout(() => navigate('/owner-dashboard/my-kos'), 1500);
-      } else {
-        console.error('Database insertion error:', result.error);
-        throw new Error(result.error || 'Gagal menyimpan data ke database.');
-      }
-    } catch (error: any) {
-      console.error('CRITICAL SUBMIT ERROR:', error);
-      toast.error(error.message || 'Terjadi kesalahan sistem. Silakan cek koneksi atau coba lagi.');
+      setLoadingStatus('Berhasil!');
+      toast.success('Kos berhasil dipublikasikan!');
+      navigate('/owner-dashboard/my-kos');
+
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Terjadi kesalahan sistem. Silakan coba lagi.';
+      toast.error(message);
     } finally {
       setIsLoading(false);
-      setUploadProgress(0);
       setLoadingStatus('');
     }
   };
@@ -277,7 +247,7 @@ export default function AddKosPage() {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase">Tipe Kos</label>
-            <Select onValueChange={(v) => setFormData(p => ({ ...p, type: v as any }))} defaultValue={formData.type}>
+            <Select onValueChange={(v) => setFormData(p => ({ ...p, type: v as 'putra' | 'putri' | 'campur' }))} defaultValue={formData.type}>
               <SelectTrigger className="rounded-xl">
                 <SelectValue placeholder="Pilih Tipe" />
               </SelectTrigger>
@@ -291,7 +261,7 @@ export default function AddKosPage() {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase">Kamar Tersedia</label>
-            <Input name="available_rooms" type="number" min="1" value={formData.available_rooms} onChange={handleChange} required className="rounded-xl" />
+            <Input name="availableRooms" type="number" min="1" value={formData.availableRooms} onChange={handleChange} required className="rounded-xl" />
           </div>
         </div>
 

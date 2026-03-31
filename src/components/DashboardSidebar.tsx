@@ -12,15 +12,16 @@ import {
   LogOut,
   ShieldAlert,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SidebarItem {
   title: string;
   href: string;
-  icon: any;
+  icon: LucideIcon;
 }
 
 interface DashboardSidebarProps {
@@ -46,6 +47,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           { title: "Boarding Houses", href: "/admin/kos", icon: Building2 },
           { title: "Marketplace", href: "/admin/marketplace", icon: ShoppingBag },
           { title: "Reports", href: "/admin/reports", icon: ShieldAlert },
+          { title: "Activity Log", href: "/admin/activity-log", icon: BarChart3 },
           { title: "Favorites", href: "/admin/favorites", icon: Heart },
         ];
       case "owner":

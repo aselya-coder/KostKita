@@ -15,7 +15,8 @@ import Notifications from "@/pages/dashboard/Notifications";
 
 // Owner Specific Components
 import MyBoardingHouses from "@/pages/dashboard/MyBoardingHouses";
-import AddBoardingHouse from "@/pages/dashboard/AddBoardingHouse";
+import AddBoardingHouse from "@/pages/dashboard/owner/AddKos";
+import EditKosPage from "@/pages/dashboard/owner/EditKos"; // Import the new component
 import Inquiries from "@/pages/dashboard/Inquiries";
 
 // Admin Specific Components
@@ -24,6 +25,7 @@ import KosManagement from "@/pages/dashboard/KosManagement";
 import MarketplaceModeration from "@/pages/dashboard/MarketplaceModeration";
 import Reports from "@/pages/dashboard/Reports";
 import SystemSettings from "@/pages/dashboard/SystemSettings";
+import ActivityLogPage from "@/pages/dashboard/admin/ActivityLog";
 
 export function DashboardRouter() {
   const { user, isLoading } = useAuth();
@@ -61,6 +63,7 @@ export function DashboardRouter() {
             <Route index element={<OwnerOverview />} />
             <Route path="my-kos" element={<MyBoardingHouses />} />
             <Route path="add-kos" element={<AddBoardingHouse />} />
+            <Route path="edit-kos/:id" element={<EditKosPage />} /> {/* Add the edit route */}
             <Route path="inquiries" element={<Inquiries />} />
             <Route path="my-items" element={<MyMarketplaceItems />} />
             <Route path="sell-item" element={<SellItem />} />
@@ -80,6 +83,7 @@ export function DashboardRouter() {
             <Route path="kos" element={<KosManagement />} />
             <Route path="marketplace" element={<MarketplaceModeration />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="activity-log" element={<ActivityLogPage />} />
             <Route path="system-settings" element={<SystemSettings />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />

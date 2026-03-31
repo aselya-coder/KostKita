@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Building2, Edit2, Trash2, Eye } from "lucide-react";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 import { type KosListing, formatPrice } from "@/data/mockData";
 import { getKosListings, deleteKosListing } from "@/services/kos";
 import { Button } from "@/components/ui/button";

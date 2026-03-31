@@ -56,14 +56,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
-    if (!supabaseUser) return;
+  const fetchUserProfile = async (supabaseUser?: SupabaseUser) => {
+    // If no user provided, get current user from Supabase
+    let targetUser = supabaseUser;
+    if (!targetUser) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      targetUser = currentUser || undefined;
+    }
+    
+    if (!targetUser) return;
     
     try {
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", supabaseUser.id)
+        .eq("id", targetUser.id)
         .single();
 
       if (!error && profile) {
@@ -76,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             phone: profile.phone || prev.phone,
             location: profile.location || prev.location,
             avatar: profile.avatar || prev.avatar,
+            about: profile.about || prev.about,
           };
         });
       }
@@ -95,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phone: supabaseUser.user_metadata?.phone || "",
       avatar: supabaseUser.user_metadata?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${supabaseUser.id}`,
       location: supabaseUser.user_metadata?.location || "",
+      about: supabaseUser.user_metadata?.about || "",
       createdAt: supabaseUser.created_at,
     };
   };
@@ -154,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, fetchUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContextType';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { createMarketplaceItem } from '@/services/forms';
+import { notifyAdmins } from '@/services/kos'; // Import the new function
 import { uploadFile } from '@/services/storage';
 import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
@@ -113,6 +114,7 @@ export default function AddItemPage() {
         seller_id: user.id,
         price: priceClean,
         image: url || '',
+        status: 'active', // Automatically approve the item
       };
 
       console.log('Final item data to be sent:', itemData);
@@ -121,15 +123,16 @@ export default function AddItemPage() {
       if (result.success) {
         setUploadProgress(100);
         setLoadingStatus('Berhasil!');
-        toast.success('Barang berhasil didaftarkan!');
+        toast.success('Barang berhasil dipublikasikan!');
         setTimeout(() => navigate('/dashboard/my-items'), 1500);
       } else {
         console.error('Database insertion error (Item):', result.error);
         throw new Error(result.error || 'Gagal menyimpan data barang.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Terjadi kesalahan sistem.';
       console.error('CRITICAL SUBMIT ERROR (Item):', error);
-      toast.error(error.message || 'Terjadi kesalahan sistem.');
+      toast.error(message);
     } finally {
       setIsLoading(false);
       setUploadProgress(0);

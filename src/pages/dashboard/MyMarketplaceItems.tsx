@@ -3,7 +3,7 @@ import { Plus, Tag, MapPin, Edit2, Trash2, Eye, ShoppingBag } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/data/mockData";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/BackButton";
 import { supabase } from "@/lib/supabase";

@@ -1,7 +1,7 @@
 import { Bell, Lock, Shield, Eye, Smartphone, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useAuth } from "@/context/AuthContextType";
+import { useAuth } from "@/hooks/useAuth";
 import { BackButton } from "@/components/BackButton";
 
 export default function Settings() {
