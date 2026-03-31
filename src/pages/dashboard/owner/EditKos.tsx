@@ -26,6 +26,12 @@ export default function EditKosPage() {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
 
+  // State for amenities and rules
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [rules, setRules] = useState<string[]>([]);
+  const [amenityInput, setAmenityInput] = useState('');
+  const [ruleInput, setRuleInput] = useState('');
+
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -33,6 +39,7 @@ export default function EditKosPage() {
     type: 'campur' as 'putra' | 'putri' | 'campur',
     description: '',
     availableRooms: '1',
+    rating: '5.0',
   });
 
   useEffect(() => {
@@ -55,8 +62,11 @@ export default function EditKosPage() {
             type: data.type,
             description: data.description,
             availableRooms: String(data.availableRooms),
+            rating: String(data.rating),
           });
           setExistingImageUrls(data.images);
+          setAmenities(data.amenities || []);
+          setRules(data.rules || []);
         } else {
           toast.error("Data kos tidak ditemukan.");
           navigate('/owner-dashboard/my-kos');
@@ -102,6 +112,28 @@ export default function EditKosPage() {
     setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleAddAmenity = () => {
+    if (amenityInput.trim() && !amenities.includes(amenityInput.trim())) {
+      setAmenities(prev => [...prev, amenityInput.trim()]);
+      setAmenityInput('');
+    }
+  };
+
+  const handleRemoveAmenity = (index: number) => {
+    setAmenities(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddRule = () => {
+    if (ruleInput.trim() && !rules.includes(ruleInput.trim())) {
+      setRules(prev => [...prev, ruleInput.trim()]);
+      setRuleInput('');
+    }
+  };
+
+  const handleRemoveRule = (index: number) => {
+    setRules(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -138,6 +170,9 @@ export default function EditKosPage() {
         description: formData.description,
         availableRooms: roomsClean,
         images: finalImageUrls,
+        amenities: amenities,
+        rules: rules,
+        rating: parseFloat(formData.rating),
       };
 
       await updateKosListing(kosId, user.id, updatedData);
@@ -176,16 +211,16 @@ export default function EditKosPage() {
           <label className="text-sm font-bold text-foreground uppercase tracking-wider">Foto Properti ({existingImageUrls.length + previewUrls.length}/8)</label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {existingImageUrls.map((url, index) => (
-              <div key={`existing-${index}`} className="relative aspect-[4/3] rounded-2xl overflow-hidden border group shadow-sm">
-                <img src={url} alt={`Existing ${index}`} className="w-full h-full object-cover" />
+              <div key={`existing-${index}`} className="relative aspect-[4/3] rounded-2xl overflow-hidden border group shadow-sm bg-muted/20">
+                <img src={url} alt={`Existing ${index}`} className="w-full h-full object-contain" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button type="button" onClick={() => removeExistingImage(index)} className="p-2 rounded-full bg-destructive text-white hover:bg-destructive/90 transform scale-75 group-hover:scale-100 transition-all"><X className="w-5 h-5" /></button>
                 </div>
               </div>
             ))}
             {previewUrls.map((url, index) => (
-              <div key={`new-${index}`} className="relative aspect-[4/3] rounded-2xl overflow-hidden border group shadow-sm">
-                <img src={url} alt={`New ${index}`} className="w-full h-full object-cover" />
+              <div key={`new-${index}`} className="relative aspect-[4/3] rounded-2xl overflow-hidden border group shadow-sm bg-muted/20">
+                <img src={url} alt={`New ${index}`} className="w-full h-full object-contain" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button type="button" onClick={() => removeNewImage(index)} className="p-2 rounded-full bg-destructive text-white hover:bg-destructive/90 transform scale-75 group-hover:scale-100 transition-all"><X className="w-5 h-5" /></button>
                 </div>
@@ -229,11 +264,75 @@ export default function EditKosPage() {
             <label className="text-xs font-bold text-muted-foreground uppercase">Kamar Tersedia</label>
             <Input name="availableRooms" type="number" min="0" value={formData.availableRooms} onChange={handleChange} required className="rounded-xl" />
           </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-muted-foreground uppercase">Rating Awal (1.0 - 5.0)</label>
+            <Input name="rating" type="number" min="1" max="5" step="0.1" value={formData.rating} onChange={handleChange} required className="rounded-xl" />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-xs font-bold text-muted-foreground uppercase">Fasilitas</label>
+          <div className="flex gap-2">
+            <Input
+              value={amenityInput}
+              onChange={(e) => setAmenityInput(e.target.value)}
+              placeholder="Contoh: WiFi, AC, Parkir Mobil"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddAmenity();
+                }
+              }}
+            />
+            <Button type="button" onClick={handleAddAmenity} variant="secondary">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {amenities.map((amenity, index) => (
+              <div key={index} className="flex items-center gap-1.5 bg-secondary text-secondary-foreground rounded-lg px-3 py-1.5 text-xs font-medium">
+                <span>{amenity}</span>
+                <button type="button" onClick={() => handleRemoveAmenity(index)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-xs font-bold text-muted-foreground uppercase">Peraturan Kos</label>
+          <div className="flex gap-2">
+            <Input
+              value={ruleInput}
+              onChange={(e) => setRuleInput(e.target.value)}
+              placeholder="Contoh: Dilarang merokok, Akses 24 jam"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddRule();
+                }
+              }}
+            />
+            <Button type="button" onClick={handleAddRule} variant="secondary">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {rules.map((rule, index) => (
+              <div key={index} className="flex items-center gap-1.5 bg-secondary text-secondary-foreground rounded-lg px-3 py-1.5 text-xs font-medium">
+                <span>{rule}</span>
+                <button type="button" onClick={() => handleRemoveRule(index)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold text-muted-foreground uppercase">Deskripsi</label>
-          <Textarea name="description" placeholder="Jelaskan fasilitas..." value={formData.description} onChange={handleChange} required className="min-h-[120px] rounded-2xl" />
+          <label className="text-xs font-bold text-muted-foreground uppercase">Deskripsi Tambahan</label>
+          <Textarea name="description" placeholder="Jelaskan detail lain tentang kos Anda..." value={formData.description} onChange={handleChange} required className="min-h-[120px] rounded-2xl" />
         </div>
 
         <div className="pt-4">

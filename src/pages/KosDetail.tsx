@@ -1,5 +1,16 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Heart, MapPin, Star, Wifi, Wind, MessageCircle, Users, DoorOpen, Shield } from "lucide-react";
+import {
+  ArrowLeft,
+  DoorOpen,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Shield,
+  Star,
+  Users,
+  Wifi,
+  Wind,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { getKosById } from "@/services/kos";
@@ -58,8 +69,8 @@ const KosDetail = () => {
   return (
     <div className="pb-24 md:pb-8">
       {/* Image gallery */}
-      <div className="container pt-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="w-full px-4 md:px-6">
+        <div className="flex items-center justify-between mb-1">
           <BackButton to="/search" className="mb-0" />
           <motion.button
             whileTap={{ scale: 0.8 }}
@@ -71,50 +82,50 @@ const KosDetail = () => {
           </motion.button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 rounded-2xl overflow-hidden h-auto md:h-[55vh]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {/* Main Image */}
-          <div className="md:col-span-2 h-full">
-            <img src={kos.images[0]} alt={kos.title} className="w-full h-full object-contain" />
+          <div className="aspect-[16/9] overflow-hidden rounded-2xl bg-muted/30">
+            <img src={kos.images[0]} alt={kos.title} className="w-full h-full object-cover" />
           </div>
           {/* Small Images */}
-          <div className="hidden md:grid grid-rows-2 gap-2 h-full">
+          <div className="hidden md:grid grid-rows-2 gap-2">
             {kos.images[1] && (
-              <div className="h-full">
-                <img src={kos.images[1]} alt={`${kos.title} 2`} className="w-full h-full object-contain" />
+              <div className="aspect-[16/9] overflow-hidden rounded-2xl bg-muted/30">
+                <img src={kos.images[1]} alt={`${kos.title} 2`} className="w-full h-full object-cover" />
               </div>
             )}
             {kos.images[2] && (
-              <div className="h-full">
-                <img src={kos.images[2]} alt={`${kos.title} 3`} className="w-full h-full object-contain" />
+              <div className="aspect-[16/9] overflow-hidden rounded-2xl bg-muted/30">
+                <img src={kos.images[2]} alt={`${kos.title} 3`} className="w-full h-full object-cover" />
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="container mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="w-full px-4 md:px-6 -mt-28">
         {/* Main info */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="space-y-0.5">
           <div>
             {kos.isPremium && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold mb-3">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold mb-0.5">
                 <Star className="w-3 h-3" /> Premium
               </span>
             )}
-            <h1 className="font-display font-bold text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.1] tracking-[-0.02em] text-foreground">
+            <h1 className="font-display font-bold text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.1] tracking-[-0.02em] text-foreground mt-1">
               {kos.title}
             </h1>
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(kos.location)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-muted-foreground mt-2 hover:text-primary transition-colors w-fit"
+              className="flex items-center gap-1 text-muted-foreground mt-0.5 hover:text-primary transition-colors w-fit"
             >
               <MapPin className="w-4 h-4" /> {kos.location}
             </a>
           </div>
 
-          <div className="flex items-center gap-6 py-4 border-y border-border">
+          <div className="flex items-center gap-6 py-1 border-y border-border">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 fill-accent text-accent" />
               <span className="font-semibold text-foreground">{kos.rating}</span>
@@ -130,7 +141,7 @@ const KosDetail = () => {
           </div>
 
           {/* Pricing and CTA */}
-          <div className="p-6 rounded-2xl ring-1 ring-foreground/5 shadow-card space-y-4">
+          <div className="p-3 rounded-2xl ring-1 ring-foreground/5 shadow-card space-y-2">
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-2xl text-price text-foreground">{formatPrice(kos.price)}</span>
@@ -159,12 +170,12 @@ const KosDetail = () => {
           </div>
 
           <div>
-            <h2 className="font-display font-semibold text-lg text-foreground mb-3">Deskripsi</h2>
+            <h2 className="font-display font-semibold text-lg text-foreground mb-1">Deskripsi</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">{kos.description}</p>
           </div>
 
           <div>
-            <h2 className="font-display font-semibold text-lg text-foreground mb-3">Fasilitas</h2>
+            <h2 className="font-display font-semibold text-lg text-foreground mb-1">Fasilitas</h2>
             <div className="grid grid-cols-2 gap-3">
               {kos.amenities.map((a) => (
                 <div key={a} className="flex items-center gap-2 text-sm text-foreground">
@@ -178,7 +189,7 @@ const KosDetail = () => {
           </div>
 
           <div>
-            <h2 className="font-display font-semibold text-lg text-foreground mb-3">Peraturan</h2>
+            <h2 className="font-display font-semibold text-lg text-foreground mb-1">Peraturan</h2>
             <ul className="space-y-2">
               {kos.rules.map((r) => (
                 <li key={r} className="text-sm text-muted-foreground flex items-start gap-2">
@@ -189,11 +200,7 @@ const KosDetail = () => {
             </ul>
           </div>
         </div>
-
-
       </div>
-
-
     </div>
   );
 };

@@ -146,6 +146,7 @@ export const addKosListing = async (userId: string, kosData: Partial<KosListing>
     rules: kosData.rules,
     type: kosData.type,
     available_rooms: kosData.availableRooms,
+    rating: kosData.rating, // This will be a float from the form
     status: 'approved', // New listings are now approved by default
   };
 
@@ -189,8 +190,11 @@ export const updateKosListing = async (id: string, userId: string, updates: Part
     price: updates.price,
     type: updates.type,
     description: updates.description,
-    available_rooms: updates.availableRooms, // Corrected field name
+    available_rooms: updates.availableRooms,
     images: updates.images,
+    amenities: updates.amenities,
+    rules: updates.rules,
+    rating: updates.rating,
   };
 
   const { data, error } = await supabase

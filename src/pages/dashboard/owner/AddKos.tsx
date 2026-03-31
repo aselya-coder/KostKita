@@ -20,6 +20,10 @@ export default function AddKosPage() {
   const [loadingStatus, setLoadingStatus] = useState<string>('');
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [rules, setRules] = useState<string[]>([]);
+  const [amenityInput, setAmenityInput] = useState('');
+  const [ruleInput, setRuleInput] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -27,6 +31,7 @@ export default function AddKosPage() {
     type: 'campur' as 'putra' | 'putri' | 'campur',
     description: '',
     availableRooms: '1',
+    rating: '5.0', // Add rating to state
   });
 
   // Cleanup object URLs to avoid memory leaks
@@ -35,6 +40,28 @@ export default function AddKosPage() {
       previewUrls.forEach(url => URL.revokeObjectURL(url));
     };
   }, [previewUrls]);
+
+  const handleAddAmenity = () => {
+    if (amenityInput.trim() && !amenities.includes(amenityInput.trim())) {
+      setAmenities(prev => [...prev, amenityInput.trim()]);
+      setAmenityInput('');
+    }
+  };
+
+  const handleRemoveAmenity = (index: number) => {
+    setAmenities(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddRule = () => {
+    if (ruleInput.trim() && !rules.includes(ruleInput.trim())) {
+      setRules(prev => [...prev, ruleInput.trim()]);
+      setRuleInput('');
+    }
+  };
+
+  const handleRemoveRule = (index: number) => {
+    setRules(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -105,9 +132,9 @@ export default function AddKosPage() {
         description: formData.description,
         availableRooms: roomsClean,
         images: urls,
-        // Default empty arrays for fields not in the form yet
-        amenities: [], 
-        rules: [],
+        amenities: amenities,
+        rules: rules,
+        rating: parseFloat(formData.rating), // Add rating to submission data
       };
 
       // This now calls the new function which also handles logging
@@ -145,8 +172,8 @@ export default function AddKosPage() {
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {previewUrls.map((url, index) => (
-              <div key={index} className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border group shadow-sm">
-                <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <div key={index} className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border group shadow-sm bg-muted/20">
+                <img src={url} alt={`Preview ${index}`} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button 
                     type="button"
@@ -263,13 +290,80 @@ export default function AddKosPage() {
             <label className="text-xs font-bold text-muted-foreground uppercase">Kamar Tersedia</label>
             <Input name="availableRooms" type="number" min="1" value={formData.availableRooms} onChange={handleChange} required className="rounded-xl" />
           </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-muted-foreground uppercase">Rating Awal (1.0 - 5.0)</label>
+            <Input name="rating" type="number" min="1" max="5" step="0.1" value={formData.rating} onChange={handleChange} required className="rounded-xl" />
+          </div>
+        </div>
+
+        {/* Amenities Input */}
+        <div className="space-y-3">
+          <label className="text-xs font-bold text-muted-foreground uppercase">Fasilitas</label>
+          <div className="flex gap-2">
+            <Input
+              value={amenityInput}
+              onChange={(e) => setAmenityInput(e.target.value)}
+              placeholder="Contoh: WiFi, AC, Parkir Mobil"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddAmenity();
+                }
+              }}
+            />
+            <Button type="button" onClick={handleAddAmenity} variant="secondary">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {amenities.map((amenity, index) => (
+              <div key={index} className="flex items-center gap-1.5 bg-secondary text-secondary-foreground rounded-lg px-3 py-1.5 text-xs font-medium">
+                <span>{amenity}</span>
+                <button type="button" onClick={() => handleRemoveAmenity(index)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Rules Input */}
+        <div className="space-y-3">
+          <label className="text-xs font-bold text-muted-foreground uppercase">Peraturan Kos</label>
+          <div className="flex gap-2">
+            <Input
+              value={ruleInput}
+              onChange={(e) => setRuleInput(e.target.value)}
+              placeholder="Contoh: Dilarang merokok di kamar"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddRule();
+                }
+              }}
+            />
+            <Button type="button" onClick={handleAddRule} variant="secondary">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {rules.map((rule, index) => (
+              <div key={index} className="flex items-center gap-1.5 bg-secondary text-secondary-foreground rounded-lg px-3 py-1.5 text-xs font-medium">
+                <span>{rule}</span>
+                <button type="button" onClick={() => handleRemoveRule(index)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold text-muted-foreground uppercase">Deskripsi & Fasilitas</label>
+          <label className="text-xs font-bold text-muted-foreground uppercase">Deskripsi Tambahan</label>
           <Textarea 
             name="description" 
-            placeholder="Jelaskan fasilitas kamar, lingkungan, dan aturan kos..." 
+            placeholder="Jelaskan tentang properti kos Anda, seperti suasana, lingkungan sekitar, dan keunggulan lainnya."
             value={formData.description} 
             onChange={handleChange} 
             required 
