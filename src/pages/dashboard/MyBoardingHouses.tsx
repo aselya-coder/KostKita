@@ -44,7 +44,7 @@ export default function MyBoardingHouses() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Hapus properti ini secara permanen?")) {
-      const { success } = await deleteKosListing(id);
+      const { success } = await deleteKosListing(id, user.id);
       if (success) {
         setMyKos(prev => prev.filter(k => k.id !== id));
         toast.success("Property deleted");

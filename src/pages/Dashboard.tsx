@@ -19,7 +19,7 @@ const Dashboard = () => {
           <Link
             key={item.title}
             to={item.to}
-            className="flex items-start gap-4 p-6 rounded-2xl bg-surface ring-1 ring-foreground/5 hover:shadow-card-hover transition-shadow"
+            className="flex items-start gap-2 p-6 rounded-2xl bg-surface ring-1 ring-foreground/5 hover:shadow-card-hover transition-shadow"
           >
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <item.icon className={`w-5 h-5 ${item.color}`} />

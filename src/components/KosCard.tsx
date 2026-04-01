@@ -1,18 +1,14 @@
 import { Link } from "react-router-dom";
-import { Heart, MapPin, Wifi, Wind, Star } from "lucide-react";
+import { Heart, MapPin, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { type KosListing, formatPrice } from "@/data/mockData";
 import { useFavorites } from "@/hooks/useFavorites";
+import { getAmenityIcon } from "@/utils/amenityIcons";
 
 interface KosCardProps {
   kos: KosListing;
 }
-
-const amenityIcons: Record<string, typeof Wifi> = {
-  WiFi: Wifi,
-  AC: Wind,
-};
 
 export function KosCard({ kos }: KosCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites('kos');
@@ -96,10 +92,10 @@ export function KosCard({ kos }: KosCardProps) {
         </a>
         <div className="flex items-center gap-3 mt-3">
           {kos.amenities.slice(0, 4).map((amenity) => {
-            const Icon = amenityIcons[amenity];
+            const Icon = getAmenityIcon(amenity);
             return (
               <span key={amenity} className="flex items-center gap-1 text-xs text-muted-foreground">
-                {Icon ? <Icon className="w-3.5 h-3.5" /> : null}
+                <Icon className="w-3.5 h-3.5" />
                 {amenity}
               </span>
             );

@@ -28,7 +28,13 @@ type ItemWithSellerRecord = MarketplaceDbRecord & {
 export const getMarketplaceItems = async (category?: string): Promise<MarketplaceItem[]> => {
   let query = supabase
     .from('marketplace_items')
-    .select('*')
+    .select(`
+      *,
+      profiles (
+        name,
+        phone
+      )
+    `)
     .eq('status', 'active');
 
   if (category && category !== 'Semua') {
@@ -42,7 +48,7 @@ export const getMarketplaceItems = async (category?: string): Promise<Marketplac
     return [];
   }
 
-  return (data || []).map((item: MarketplaceDbRecord) => ({
+  return (data || []).map((item: any) => ({
     id: item.id,
     sellerId: item.seller_id,
     title: item.title,
@@ -50,8 +56,8 @@ export const getMarketplaceItems = async (category?: string): Promise<Marketplac
     image: item.image,
     category: item.category,
     condition: item.condition,
-    sellerPhone: '', // Add if needed
-    sellerName: '', // Add if needed
+    sellerPhone: item.profiles?.phone || '',
+    sellerName: item.profiles?.name || 'Penjual',
     location: item.location,
     description: item.description,
     createdAt: item.created_at,
@@ -60,19 +66,25 @@ export const getMarketplaceItems = async (category?: string): Promise<Marketplac
 };
 
 export const getItemById = async (id: string): Promise<MarketplaceItem | null> => {
+  console.log(`Fetching item with ID: ${id}`);
   const { data, error } = await supabase
     .from('marketplace_items')
     .select(
       `
       *,
-      profiles!inner ( name, phone )
+      profiles ( name, phone )
     `
     )
     .eq('id', id)
     .single<ItemWithSellerRecord>();
 
-  if (error || !data) {
-    console.error(`Error fetching item with id ${id}:`, error);
+  if (error) {
+    console.error(`Supabase error fetching item with id ${id}:`, error);
+    return null;
+  }
+
+  if (!data) {
+    console.warn(`No data found for item with id ${id}`);
     return null;
   }
 
@@ -86,8 +98,8 @@ export const getItemById = async (id: string): Promise<MarketplaceItem | null> =
     image: item.image,
     category: item.category,
     condition: item.condition,
-    sellerPhone: item.profiles?.phone || '',
-    sellerName: item.profiles?.name || 'Unknown Seller',
+    sellerPhone: item.profiles?.phone || '', 
+    sellerName: item.profiles?.name || 'Penjual',
     location: item.location,
     description: item.description,
     createdAt: item.created_at,

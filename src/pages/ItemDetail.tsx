@@ -49,8 +49,13 @@ const ItemDetail = () => {
 
   const liked = isFavorite(item.id);
 
-  // Sanitize phone number to remove any non-digit characters
-  const sanitizedPhone = item.sellerPhone ? item.sellerPhone.replace(/\D/g, '') : '';
+  // Sanitize phone number: remove non-digits and ensure international format
+  const rawPhone = item.sellerPhone || '';
+  let sanitizedPhone = rawPhone.replace(/\D/g, '');
+  if (sanitizedPhone.startsWith('0')) {
+    sanitizedPhone = '62' + sanitizedPhone.slice(1);
+  }
+  
   const waLink = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(
     `Hi ${item.sellerName}, saya tertarik dengan ${item.title} di KosKita. Apakah masih tersedia?`
   )}`;
@@ -110,14 +115,12 @@ const ItemDetail = () => {
             href={waLink}
             target="_blank"
             rel="noopener noreferrer"
-            className={`hidden md:flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-colors ${
-              !item.sellerPhone ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-primary text-primary-foreground hover:bg-primary/90'
+            className={`hidden md:flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-colors bg-primary text-primary-foreground hover:bg-primary/90 shadow-md active:scale-95 ${
+              !item.sellerPhone ? 'opacity-80' : ''
             }`}
-            onClick={(e) => !item.sellerPhone && e.preventDefault()}
-            aria-disabled={!item.sellerPhone}
           >
             <MessageCircle className="w-4 h-4" />
-            {item.sellerPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
+            Tanya Penjual via WhatsApp
           </a>
         </div>
       </div>

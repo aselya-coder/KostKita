@@ -57,7 +57,13 @@ export const notifyAdmins = async (title: string, message: string, link: string)
 export const getKosListings = async (ownerId?: string): Promise<KosListing[]> => {
   let query = supabase
     .from('kos_listings')
-    .select('*');
+    .select(`
+      *,
+      profiles (
+        name,
+        phone
+      )
+    `);
 
   // If no ownerId provided, only show approved listings (public view)
   // If ownerId provided, show all listings for that owner (including pending)
@@ -86,7 +92,8 @@ export const getKosListings = async (ownerId?: string): Promise<KosListing[]> =>
     amenities: k.amenities || [],
     rating: k.rating || 0,
     isPremium: k.is_premium || false,
-    ownerPhone: '', // Add if needed
+    ownerName: k.profiles?.name || 'Pemilik Kos',
+    ownerPhone: k.profiles?.phone || '',
     description: k.description || '',
     rules: k.rules || [],
     type: k.type,
@@ -125,7 +132,7 @@ export const getKosById = async (id: string): Promise<KosListing | null> => {
     rating: k.rating || 0,
     isPremium: k.is_premium || false,
     ownerName: k.profiles?.name || 'Pemilik Kos',
-    ownerPhone: k.profiles?.phone || '',
+    ownerPhone: k.profiles?.phone || '', 
     description: k.description || '',
     rules: k.rules || [],
     type: k.type,
