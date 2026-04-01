@@ -44,7 +44,7 @@ export const notifyAdmins = async (title: string, message: string, link: string)
       title,
       message,
       link,
-      type: 'system' as any,
+      type: 'system',
     }));
 
     // 3. Insert notifications

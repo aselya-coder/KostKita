@@ -14,6 +14,17 @@ export const createKosListing = async (listing: any) => {
     console.error('Supabase Error (Kos):', error);
     return { success: false, error: error.message };
   }
+
+  // Log activity
+  if (data?.[0]) {
+    await logUserActivity(
+      data[0].owner_id,
+      'Memasang kos baru',
+      data[0].title,
+      `/kos/${data[0].id}`
+    );
+  }
+
   return { success: true, data: data[0] };
 };
 

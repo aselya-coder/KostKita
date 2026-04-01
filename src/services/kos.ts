@@ -143,16 +143,16 @@ export const addKosListing = async (userId: string, kosData: Partial<KosListing>
   if (data) {
     await logUserActivity(
       userId,
-      'Membuat kos baru',
+      'Memasang kos baru',
       data.title,
-      `/owner-dashboard/edit-kos/${data.id}`
+      `/kos/${data.id}`
     );
 
     // Notify admins
     await notifyAdmins(
-      'Kos Baru Ditambahkan',
-      `Sebuah kos baru '${data.title}' telah ditambahkan dan menunggu verifikasi Anda.`,
-      `/admin/kos-management` // Link to the verification page
+      'Listing Kos Baru',
+      `Kos baru '${data.title}' telah ditambahkan dan menunggu verifikasi.`,
+      `/admin/kos`
     );
   }
 
@@ -193,7 +193,7 @@ export const updateKosListing = async (id: string, userId: string, updates: Part
       userId,
       'Memperbarui data kos',
       data.title,
-      `/owner-dashboard/edit-kos/${data.id}`
+      `/kos/${data.id}`
     );
   }
 
