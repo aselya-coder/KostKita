@@ -1,4 +1,4 @@
-import { Building2, Users, MessageCircle, BarChart3, Trash2, Edit2, Eye } from "lucide-react";
+import { Building2, Users, MessageCircle, BarChart3, Trash2, Edit2, Eye, Plus, ShoppingBag } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,7 +42,7 @@ export default function OwnerOverview() {
 
   const handleDeleteKos = async (id: string) => {
     if (confirm("Hapus properti ini secara permanen?")) {
-      const { success } = await deleteKosListing(id);
+      const { success } = await deleteKosListing(id, user?.id || '');
       if (success) {
         setMyKos(prev => prev.filter(k => k.id !== id));
         toast.success("Property deleted");
@@ -75,9 +75,25 @@ export default function OwnerOverview() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Welcome back, {user?.name}!</h1>
-        <p className="text-muted-foreground">Manage your properties and marketplace activity.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Welcome back, {user?.name}!</h1>
+          <p className="text-muted-foreground">Manage your properties and marketplace activity.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button asChild variant="outline" className="shadow-sm">
+            <Link to="/owner-dashboard/sell-item">
+              <ShoppingBag className="w-4 h-4 mr-2" />
+              Jual Barang
+            </Link>
+          </Button>
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20">
+            <Link to="/owner-dashboard/add-kos">
+              <Plus className="w-4 h-4 mr-2" />
+              Tambah Kos
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

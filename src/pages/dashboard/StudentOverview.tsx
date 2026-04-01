@@ -1,4 +1,4 @@
-import { ShoppingBag, Heart, MessageCircle, Clock } from "lucide-react";
+import { ShoppingBag, Heart, MessageCircle, Clock, Plus } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { getStudentDashboardStats } from "@/services/dashboard";
 import { getMarketplaceItems } from "@/services/marketplace";
 import { type MarketplaceItem, formatPrice } from "@/data/mockData";
+import { Button } from "@/components/ui/button";
 
 export default function StudentOverview() {
   const { user } = useAuth();
@@ -31,9 +32,17 @@ export default function StudentOverview() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Welcome back, {user?.name}!</h1>
-        <p className="text-muted-foreground">Here's what's happening with your account today.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Welcome back, {user?.name}!</h1>
+          <p className="text-muted-foreground">Here's what's happening with your account today.</p>
+        </div>
+        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20">
+          <Link to="/dashboard/sell-item">
+            <Plus className="w-4 h-4 mr-2" />
+            Jual Barang Baru
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

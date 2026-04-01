@@ -146,8 +146,10 @@ export default function MyMarketplaceItems() {
                             <Eye className="w-4 h-4" />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                          <Edit2 className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
+                          <Link to={`${basePath}/edit-item/${item.id}`}>
+                            <Edit2 className="w-4 h-4" />
+                          </Link>
                         </Button>
                         <Button 
                           variant="ghost" 

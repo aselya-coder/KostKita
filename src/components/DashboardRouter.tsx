@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 // Student/Owner Dashboard Components
 import MyMarketplaceItems from "@/pages/dashboard/MyMarketplaceItems";
 import SellItem from "@/pages/dashboard/SellItem";
+import EditItem from "@/pages/dashboard/EditItem";
 import Profile from "@/pages/dashboard/Profile";
 import Settings from "@/pages/dashboard/Settings";
 import Notifications from "@/pages/dashboard/Notifications";
@@ -49,6 +50,7 @@ export function DashboardRouter() {
             <Route index element={<StudentOverview />} />
             <Route path="my-items" element={<MyMarketplaceItems />} />
             <Route path="sell-item" element={<SellItem />} />
+            <Route path="edit-item/:id" element={<EditItem />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
@@ -67,6 +69,7 @@ export function DashboardRouter() {
             <Route path="inquiries" element={<Inquiries />} />
             <Route path="my-items" element={<MyMarketplaceItems />} />
             <Route path="sell-item" element={<SellItem />} />
+            <Route path="edit-item/:id" element={<EditItem />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />

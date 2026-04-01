@@ -1,12 +1,16 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Plus } from "lucide-react";
 import { MarketplaceCard } from "@/components/MarketplaceCard";
 import { getMarketplaceItems } from "@/services/marketplace";
 import { type MarketplaceItem } from "@/data/mockData";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const categories = ["Semua", "Buku", "Elektronik", "Furnitur", "Kendaraan"];
 
 const Marketplace = () => {
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Semua");
   const [items, setItems] = useState<MarketplaceItem[]>([]);
@@ -34,10 +38,26 @@ const Marketplace = () => {
     });
   }, [query, items]);
 
+  const canSell = user?.role === "student" || user?.role === "owner";
+  const sellPath = user?.role === "owner" ? "/owner-dashboard/sell-item" : "/dashboard/sell-item";
+
   return (
     <div className="container py-8">
-      <h1 className="font-display font-bold text-2xl text-foreground mb-1">Marketplace</h1>
-      <p className="text-sm text-muted-foreground mb-6">Jual beli barang bekas antar mahasiswa</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="font-display font-bold text-2xl text-foreground mb-1">Marketplace</h1>
+          <p className="text-sm text-muted-foreground">Jual beli barang bekas antar mahasiswa</p>
+        </div>
+        
+        {canSell && (
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20">
+            <Link to={sellPath}>
+              <Plus className="w-4 h-4 mr-2" />
+              Jual Barang
+            </Link>
+          </Button>
+        )}
+      </div>
 
       {/* Search */}
       <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-surface ring-1 ring-foreground/5 mb-4">
