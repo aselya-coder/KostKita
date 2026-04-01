@@ -38,12 +38,14 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           { title: "Overview", href: "/owner-dashboard", icon: Home },
           { title: "My Kos", href: "/owner-dashboard/my-kos", icon: Home },
           { title: "My Items", href: "/owner-dashboard/my-items", icon: Home },
+          { title: "Laporan", href: "/owner-dashboard/reports", icon: Home },
           { title: "Profile", href: "/owner-dashboard/profile", icon: Home },
         ];
       case "student":
         return [
           { title: "Overview", href: "/dashboard", icon: Home },
           { title: "My Items", href: "/dashboard/my-items", icon: Home },
+          { title: "Laporan", href: "/dashboard/reports", icon: Home },
           { title: "Favorites", href: "/dashboard/favorites", icon: Home },
           { title: "Profile", href: "/dashboard/profile", icon: Home },
         ];

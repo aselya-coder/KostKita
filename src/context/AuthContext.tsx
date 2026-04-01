@@ -3,6 +3,7 @@ import { type User } from "@/data/mockData";
 import { supabase } from "@/lib/supabase";
 import { AuthError, User as SupabaseUser } from "@supabase/supabase-js";
 import { AuthContext, type AuthContextType } from "./AuthContextType";
+import { logUserActivity } from "@/services/marketplace";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -11,6 +12,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // 1. Initial session check
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkSession();
 
+    // 2. Auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const initialUser = mapSupabaseUser(session.user);
@@ -50,9 +53,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // 3. Profile changes listener (REALTIME)
+    let profileSubscription: any = null;
+    
+    const setupProfileListener = async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser && mounted) {
+        profileSubscription = supabase
+          .channel(`profile-updates-${currentUser.id}`)
+          .on(
+            'postgres_changes',
+            { 
+              event: 'UPDATE', 
+              schema: 'public', 
+              table: 'profiles', 
+              filter: `id=eq.${currentUser.id}` 
+            },
+            (payload) => {
+              const profile = payload.new as any;
+              if (mounted) {
+                setUser(prev => {
+                  if (!prev) return null;
+                  return {
+                    ...prev,
+                    name: profile.name || prev.name,
+                    role: profile.role || prev.role,
+                    phone: profile.phone || prev.phone,
+                    location: profile.location || prev.location,
+                    avatar: profile.avatar || prev.avatar,
+                    about: profile.about || prev.about,
+                  };
+                });
+              }
+            }
+          )
+          .subscribe();
+      }
+    };
+
+    setupProfileListener();
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      if (profileSubscription) {
+        supabase.removeChannel(profileSubscription);
+      }
     };
   }, []);
 
@@ -118,6 +164,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       if (data.user) {
+        // Log activity
+        await logUserActivity(data.user.id, 'Masuk ke akun (Login)');
         // The onAuthStateChange listener will handle setting the user state.
         return { success: true };
       }
@@ -146,6 +194,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
+        // Log activity
+        await logUserActivity(data.user.id, 'Mendaftar akun baru');
         // Immediately try to log in after successful signup
         const loginResponse = await login(email, password);
         return loginResponse;
@@ -158,6 +208,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    if (user) {
+      await logUserActivity(user.id, 'Keluar dari akun (Logout)');
+    }
     await supabase.auth.signOut();
     setUser(null);
   };

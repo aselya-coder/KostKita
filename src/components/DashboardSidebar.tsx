@@ -57,6 +57,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           { title: "Add Boarding House", href: "/owner-dashboard/add-kos", icon: PlusCircle },
           { title: "My Items", href: "/owner-dashboard/my-items", icon: ShoppingBag },
           { title: "Sell Item", href: "/owner-dashboard/sell-item", icon: PlusCircle },
+          { title: "Laporan", href: "/owner-dashboard/reports", icon: ShieldAlert },
           { title: "Favorites", href: "/owner-dashboard/favorites", icon: Heart },
           { title: "Profile", href: "/owner-dashboard/profile", icon: User },
         ];
@@ -65,6 +66,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
           { title: "My Items", href: "/dashboard/my-items", icon: ShoppingBag },
           { title: "Sell Item", href: "/dashboard/sell-item", icon: PlusCircle },
+          { title: "Laporan", href: "/dashboard/reports", icon: ShieldAlert },
           { title: "Favorites", href: "/dashboard/favorites", icon: Heart },
           { title: "Profile", href: "/dashboard/profile", icon: User },
         ];

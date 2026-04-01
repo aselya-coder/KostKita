@@ -1,37 +1,74 @@
 import { useState, useEffect } from "react";
 import { BackButton } from "@/components/BackButton";
-import { AlertTriangle, User, MessageCircle, ShoppingBag, Home, CheckCircle2, Trash2, ShieldAlert, Clock, Flag } from "lucide-react";
+import { AlertTriangle, User, MessageCircle, ShoppingBag, Home, CheckCircle2, Trash2, ShieldAlert, Clock, Flag, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { FollowUpModal } from "@/components/FollowUpModal";
 
 export default function Reports() {
   const [reports, setReports] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "new">("all");
+  const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
 
   const fetchReports = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('reports')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
+    try {
+      // 1. Fetch reports with reporter profiles
+      const { data, error } = await supabase
+        .from('reports')
+        .select(`
+          *,
+          profiles:reporter_id ( name )
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      const reportsData = data || [];
+      
+      // 2. For each report, fetch the target name based on type
+      const formatted = await Promise.all(reportsData.map(async (r: any) => {
+        let targetName = "Konten Terhapus";
+        
+        try {
+          if (r.type === 'user') {
+            const { data: profile } = await supabase.from('profiles').select('name').eq('id', r.target_id).single();
+            if (profile) targetName = profile.name;
+          } else if (r.type === 'kos') {
+            const { data: kos } = await supabase.from('kos_listings').select('title').eq('id', r.target_id).single();
+            if (kos) targetName = kos.title;
+          } else if (r.type === 'item') {
+            const { data: item } = await supabase.from('marketplace_items').select('title').eq('id', r.target_id).single();
+            if (item) targetName = item.title;
+          }
+        } catch (e) {
+          console.warn(`Could not fetch target name for ${r.type} ${r.target_id}`);
+        }
+
+        return {
+          ...r,
+          reporterName: r.profiles?.name || "User Tidak Dikenal",
+          targetName,
+          time: new Date(r.created_at).toLocaleDateString('id-ID', { 
+            day: 'numeric', 
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        };
+      }));
+      
+      setReports(formatted);
+    } catch (error) {
       console.error('Error fetching reports:', error);
       toast.error("Gagal mengambil data laporan");
-    } else {
-      // Map basic data
-      const formatted = (data || []).map(r => ({
-        ...r,
-        reporterName: "User", // Placeholder if profile not joined
-        targetName: "Konten", // Placeholder
-        time: new Date(r.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-      }));
-      setReports(formatted);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -63,40 +100,9 @@ export default function Reports() {
     }
   };
 
-  const filteredReports = reports.filter(r => 
-    activeTab === "all" ? true : r.status === "new"
-  );
-
-  const resolveReport = async (id: string) => {
-    const { error } = await supabase
-      .from('reports')
-      .update({ status: 'resolved' })
-      .eq('id', id);
-    
-    if (error) {
-      toast.error("Gagal memproses laporan");
-    } else {
-      setReports(prev => prev.map(r => 
-        r.id === id ? { ...r, status: "resolved" } : r
-      ));
-      toast.success("Laporan diselesaikan");
-    }
-  };
-
-  const dismissReport = async (id: string) => {
-    const { error } = await supabase
-      .from('reports')
-      .update({ status: 'dismissed' })
-      .eq('id', id);
-    
-    if (error) {
-      toast.error("Gagal menolak laporan");
-    } else {
-      setReports(prev => prev.map(r => 
-        r.id === id ? { ...r, status: "dismissed" } : r
-      ));
-      toast.success("Laporan ditolak");
-    }
+  const openFollowUp = (report: any) => {
+    setSelectedReport(report);
+    setIsFollowUpModalOpen(true);
   };
 
   const getTypeIcon = (type: string) => {
@@ -107,6 +113,10 @@ export default function Reports() {
       default: return <Flag className="w-4 h-4 text-primary" />;
     }
   };
+
+  const filteredReports = reports.filter(r => 
+    activeTab === "all" ? true : r.status === "new"
+  );
 
   return (
     <div className="space-y-8 pb-12">
@@ -213,19 +223,10 @@ export default function Reports() {
                       <div className="flex items-center gap-2">
                         <Button 
                           size="sm" 
-                          variant="outline"
-                          className="rounded-lg h-8 text-xs font-bold"
-                          onClick={() => dismissReport(report.id)}
+                          className="rounded-lg h-8 text-xs font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 px-4"
+                          onClick={() => openFollowUp(report)}
                         >
-                          <Trash2 className="w-3 h-3 mr-1.5" />
-                          Abaikan
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          className="rounded-lg h-8 text-xs font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
-                          onClick={() => resolveReport(report.id)}
-                        >
-                          <CheckCircle2 className="w-3 h-3 mr-1.5" />
+                          <ShieldCheck className="w-3 h-3 mr-1.5" />
                           Tindak Lanjuti
                         </Button>
                       </div>
@@ -251,6 +252,14 @@ export default function Reports() {
           )}
         </div>
       </div>
+
+      <FollowUpModal 
+        isOpen={isFollowUpModalOpen}
+        onClose={() => setIsFollowUpModalOpen(false)}
+        report={selectedReport}
+        onSuccess={fetchReports}
+      />
     </div>
   );
 }
+

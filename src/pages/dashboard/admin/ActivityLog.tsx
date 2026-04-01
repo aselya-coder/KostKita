@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { getUserActivities } from '@/services/marketplace';
-import { Loader2, ShieldAlert } from 'lucide-react';
+import { getUserActivities, deleteActivity } from '@/services/marketplace';
+import { Loader2, ShieldAlert, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 // Define the type for an activity, including the nested profile
 interface Activity {
@@ -24,26 +26,38 @@ export default function ActivityLogPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchActivities = async () => {
-      try {
-        const data = await getUserActivities();
-        // Type guard to ensure data is what we expect
-        if (Array.isArray(data)) {
-          setActivities(data as Activity[]);
-        } else {
-          throw new Error("Format data tidak valid");
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Gagal memuat aktivitas.");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+  const fetchActivities = async () => {
+    try {
+      const data = await getUserActivities();
+      // Type guard to ensure data is what we expect
+      if (Array.isArray(data)) {
+        setActivities(data as Activity[]);
+      } else {
+        throw new Error("Format data tidak valid");
       }
-    };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal memuat aktivitas.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchActivities();
   }, []);
+
+  const handleDelete = async (activityId: string) => {
+    if (!confirm("Hapus log aktivitas ini?")) return;
+    
+    try {
+      await deleteActivity(activityId);
+      toast.success("Aktivitas berhasil dihapus");
+      setActivities(prev => prev.filter(a => a.id !== activityId));
+    } catch (err) {
+      toast.error("Gagal menghapus aktivitas");
+    }
+  };
 
   const renderContent = () => {
     if (isLoading) {
@@ -76,13 +90,13 @@ export default function ActivityLogPage() {
     return (
       <div className="space-y-4">
         {activities.map((activity) => (
-          <div key={activity.id} className="flex items-start gap-4 p-4 border rounded-2xl bg-card hover:bg-muted/50 transition-colors">
+          <div key={activity.id} className="flex items-start gap-4 p-4 border rounded-2xl bg-card hover:bg-muted/50 transition-colors group relative">
             <Avatar className="w-10 h-10 border">
               <AvatarImage src={activity.profiles?.avatar || undefined} alt={activity.profiles?.name || 'User'} />
               <AvatarFallback>{activity.profiles?.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex-grow">
-              <p className="font-medium">
+              <p className="font-medium pr-8">
                 <span className="font-bold text-primary">{activity.profiles?.name || 'Pengguna'}</span>
                 {' '}{activity.action.toLowerCase()}
                 {activity.description && (
@@ -103,6 +117,15 @@ export default function ActivityLogPage() {
                 )}
               </p>
             </div>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive h-8 w-8"
+              onClick={() => handleDelete(activity.id)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
           </div>
         ))}
       </div>

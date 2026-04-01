@@ -142,6 +142,16 @@ CREATE TABLE IF NOT EXISTS public.reports (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- USER_ACTIVITIES: Audit log for user actions
+CREATE TABLE IF NOT EXISTS public.user_activities (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  action TEXT NOT NULL,
+  description TEXT,
+  target_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ==========================================
 -- 3. FUNCTIONS & TRIGGERS
 -- ==========================================
@@ -203,6 +213,7 @@ ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_activities ENABLE ROW LEVEL SECURITY;
 
 -- --- PROFILES POLICIES ---
 DROP POLICY IF EXISTS "Public profiles are viewable by authenticated users." ON public.profiles;
@@ -298,6 +309,19 @@ CREATE POLICY "Authenticated users can create reports." ON public.reports
 DROP POLICY IF EXISTS "Admins can manage all reports." ON public.reports;
 CREATE POLICY "Admins can manage all reports." ON public.reports
   FOR ALL USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'admin');
+
+-- --- USER_ACTIVITIES POLICIES ---
+DROP POLICY IF EXISTS "Users can insert their own activities." ON public.user_activities;
+CREATE POLICY "Users can insert their own activities." ON public.user_activities
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can view their own activities." ON public.user_activities;
+CREATE POLICY "Users can view their own activities." ON public.user_activities
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Admins can view all activities." ON public.user_activities;
+CREATE POLICY "Admins can view all activities." ON public.user_activities
+  FOR SELECT USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'admin');
 
 -- ==========================================
 -- 4.1 PERMISSIONS

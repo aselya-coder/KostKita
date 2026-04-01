@@ -14,11 +14,16 @@ import { type KosListing, formatPrice } from "@/data/mockData";
 import { BackButton } from "@/components/BackButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getAmenityIcon } from "@/utils/amenityIcons";
+import { useAuth } from "@/hooks/useAuth";
+import { ReportModal } from "@/components/ReportModal";
+import { Flag } from "lucide-react";
 
 const KosDetail = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [kos, setKos] = useState<KosListing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites('kos');
 
   useEffect(() => {
@@ -74,15 +79,36 @@ const KosDetail = () => {
         <div className="container">
           <div className="flex items-center justify-between mb-6">
             <BackButton to="/search" />
-            <motion.button
-              whileTap={{ scale: 0.8 }}
-              onClick={() => toggleFavorite(kos.id)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full ring-1 ring-border text-sm"
-            >
-              <Heart className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-              {liked ? "Tersimpan" : "Simpan"}
-            </motion.button>
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.8 }}
+                onClick={() => toggleFavorite(kos.id)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full ring-1 ring-border text-sm"
+              >
+                <Heart className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                {liked ? "Tersimpan" : "Simpan"}
+              </motion.button>
+              
+              {user && user.id !== kos.ownerId && (
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full ring-1 ring-border text-sm hover:bg-red-50 hover:text-red-600 transition-colors"
+                >
+                  <Flag className="w-4 h-4" />
+                  Laporkan
+                </button>
+              )}
+            </div>
           </div>
+
+          <ReportModal 
+            isOpen={isReportModalOpen}
+            onClose={() => setIsReportModalOpen(false)}
+            targetId={kos.id}
+            targetName={kos.title}
+            type="kos"
+            reporterId={user?.id || ""}
+          />
 
           {/* Images */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">

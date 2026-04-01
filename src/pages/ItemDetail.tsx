@@ -6,11 +6,16 @@ import { getItemById } from "@/services/marketplace";
 import { BackButton } from "@/components/BackButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
+import { ReportModal } from "@/components/ReportModal";
+import { Flag } from "lucide-react";
 
 const ItemDetail = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [item, setItem] = useState<MarketplaceItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites('item');
 
   useEffect(() => {
@@ -64,15 +69,36 @@ const ItemDetail = () => {
     <div className="container py-8 pb-24 md:pb-8">
       <div className="flex items-center justify-between mb-6">
         <BackButton to="/marketplace" className="mb-0" />
-        <motion.button
-          whileTap={{ scale: 0.8 }}
-          onClick={() => toggleFavorite(item.id)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full ring-1 ring-foreground/10 text-sm"
-        >
-          <Heart className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-          {liked ? "Tersimpan" : "Simpan"}
-        </motion.button>
+        <div className="flex items-center gap-2">
+          <motion.button
+            whileTap={{ scale: 0.8 }}
+            onClick={() => toggleFavorite(item.id)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full ring-1 ring-foreground/10 text-sm"
+          >
+            <Heart className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+            {liked ? "Tersimpan" : "Simpan"}
+          </motion.button>
+          
+          {user && user.id !== item.sellerId && (
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full ring-1 ring-foreground/10 text-sm hover:bg-red-50 hover:text-red-600 transition-colors"
+            >
+              <Flag className="w-4 h-4" />
+              Laporkan
+            </button>
+          )}
+        </div>
       </div>
+
+      <ReportModal 
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetId={item.id}
+        targetName={item.title}
+        type="item"
+        reporterId={user?.id || ""}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="rounded-2xl overflow-hidden ring-1 ring-foreground/5">

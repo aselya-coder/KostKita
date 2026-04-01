@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { uploadFile } from "@/services/storage";
 import { createMarketplaceItem } from "@/services/forms";
-import { notifyAdmins } from '@/services/kos'; // Import the new function
+import { notifyAdmins } from '@/services/notifications';
 import { toast as sonnerToast } from "sonner";
 
 export default function SellItem() {

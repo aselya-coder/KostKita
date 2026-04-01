@@ -4,6 +4,8 @@ import { Search, UserPlus, MoreVertical, Shield, User as UserIcon, Mail, Calenda
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { logUserActivity } from "@/services/marketplace";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { 
@@ -16,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function UserManagement() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,6 +59,10 @@ export default function UserManagement() {
 
   const deleteUser = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus pengguna ini?")) {
+      // Get user name for logging
+      const userToDelete = users.find(u => u.id === id);
+      const userName = userToDelete?.name || "Pengguna";
+
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -64,6 +71,10 @@ export default function UserManagement() {
       if (error) {
         toast.error("Gagal menghapus pengguna");
       } else {
+        // Log activity
+        if (currentUser) {
+          await logUserActivity(currentUser.id, 'Moderasi: Menghapus akun pengguna', userName);
+        }
         setUsers(prev => prev.filter(u => u.id !== id));
         toast.success("Pengguna berhasil dihapus");
       }

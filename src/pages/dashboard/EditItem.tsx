@@ -6,6 +6,7 @@ import { BackButton } from "@/components/BackButton";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { uploadFile } from "@/services/storage";
+import { logUserActivity } from "@/services/marketplace";
 import { toast as sonnerToast } from "sonner";
 import { type MarketplaceItem } from "@/data/mockData";
 
@@ -142,6 +143,14 @@ export default function EditItem() {
         .eq('id', id);
 
       if (updateError) throw updateError;
+
+      // Log activity
+      await logUserActivity(
+        user.id,
+        'Memperbarui barang marketplace',
+        formData.title,
+        `/item/${id}`
+      );
 
       sonnerToast.success('Barang berhasil diperbarui!');
       const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";

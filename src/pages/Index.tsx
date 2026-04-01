@@ -1,9 +1,13 @@
+import { useState, useEffect } from "react";
 import { HeroSection } from "@/components/HeroSection";
 import { KosCard } from "@/components/KosCard";
 import { MarketplaceCard } from "@/components/MarketplaceCard";
-import { mockKosListings, mockMarketplaceItems } from "@/data/mockData";
+import { getKosListings } from "@/services/kos";
+import { getMarketplaceItems } from "@/services/marketplace";
+import { type KosListing, type MarketplaceItem } from "@/data/mockData";
 import { Link } from "react-router-dom";
-import { ArrowRight, Shield, MessageCircle, MapPin } from "lucide-react";
+import { ArrowRight, Shield, MessageCircle, MapPin, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const features = [
   { icon: MapPin, title: "Lokasi Strategis", desc: "Kos dekat kampus dan fasilitas umum" },
@@ -12,6 +16,52 @@ const features = [
 ];
 
 const Index = () => {
+  const [kosListings, setKosListings] = useState<KosListing[]>([]);
+  const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>([]);
+  const [isLoadingKos, setIsLoadingKos] = useState(true);
+  const [isLoadingMarketplace, setIsLoadingMarketplace] = useState(true);
+
+  useEffect(() => {
+    const fetchKos = async () => {
+      try {
+        const data = await getKosListings();
+        setKosListings(data.slice(0, 3));
+      } catch (error) {
+        console.error("Error fetching kos:", error);
+      } finally {
+        setIsLoadingKos(false);
+      }
+    };
+
+    const fetchMarketplace = async () => {
+      try {
+        const data = await getMarketplaceItems();
+        setMarketplaceItems(data.slice(0, 4));
+      } catch (error) {
+        console.error("Error fetching marketplace items:", error);
+      } finally {
+        setIsLoadingMarketplace(false);
+      }
+    };
+
+    fetchKos();
+    fetchMarketplace();
+
+    // REALTIME: Listen for changes
+    const kosChannel = supabase.channel('home-kos-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings' }, () => fetchKos())
+      .subscribe();
+
+    const marketplaceChannel = supabase.channel('home-marketplace-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_items' }, () => fetchMarketplace())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(kosChannel);
+      supabase.removeChannel(marketplaceChannel);
+    };
+  }, []);
+
   return (
     <div>
       <HeroSection />
@@ -44,11 +94,22 @@ const Index = () => {
             Lihat semua <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockKosListings.slice(0, 3).map((kos) => (
-            <KosCard key={kos.id} kos={kos} />
-          ))}
-        </div>
+        
+        {isLoadingKos ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : kosListings.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {kosListings.map((kos) => (
+              <KosCard key={kos.id} kos={kos} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-muted-foreground">
+            Belum ada kos populer yang tersedia saat ini.
+          </div>
+        )}
       </section>
 
       {/* Marketplace Preview */}
@@ -63,11 +124,22 @@ const Index = () => {
               Lihat semua <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {mockMarketplaceItems.slice(0, 4).map((item) => (
-              <MarketplaceCard key={item.id} item={item} />
-            ))}
-          </div>
+
+          {isLoadingMarketplace ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : marketplaceItems.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {marketplaceItems.map((item) => (
+                <MarketplaceCard key={item.id} item={item} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              Belum ada barang di marketplace saat ini.
+            </div>
+          )}
         </div>
       </section>
     </div>

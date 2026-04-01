@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/BackButton";
 import { supabase } from "@/lib/supabase";
+import { logUserActivity } from "@/services/marketplace";
 import { toast } from "sonner";
 
 export default function MyMarketplaceItems() {
@@ -51,6 +52,10 @@ export default function MyMarketplaceItems() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Hapus barang ini secara permanen?")) {
+      // Get item title first for logging
+      const itemToDelete = myItems.find(i => i.id === id);
+      const itemTitle = itemToDelete?.title || "Barang";
+
       const { error } = await supabase
         .from('marketplace_items')
         .delete()
@@ -59,6 +64,10 @@ export default function MyMarketplaceItems() {
       if (error) {
         toast.error("Failed to delete item");
       } else {
+        // Log activity
+        if (user) {
+          await logUserActivity(user.id, 'Menghapus barang marketplace', itemTitle);
+        }
         setMyItems(prev => prev.filter(item => item.id !== id));
         toast.success("Item deleted");
       }

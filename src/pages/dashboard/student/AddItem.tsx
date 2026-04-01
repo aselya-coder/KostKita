@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { createMarketplaceItem } from '@/services/forms';
-import { notifyAdmins } from '@/services/kos'; // Import the new function
+import { notifyAdmins } from '@/services/notifications';
 import { uploadFile } from '@/services/storage';
 import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/ui/button';

@@ -5,10 +5,13 @@ import { CheckCircle2, XCircle, Search, Home, MapPin, Eye, Star, ShieldCheck, Cl
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { logUserActivity } from "@/services/marketplace";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export default function KosManagement() {
+  const { user } = useAuth();
   const [listings, setListings] = useState<KosListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "approved">("all");
@@ -33,7 +36,7 @@ export default function KosManagement() {
     fetchListings();
 
     // REALTIME: Listen for any changes in kos_listings
-    const channel = supabase.channel('admin-kos-management')
+    const channel = supabase.channel('admin-kos-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings' }, () => fetchListings())
       .subscribe();
 
@@ -64,6 +67,10 @@ export default function KosManagement() {
   };
 
   const approveListing = async (id: string) => {
+    // Get kos title for logging
+    const kosToApprove = listings.find(l => l.id === id);
+    const kosTitle = kosToApprove?.title || "Kos";
+
     const { error } = await supabase
       .from('kos_listings')
       .update({ status: 'approved' })
@@ -72,6 +79,10 @@ export default function KosManagement() {
     if (error) {
       toast.error("Gagal menyetujui kos");
     } else {
+      // Log activity
+      if (user) {
+        await logUserActivity(user.id, 'Moderasi: Menyetujui listing kos', kosTitle, `/kos/${id}`);
+      }
       setListings(prev => prev.map(l => 
         l.id === id ? { ...l, status: "approved" } : l
       ));
@@ -80,6 +91,10 @@ export default function KosManagement() {
   };
 
   const rejectListing = async (id: string) => {
+    // Get kos title for logging
+    const kosToReject = listings.find(l => l.id === id);
+    const kosTitle = kosToReject?.title || "Kos";
+
     const { error } = await supabase
       .from('kos_listings')
       .update({ status: 'rejected' })
@@ -88,6 +103,10 @@ export default function KosManagement() {
     if (error) {
       toast.error("Gagal menolak kos");
     } else {
+      // Log activity
+      if (user) {
+        await logUserActivity(user.id, 'Moderasi: Menolak listing kos', kosTitle, `/kos/${id}`);
+      }
       setListings(prev => prev.map(l => 
         l.id === id ? { ...l, status: "rejected" } : l
       ));

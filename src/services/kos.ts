@@ -23,36 +23,7 @@ type KosDbRecord = {
   };
 };
 import { logUserActivity } from '@/services/marketplace';
-
-export const notifyAdmins = async (title: string, message: string, link: string) => {
-  try {
-    // 1. Get all admin user IDs
-    const { data: admins, error: adminError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'admin');
-
-    if (adminError) throw adminError;
-    if (!admins || admins.length === 0) return;
-
-    // 2. Create notification for each admin
-    const notifications = admins.map(admin => ({
-      user_id: admin.id,
-      title,
-      message,
-      link,
-      type: 'new_listing' as const,
-    }));
-
-    // 3. Insert notifications
-    const { error: notificationError } = await supabase.from('notifications').insert(notifications);
-    if (notificationError) throw notificationError;
-
-  } catch (error) {
-    console.error('Error sending admin notifications:', error);
-    // We don't re-throw here because failing to notify shouldn't block the user action
-  }
-};
+import { notifyAdmins } from './notifications';
 
 export const getKosListings = async (ownerId?: string): Promise<KosListing[]> => {
   let query = supabase

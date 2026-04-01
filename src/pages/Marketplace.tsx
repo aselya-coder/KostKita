@@ -6,6 +6,7 @@ import { type MarketplaceItem } from "@/data/mockData";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 
 const categories = ["Semua", "Buku", "Elektronik", "Furnitur", "Kendaraan"];
 
@@ -23,7 +24,22 @@ const Marketplace = () => {
       setItems(data);
       setIsLoading(false);
     };
+
     fetchItems();
+
+    // REALTIME: Listen for changes
+    const channel = supabase
+      .channel("marketplace-items-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "marketplace_items" },
+        () => fetchItems()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [category]);
 
   const filteredItems = useMemo(() => {

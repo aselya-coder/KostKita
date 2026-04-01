@@ -25,6 +25,7 @@ import UserManagement from "@/pages/dashboard/UserManagement";
 import KosManagement from "@/pages/dashboard/KosManagement";
 import MarketplaceModeration from "@/pages/dashboard/MarketplaceModeration";
 import Reports from "@/pages/dashboard/Reports";
+import UserReports from "@/pages/dashboard/UserReports";
 import SystemSettings from "@/pages/dashboard/SystemSettings";
 import ActivityLogPage from "@/pages/dashboard/admin/ActivityLog";
 
@@ -51,6 +52,7 @@ export function DashboardRouter() {
             <Route path="my-items" element={<MyMarketplaceItems />} />
             <Route path="sell-item" element={<SellItem />} />
             <Route path="edit-item/:id" element={<EditItem />} />
+            <Route path="reports" element={<UserReports />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
@@ -70,6 +72,7 @@ export function DashboardRouter() {
             <Route path="my-items" element={<MyMarketplaceItems />} />
             <Route path="sell-item" element={<SellItem />} />
             <Route path="edit-item/:id" element={<EditItem />} />
+            <Route path="reports" element={<UserReports />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />

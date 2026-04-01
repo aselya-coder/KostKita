@@ -94,10 +94,10 @@ export function KosCard({ kos }: KosCardProps) {
           {kos.amenities.slice(0, 4).map((amenity) => {
             const Icon = getAmenityIcon(amenity);
             return (
-              <span key={amenity} className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Link key={amenity} to={`/kos/${kos.id}`} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
                 <Icon className="w-3.5 h-3.5" />
                 {amenity}
-              </span>
+              </Link>
             );
           })}
         </div>

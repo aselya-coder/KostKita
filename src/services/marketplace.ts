@@ -157,6 +157,23 @@ export const getAllUsers = async (): Promise<Partial<User>[]> => {
 };
 
 /**
+ * Deletes a user activity by ID.
+ * Only intended for admin use.
+ * @param activityId The ID of the activity to delete.
+ */
+export const deleteActivity = async (activityId: string) => {
+  const { error } = await supabase
+    .from('user_activities')
+    .delete()
+    .eq('id', activityId);
+
+  if (error) {
+    console.error('Error deleting activity:', error);
+    throw error;
+  }
+};
+
+/**
  * Logs a user activity to the user_activities table.
  * @param userId The ID of the user performing the action.
  * @param action A short description of the action (e.g., 'Membuat kos baru').

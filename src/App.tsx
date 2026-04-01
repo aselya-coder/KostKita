@@ -20,6 +20,7 @@ import Owner from "./pages/Owner";
 import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import UserReports from "./pages/dashboard/UserReports";
 
 const queryClient = new QueryClient();
 
@@ -80,8 +81,7 @@ const AppContent = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
+      <Toaster position="top-center" richColors />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <AppContent />

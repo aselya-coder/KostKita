@@ -5,6 +5,8 @@ import { Search, ShoppingBag, Eye, Trash2, AlertTriangle, CheckCircle2, MoreVert
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
+import { logUserActivity } from "@/services/marketplace";
 import { toast } from "sonner";
 import { 
   DropdownMenu, 
@@ -16,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function MarketplaceModeration() {
+  const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,6 +41,15 @@ export default function MarketplaceModeration() {
 
   useEffect(() => {
     fetchItems();
+
+    // REALTIME: Listen for any changes in marketplace_items
+    const channel = supabase.channel('admin-marketplace-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_items' }, () => fetchItems())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const filteredItems = items.filter(i => 
@@ -46,6 +58,10 @@ export default function MarketplaceModeration() {
 
   const removeItem = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus barang ini dari marketplace?")) {
+      // Get item title first for logging
+      const itemToDelete = items.find(i => i.id === id);
+      const itemTitle = itemToDelete?.title || "Barang";
+
       const { error } = await supabase
         .from('marketplace_items')
         .delete()
@@ -54,6 +70,10 @@ export default function MarketplaceModeration() {
       if (error) {
         toast.error("Gagal menghapus barang");
       } else {
+        // Log activity
+        if (user) {
+          await logUserActivity(user.id, 'Moderasi: Menghapus barang marketplace', itemTitle);
+        }
         setItems(prev => prev.filter(i => i.id !== id));
         toast.success("Barang berhasil dihapus");
       }

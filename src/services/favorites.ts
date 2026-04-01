@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { logUserActivity } from './marketplace';
 
 export const getFavorites = async (userId: string) => {
   const { data, error } = await supabase
@@ -20,6 +21,14 @@ export const addFavorite = async (userId: string, targetId: string, type: 'kos' 
 
   if (error) {
     console.error('Error adding favorite:', error);
+  } else {
+    // Log activity
+    await logUserActivity(
+      userId,
+      `Menyimpan ${type === 'kos' ? 'kos' : 'barang'} ke favorit`,
+      undefined,
+      type === 'kos' ? `/kos/${targetId}` : `/item/${targetId}`
+    );
   }
 };
 
@@ -32,5 +41,8 @@ export const removeFavorite = async (userId: string, targetId: string) => {
 
   if (error) {
     console.error('Error removing favorite:', error);
+  } else {
+    // Log activity
+    await logUserActivity(userId, 'Menghapus dari favorit');
   }
 };
