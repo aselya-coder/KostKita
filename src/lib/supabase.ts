@@ -7,4 +7,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing Supabase environment variables. Please check your .env file.');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+  auth: {
+    persistSession: true,
+    storage: window.sessionStorage, // Use sessionStorage instead of localStorage for automatic logout on browser close
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});

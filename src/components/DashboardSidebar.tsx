@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   HelpCircle,
   MessageSquare,
+  Settings as SettingsIcon,
   type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           { title: "Marketplace", href: "/admin/marketplace", icon: ShoppingBag },
           { title: "Reports", href: "/admin/reports", icon: ShieldAlert },
           { title: "Activity Log", href: "/admin/activity-log", icon: BarChart3 },
+          { title: "System Settings", href: "/admin/system-settings", icon: SettingsIcon },
           { title: "Favorites", href: "/admin/favorites", icon: Heart },
         ];
       case "owner":
@@ -58,6 +60,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           { title: "My Items", href: "/owner-dashboard/my-items", icon: ShoppingBag },
           { title: "Sell Item", href: "/owner-dashboard/sell-item", icon: PlusCircle },
           { title: "Laporan", href: "/owner-dashboard/reports", icon: ShieldAlert },
+          { title: "System Settings", href: "/owner-dashboard/system-settings", icon: SettingsIcon },
           { title: "Favorites", href: "/owner-dashboard/favorites", icon: Heart },
           { title: "Profile", href: "/owner-dashboard/profile", icon: User },
         ];
@@ -67,6 +70,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           { title: "My Items", href: "/dashboard/my-items", icon: ShoppingBag },
           { title: "Sell Item", href: "/dashboard/sell-item", icon: PlusCircle },
           { title: "Laporan", href: "/dashboard/reports", icon: ShieldAlert },
+          { title: "System Settings", href: "/dashboard/system-settings", icon: SettingsIcon },
           { title: "Favorites", href: "/dashboard/favorites", icon: Heart },
           { title: "Profile", href: "/dashboard/profile", icon: User },
         ];

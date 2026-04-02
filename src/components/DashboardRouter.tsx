@@ -56,6 +56,7 @@ export function DashboardRouter() {
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="system-settings" element={<SystemSettings />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </>
@@ -76,6 +77,7 @@ export function DashboardRouter() {
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="system-settings" element={<SystemSettings />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<Navigate to="/owner-dashboard" replace />} />
           </>

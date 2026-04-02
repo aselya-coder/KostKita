@@ -16,15 +16,17 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function SystemSettings() {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsLoading] = useState(false);
 
   const handleSave = () => {
-    setIsSaving(true);
+    setIsLoading(true);
     setTimeout(() => {
-      setIsSaving(false);
+      setIsLoading(false);
       toast({
         title: "Settings Saved",
         description: "System configuration has been updated successfully.",
@@ -60,9 +62,16 @@ export default function SystemSettings() {
     }
   ];
 
+  const getBackPath = () => {
+    if (!user) return "/";
+    if (user.role === "admin") return "/admin";
+    if (user.role === "owner") return "/owner-dashboard";
+    return "/dashboard";
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
-      <BackButton to="/admin" className="mb-0" />
+      <BackButton to={getBackPath()} className="mb-0" />
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
