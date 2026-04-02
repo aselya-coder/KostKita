@@ -7,6 +7,7 @@ import {
   markAllNotificationsAsRead as markAllAsReadService,
   deleteNotification as deleteNotifService 
 } from "@/services/notifications";
+import { supabase } from "@/lib/supabase";
 
 export function useNotifications() {
   const { user } = useAuth();

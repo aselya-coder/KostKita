@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { getFavorites, addFavorite, removeFavorite } from "@/services/favorites";
+import { supabase } from "@/lib/supabase";
 
 export function useFavorites(type: 'kos' | 'item') {
   const { user } = useAuth();
@@ -18,7 +19,22 @@ export function useFavorites(type: 'kos' | 'item') {
 
   useEffect(() => {
     fetchFavorites();
-  }, [fetchFavorites]);
+
+    if (user) {
+      const channel = supabase
+        .channel(`favorites:${user.id}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'favorites', filter: `user_id=eq.${user.id}` },
+          () => fetchFavorites()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [fetchFavorites, user]);
 
   const isFavorite = (id: string) => favorites.includes(id);
 
