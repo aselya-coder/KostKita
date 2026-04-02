@@ -21,10 +21,10 @@ export default function StudentOverview() {
         setIsLoading(true);
         const [statsData, itemsData] = await Promise.all([
           getStudentDashboardStats(user.id),
-          getMarketplaceItems(), // This fetches all, we filter locally
+          getMarketplaceItems(undefined, user.id),
         ]);
         setStats(statsData);
-        setMyItems(itemsData.filter(item => item.sellerId === user.id));
+        setMyItems(itemsData);
         setIsLoading(false);
       };
       fetchData();

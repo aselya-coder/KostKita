@@ -32,6 +32,8 @@ export default function MyMarketplaceItems() {
   };
 
   useEffect(() => {
+    if (!user) return;
+
     fetchMyItems();
 
     // REALTIME: Listen for changes in marketplace_items

@@ -25,7 +25,7 @@ type ItemWithSellerRecord = MarketplaceDbRecord & {
   profiles: ProfileRecord | null;
 };
 
-export const getMarketplaceItems = async (category?: string): Promise<MarketplaceItem[]> => {
+export const getMarketplaceItems = async (category?: string, sellerId?: string): Promise<MarketplaceItem[]> => {
   let query = supabase
     .from('marketplace_items')
     .select(`
@@ -39,6 +39,10 @@ export const getMarketplaceItems = async (category?: string): Promise<Marketplac
 
   if (category && category !== 'Semua') {
     query = query.ilike('category', category);
+  }
+
+  if (sellerId) {
+    query = query.eq('seller_id', sellerId);
   }
 
   const { data, error } = await query;
