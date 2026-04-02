@@ -17,7 +17,7 @@ import { getAmenityIcon } from "@/utils/amenityIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { ReportModal } from "@/components/ReportModal";
 import { Flag } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+
 
 const KosDetail = () => {
   const { id } = useParams();
@@ -42,27 +42,6 @@ const KosDetail = () => {
       }
     };
     fetchKos();
-
-    if (id) {
-      const channel = supabase
-        .channel(`kos-detail:${id}`)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'kos_listings', filter: `id=eq.${id}` },
-          (payload) => {
-            if (payload.eventType === 'DELETE') {
-              setKos(null); // Kos deleted
-            } else {
-              fetchKos(); // Kos updated
-            }
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
   }, [id]);
 
   if (isLoading) {

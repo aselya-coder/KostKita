@@ -30,20 +30,6 @@ const AppContent = () => {
     location.pathname.startsWith("/dashboard") || 
     location.pathname.startsWith("/owner-dashboard") || 
     location.pathname.startsWith("/admin");
-  
-  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
-
-  if (isAuthPage) {
-    return (
-      <main className="flex-1">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </main>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -56,6 +42,7 @@ const AppContent = () => {
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/item/:id" element={<ItemDetail />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           
           {/* Role-based Dashboards */}
           <Route path="/dashboard/*" element={<DashboardRouter />} />
