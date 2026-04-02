@@ -5,6 +5,7 @@ import { KosCard } from "@/components/KosCard";
 import { getKosListings } from "@/services/kos";
 import { type KosListing } from "@/data/mockData";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 const priceRanges = [
   { label: "Semua", min: 0, max: Infinity },
@@ -33,7 +34,22 @@ const SearchKos = () => {
       setKosListings(data);
       setIsLoading(false);
     };
+
     fetchKos();
+
+    // REALTIME: Listen for changes in kos_listings
+    const channel = supabase
+      .channel('kos-listings-changes')
+      .on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: 'kos_listings', filter: 'status=eq.approved' }, 
+        () => fetchKos()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const toggleAmenity = (a: string) => {
@@ -47,7 +63,8 @@ const SearchKos = () => {
       const matchesQuery =
         !query ||
         kos.title.toLowerCase().includes(query.toLowerCase()) ||
-        kos.location.toLowerCase().includes(query.toLowerCase());
+        kos.location.toLowerCase().includes(query.toLowerCase()) ||
+        kos.description.toLowerCase().includes(query.toLowerCase());
       const range = priceRanges[priceIdx];
       const matchesPrice = kos.price >= range.min && kos.price < range.max;
       const matchesAmenities =
@@ -67,7 +84,7 @@ const SearchKos = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari lokasi atau nama kos..."
+            placeholder="Cari nama kos, lokasi, atau dekat kampus (ex: dekat UI)..."
             className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           {query && (

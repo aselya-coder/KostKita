@@ -13,6 +13,9 @@ import EditItem from "@/pages/dashboard/EditItem";
 import Profile from "@/pages/dashboard/Profile";
 import Settings from "@/pages/dashboard/Settings";
 import Notifications from "@/pages/dashboard/Notifications";
+import PricingPage from "@/pages/dashboard/Pricing";
+import TransactionsPage from "@/pages/dashboard/Transactions";
+
 
 // Owner Specific Components
 import MyBoardingHouses from "@/pages/dashboard/MyBoardingHouses";
@@ -56,6 +59,8 @@ export function DashboardRouter() {
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="pricing" element={<PricingPage />} />
+            <Route path="transactions" element={<TransactionsPage />} />
             <Route path="system-settings" element={<SystemSettings />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -77,6 +82,8 @@ export function DashboardRouter() {
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="pricing" element={<PricingPage />} />
+            <Route path="transactions" element={<TransactionsPage />} />
             <Route path="system-settings" element={<SystemSettings />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="*" element={<Navigate to="/owner-dashboard" replace />} />

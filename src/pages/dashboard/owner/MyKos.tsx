@@ -50,7 +50,7 @@ export default function MyKos() {
   const handleDelete = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus listing kos ini?")) {
       try {
-        await deleteKosListing(id);
+        await deleteKosListing(id, user?.id || '');
         toast.success("Listing kos berhasil dihapus.");
         // The real-time listener will handle the UI update
       } catch (error) {
@@ -100,7 +100,7 @@ export default function MyKos() {
                         />
                         <div className="min-w-0">
                           <p className="font-semibold truncate max-w-[200px]">{kos.title}</p>
-                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{kos.address}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{kos.location}</p>
                         </div>
                       </div>
                     </td>

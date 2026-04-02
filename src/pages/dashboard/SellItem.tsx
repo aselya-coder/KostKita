@@ -10,6 +10,8 @@ import { uploadFile } from "@/services/storage";
 import { createMarketplaceItem } from "@/services/forms";
 import { notifyAdmins } from '@/services/notifications';
 import { toast as sonnerToast } from "sonner";
+import { QuotaAlertModal } from "@/components/QuotaAlertModal";
+import { checkUploadEligibility } from "@/services/payment";
 
 export default function SellItem() {
   const navigate = useNavigate();
@@ -17,6 +19,9 @@ export default function SellItem() {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingQuota, setIsCheckingQuota] = useState(true);
+  const [quotaModalOpen, setQuotaModalOpen] = useState(false);
+  const [quotaMessage, setQuotaMessage] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
@@ -27,10 +32,31 @@ export default function SellItem() {
     condition: "baru",
     location: "",
     description: "",
+    durationDays: "30", // Default duration
   });
+  const [isFreeUpload, setIsFreeUpload] = useState(false);
 
   const categories = ["Buku", "Elektronik", "Furnitur", "Kendaraan", "Lainnya"];
   const conditions = ["Baru", "Bekas - Sangat Baik", "Bekas - Baik", "Bekas - Cukup"];
+
+  // Check quota on mount
+  useEffect(() => {
+    const verifyQuota = async () => {
+      if (!user) return;
+      
+      const { eligible, message, is_free } = await checkUploadEligibility(user.id);
+      setIsFreeUpload(is_free);
+      
+      if (!eligible) {
+        setQuotaMessage(message);
+        setQuotaModalOpen(true);
+      }
+      setIsCheckingQuota(false);
+    };
+    
+    verifyQuota();
+  }, [user]);
+
 
   // Cleanup object URL
   useEffect(() => {
@@ -38,6 +64,7 @@ export default function SellItem() {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -110,7 +137,8 @@ export default function SellItem() {
         price: priceClean,
         image: url || '',
         status: 'active', // Automatically approve the item
-      });
+      }, parseInt(formData.durationDays));
+
 
       if (result.success) {
         sonnerToast.success('Barang berhasil dipublikasikan!');
@@ -131,6 +159,12 @@ export default function SellItem() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
+      <QuotaAlertModal 
+        isOpen={quotaModalOpen} 
+        onClose={() => setQuotaModalOpen(false)} 
+        message={quotaMessage}
+        role={user?.role}
+      />
       <div className="flex items-center gap-4">
         <BackButton to={`${basePath}/my-items`} className="mb-0" />
         <h1 className="text-2xl font-display font-bold text-foreground">Sell New Item</h1>
@@ -240,7 +274,28 @@ export default function SellItem() {
               className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
             />
           </div>
+
+          {!isFreeUpload && (
+            <div className="space-y-2 pt-2">
+              <label className="text-sm font-bold text-primary flex items-center gap-2">
+                Ad Duration (1 Coin/Day)
+                <Plus className="w-3 h-3 fill-current" />
+              </label>
+              <select 
+                name="durationDays"
+                value={formData.durationDays}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl bg-primary/5 border border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none font-bold text-primary"
+              >
+                <option value="3">3 Days (3 Coins)</option>
+                <option value="7">7 Days (7 Coins)</option>
+                <option value="14">14 Days (14 Coins)</option>
+                <option value="30">30 Days (30 Coins)</option>
+              </select>
+            </div>
+          )}
         </div>
+
 
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
           <h3 className="font-display font-bold text-lg border-b border-border pb-4">Media</h3>

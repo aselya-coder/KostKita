@@ -41,7 +41,7 @@ export function HeroSection() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari berdasarkan lokasi atau universitas..."
+              placeholder="Cari kos atau barang dekat kampus (ex: dekat UGM)..."
               className="w-full py-3 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-sm"
             />
           </div>

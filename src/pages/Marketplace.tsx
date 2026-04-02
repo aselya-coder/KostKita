@@ -49,7 +49,8 @@ const Marketplace = () => {
     return items.filter((item) => {
       return (
         item.title.toLowerCase().includes(query.toLowerCase()) ||
-        (item.location && item.location.toLowerCase().includes(query.toLowerCase()))
+        (item.location && item.location.toLowerCase().includes(query.toLowerCase())) ||
+        (item.description && item.description.toLowerCase().includes(query.toLowerCase()))
       );
     });
   }, [query, items]);
@@ -82,7 +83,7 @@ const Marketplace = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Cari barang..."
+          placeholder="Cari barang, lokasi, atau dekat kampus (ex: dekat UGM)..."
           className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         {query && (
