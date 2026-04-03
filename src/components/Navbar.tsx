@@ -17,7 +17,7 @@ export function Navbar() {
 
   const getDashboardLink = () => {
     if (!user) return "/login";
-    if (user.role === "admin") return "/admin";
+    if (user.role === "admin") return "/admin-dashboard";
     if (user.role === "owner") return "/owner-dashboard";
     return "/dashboard";
   };
@@ -64,7 +64,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             {user?.role === "admin" && (
               <Link
-                to="/admin"
+                to="/admin-dashboard"
                 className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                 title="Admin Panel"
               >

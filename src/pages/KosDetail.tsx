@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   DoorOpen,
   Heart,
@@ -12,20 +12,24 @@ import { useEffect, useState } from "react";
 import { getKosById } from "@/services/kos";
 import { type KosListing, formatPrice } from "@/data/mockData";
 import { BackButton } from "@/components/BackButton";
+import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getAmenityIcon } from "@/utils/amenityIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { ReportModal } from "@/components/ReportModal";
+import { AdvertiseKosModal } from "@/components/AdvertiseKosModal";
 import { Flag } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 
 const KosDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [kos, setKos] = useState<KosListing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isAdvertiseModalOpen, setIsAdvertiseModalOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites('kos');
 
   useEffect(() => {
@@ -98,7 +102,7 @@ const KosDetail = () => {
   )}`;
 
   return (
-    <div className="bg-background min-h-screen">
+    <>
       <div className="pt-4 pb-8">
         <div className="container">
           <div className="flex items-center justify-between mb-6">
@@ -253,15 +257,55 @@ const KosDetail = () => {
                   <MessageCircle className="w-4 h-4" />
                   Chat via WhatsApp
                 </a>
+                {user && user.id === kos.ownerId && (
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    onClick={() => navigate(`/owner-dashboard/edit-kos/${kos.id}`)}
+                  >
+                    Edit Kos
+                  </Button>
+                )}
+                {user && user.id === kos.ownerId && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setIsAdvertiseModalOpen(true)}
+                  >
+                    Iklankan Kos
+                  </Button>
+                )}
                 <p className="text-xs text-muted-foreground text-center">
                   Terhubung langsung dengan Pemilik Kos
                 </p>
+                {user && user.role === "admin" && (
+                  <div className="mt-4 pt-4 border-t border-border space-y-2">
+                    <p className="text-xs font-semibold text-center text-muted-foreground tracking-wider">
+                      ADMIN ACTIONS
+                    </p>
+                    <Button 
+                      variant="secondary" 
+                      className="w-full"
+                      onClick={() => navigate(`/admin-dashboard/edit-kos/${kos.id}`)}
+                    >
+                      Edit Kos
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+      {kos && (
+        <AdvertiseKosModal
+          isOpen={isAdvertiseModalOpen}
+          onClose={() => setIsAdvertiseModalOpen(false)}
+          kosId={kos.id}
+          ownerId={kos.ownerId}
+        />
+      )}
+    </>
   );
 };
 

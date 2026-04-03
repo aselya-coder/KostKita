@@ -181,7 +181,7 @@ export const mockNotifications: Notification[] = [
     time: "30 menit yang lalu",
     isRead: false,
     type: "system",
-    link: "/admin/reports",
+    link: "/admin-dashboard/reports",
   },
 ];
 

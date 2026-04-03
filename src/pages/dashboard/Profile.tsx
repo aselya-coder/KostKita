@@ -95,7 +95,7 @@ export default function Profile() {
     }
   };
 
-  const basePath = user.role === "admin" ? "/admin" : user.role === "owner" ? "/owner-dashboard" : "/dashboard";
+  const basePath = user.role === "admin" ? "/admin-dashboard" : user.role === "owner" ? "/owner-dashboard" : "/dashboard";
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">

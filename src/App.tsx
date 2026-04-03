@@ -1,77 +1,125 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
+
+// Layouts
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { DashboardRouter } from "@/components/DashboardRouter";
-import { AuthProvider } from "@/context/AuthContext";
-import Index from "./pages/Index";
-import SearchKos from "./pages/SearchKos";
-import KosDetail from "./pages/KosDetail";
-import Marketplace from "./pages/Marketplace";
-import ItemDetail from "./pages/ItemDetail";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Favorites from "./pages/Favorites";
-import Owner from "./pages/Owner";
-import FAQ from "./pages/FAQ";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
-import UserReports from "./pages/dashboard/UserReports";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import AdminLayout from "@/pages/admin/AdminLayout";
+
+// Page Imports
+import Home from "@/pages/Index";
+import KosDetail from "@/pages/KosDetail";
+import SearchResults from "@/pages/SearchKos";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import NotFound from "@/pages/NotFound";
+import Favorites from "@/pages/Favorites";
+import AddKos from "@/pages/dashboard/owner/AddKos";
+import OwnerDashboard from "@/pages/dashboard/OwnerOverview";
+import StudentDashboard from "@/pages/dashboard/StudentOverview";
+import MyBoardingHouses from "@/pages/dashboard/MyBoardingHouses";
+import Profile from "@/pages/dashboard/Profile";
+import Settings from "@/pages/dashboard/Settings";
+
+// Admin Pages
+import AdminDashboard from "@/pages/dashboard/admin/AdminDashboard";
+import UserManagement from "@/pages/dashboard/UserManagement";
+import EditKos from "@/pages/dashboard/admin/EditKos";
+
+// Route Protection
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
+import { OwnerRoute } from "@/components/OwnerRoute";
 
 const queryClient = new QueryClient();
 
-const AppContent = () => {
-  const location = useLocation();
-  const isDashboard = 
-    location.pathname.startsWith("/dashboard") || 
-    location.pathname.startsWith("/owner-dashboard") || 
-    location.pathname.startsWith("/admin");
+// Layout for public pages that includes Navbar and Footer
+const PublicLayout = () => (
+  <div className="min-h-screen flex flex-col">
+    <Navbar />
+    <main className="flex-1">
+      <Outlet />
+    </main>
+    <Footer />
+    <MobileBottomNav />
+    <div className="h-16 md:hidden" />
+  </div>
+);
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      {!isDashboard && <Navbar />}
-      <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/search" element={<SearchKos />} />
-          <Route path="/kos/:id" element={<KosDetail />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/item/:id" element={<ItemDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Role-based Dashboards */}
-          <Route path="/dashboard/*" element={<DashboardRouter />} />
-          <Route path="/owner-dashboard/*" element={<DashboardRouter />} />
-          <Route path="/admin/*" element={<DashboardRouter />} />
-
-          {/* Legacy routes or redirects could go here if needed */}
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/owner" element={<Owner />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/contact" element={<Contact />} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-      {!isDashboard && <Footer />}
-      {!isDashboard && <MobileBottomNav />}
-      {!isDashboard && <div className="h-16 md:hidden" />}
-    </div>
-  );
+// Helper component to render the correct dashboard index based on role
+const DashboardIndex = () => {
+  const { user } = useAuth();
+  if (user?.role === 'owner') {
+    return <OwnerDashboard />;
+  }
+  // Default to student dashboard
+  return <StudentDashboard />;
 };
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
+      <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
-          <AppContent />
+          <Routes>
+            {/* Public Routes */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/kos/:id" element={<KosDetail />} />
+              <Route path="/search" element={<SearchResults />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Route>
+
+            {/* Unified Dashboard for Students and Owners */}
+            <Route 
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<DashboardIndex />} />
+              <Route path="favorites" element={<Favorites />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Settings />} />
+              
+              {/* Owner-Specific Routes */}
+              <Route path="my-kos" element={<OwnerRoute><MyBoardingHouses /></OwnerRoute>} />
+              <Route path="add-kos" element={<OwnerRoute><AddKos /></OwnerRoute>} />
+              <Route path="edit-kos/:id" element={<OwnerRoute><AddKos isEditMode /></OwnerRoute>} />
+            </Route>
+
+            {/* Admin Routes */}
+            <Route 
+              path="/admin" 
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="edit-kos/:id" element={<EditKos />} />
+            </Route>
+
+            {/* Redirect old dashboard paths */}
+            <Route path="/owner-dashboard/*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/admin-dashboard/*" element={<Navigate to="/admin" replace />} />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

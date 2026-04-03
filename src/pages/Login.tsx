@@ -18,7 +18,7 @@ const Login = () => {
   // If already logged in, redirect to appropriate dashboard
   React.useEffect(() => {
     if (user) {
-      const path = user.role === "admin" ? "/admin" : user.role === "owner" ? "/owner-dashboard" : "/dashboard";
+      const path = user.role === "admin" ? "/admin-dashboard" : user.role === "owner" ? "/owner-dashboard" : "/dashboard";
       navigate(path, { replace: true });
     }
   }, [user, navigate]);

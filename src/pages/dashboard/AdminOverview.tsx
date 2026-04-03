@@ -139,12 +139,12 @@ export default function AdminOverview() {
 
           <div className="flex items-center gap-3">
             <Button asChild variant="outline" className="rounded-xl border-border shadow-sm" size="lg">
-              <Link to="/admin/profile">
+              <Link to="/admin-dashboard/profile">
                 Edit Profile
               </Link>
             </Button>
             <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-95" size="lg">
-              <Link to="/admin/system-settings">
+              <Link to="/admin-dashboard/system-settings">
                 <Settings className="w-5 h-5 mr-2" />
                 System Settings
               </Link>
@@ -159,28 +159,28 @@ export default function AdminOverview() {
           value={isLoading ? '...' : stats.totalUsers} 
           icon={Users} 
           trend={{ value: 0, isUp: true }}
-          to="/admin/users"
+          to="/admin-dashboard/users"
         />
         <StatsCard 
           title="Boarding Houses" 
           value={isLoading ? '...' : stats.totalKos} 
           icon={Building2} 
           trend={{ value: 0, isUp: true }}
-          to="/admin/kos"
+          to="/admin-dashboard/kos"
         />
         <StatsCard 
           title="Marketplace Items" 
           value={isLoading ? '...' : stats.totalItems} 
           icon={ShoppingBag} 
           trend={{ value: 0, isUp: true }}
-          to="/admin/marketplace"
+          to="/admin-dashboard/marketplace"
         />
         <StatsCard 
           title="Pending Reports" 
           value="0" // Replace with real data
           icon={ShieldAlert} 
           trend={{ value: 0, isUp: false }}
-          to="/admin/reports"
+          to="/admin-dashboard/reports"
         />
       </div>
 
@@ -282,7 +282,7 @@ export default function AdminOverview() {
           </div>
           <hr className="my-6 border-border" />
           <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all">
-            <Link to="/admin/system-settings">
+            <Link to="/admin-dashboard/system-settings">
               System Settings
             </Link>
           </Button>

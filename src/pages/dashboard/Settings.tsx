@@ -25,7 +25,7 @@ export default function Settings() {
     }
   ];
 
-  const basePath = user?.role === "admin" ? "/admin" : user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
+  const basePath = user?.role === "admin" ? "/admin-dashboard" : user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">

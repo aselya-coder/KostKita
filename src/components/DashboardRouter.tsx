@@ -31,6 +31,7 @@ import Reports from "@/pages/dashboard/Reports";
 import UserReports from "@/pages/dashboard/UserReports";
 import SystemSettings from "@/pages/dashboard/SystemSettings";
 import ActivityLogPage from "@/pages/dashboard/admin/ActivityLog";
+import CoinPackagesPage from "@/pages/dashboard/admin/CoinPackages";
 import TopUpPage from "@/pages/dashboard/TopUp";
 
 export function DashboardRouter() {
@@ -47,73 +48,73 @@ export function DashboardRouter() {
   const role = user.role;
 
   return (
-    <DashboardLayout user={user}>
-      <Routes>
-        {/* Student Routes */}
-        {role === "student" && (
-          <>
-            <Route index element={<StudentOverview />} />
-            <Route path="my-items" element={<MyMarketplaceItems />} />
-            <Route path="sell-item" element={<SellItem />} />
-            <Route path="edit-item/:id" element={<EditItem />} />
-            <Route path="reports" element={<UserReports />} />
-            <Route path="favorites" element={<Favorites />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="pricing" element={<PricingPage />} />
-            <Route path="topup" element={<TopUpPage />} />
-            <Route path="transactions" element={<TransactionsPage />} />
-            <Route path="system-settings" element={<SystemSettings />} />
-            <Route path="notifications" element={<Notifications />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </>
-        )}
+    <Routes>
+      {/* Student Routes */}
+      {role === "student" && (
+        <>
+          <Route index element={<StudentOverview />} />
+          <Route path="my-items" element={<MyMarketplaceItems />} />
+          <Route path="sell-item" element={<SellItem />} />
+          <Route path="edit-item/:id" element={<EditItem />} />
+          <Route path="reports" element={<UserReports />} />
+          <Route path="favorites" element={<Favorites />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="pricing" element={<PricingPage />} />
+          <Route path="topup" element={<TopUpPage />} />
+          <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="system-settings" element={<SystemSettings />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </>
+      )}
 
-        {/* Owner Routes */}
-        {role === "owner" && (
-          <>
-            <Route index element={<OwnerOverview />} />
-            <Route path="my-kos" element={<MyBoardingHouses />} />
-            <Route path="add-kos" element={<AddBoardingHouse />} />
-            <Route path="edit-kos/:id" element={<EditKosPage />} /> {/* Add the edit route */}
-            <Route path="inquiries" element={<Inquiries />} />
-            <Route path="my-items" element={<MyMarketplaceItems />} />
-            <Route path="sell-item" element={<SellItem />} />
-            <Route path="edit-item/:id" element={<EditItem />} />
-            <Route path="reports" element={<UserReports />} />
-            <Route path="favorites" element={<Favorites />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="pricing" element={<PricingPage />} />
-            <Route path="topup" element={<TopUpPage />} />
-            <Route path="transactions" element={<TransactionsPage />} />
-            <Route path="system-settings" element={<SystemSettings />} />
-            <Route path="notifications" element={<Notifications />} />
-            <Route path="*" element={<Navigate to="/owner-dashboard" replace />} />
-          </>
-        )}
+      {/* Owner Routes */}
+      {role === "owner" && (
+        <>
+          <Route index element={<OwnerOverview />} />
+          <Route path="my-kos" element={<MyBoardingHouses />} />
+          <Route path="add-kos" element={<AddBoardingHouse />} />
+          <Route path="edit-kos/:id" element={<EditKosPage />} /> {/* Add the edit route */}
+          <Route path="inquiries" element={<Inquiries />} />
+          <Route path="my-items" element={<MyMarketplaceItems />} />
+          <Route path="sell-item" element={<SellItem />} />
+          <Route path="edit-item/:id" element={<EditItem />} />
+          <Route path="reports" element={<UserReports />} />
+          <Route path="favorites" element={<Favorites />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="pricing" element={<PricingPage />} />
+          <Route path="topup" element={<TopUpPage />} />
+          <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="system-settings" element={<SystemSettings />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="*" element={<Navigate to="/owner-dashboard" replace />} />
+        </>
+      )}
 
-        {/* Admin Routes */}
-        {role === "admin" && (
-          <>
-            <Route index element={<AdminOverview />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="kos" element={<KosManagement />} />
-            <Route path="marketplace" element={<MarketplaceModeration />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="activity-log" element={<ActivityLogPage />} />
-            <Route path="pricing" element={<PricingPage />} />
-            <Route path="topup" element={<TopUpPage />} />
-            <Route path="transactions" element={<TransactionsPage />} />
-            <Route path="system-settings" element={<SystemSettings />} />
-            <Route path="favorites" element={<Favorites />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="notifications" element={<Notifications />} />
-            <Route path="*" element={<Navigate to="/admin" replace />} />
-          </>
-        )}
-      </Routes>
-    </DashboardLayout>
+      {/* Admin Routes */}
+      {role === "admin" && (
+        <>
+          <Route index element={<AdminOverview />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="kos" element={<KosManagement />} />
+          <Route path="marketplace" element={<MarketplaceModeration />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="activity-log" element={<ActivityLogPage />} />
+          <Route path="coin-packages" element={<CoinPackagesPage />} />
+          <Route path="edit-kos/:id" element={<EditKosPage />} />
+          <Route path="pricing" element={<PricingPage />} />
+          <Route path="topup" element={<TopUpPage />} />
+          <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="system-settings" element={<SystemSettings />} />
+          <Route path="favorites" element={<Favorites />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="*" element={<Navigate to="/admin-dashboard" replace />} />
+        </>
+      )}
+    </Routes>
   );
 }

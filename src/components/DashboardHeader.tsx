@@ -16,18 +16,18 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 
 interface DashboardHeaderProps {
-  user: UserType;
   onMobileMenuOpen?: () => void;
 }
 
-export function DashboardHeader({ user, onMobileMenuOpen }: DashboardHeaderProps) {
+export function DashboardHeader({ onMobileMenuOpen }: DashboardHeaderProps) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth(); // Get user from context
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   
   const getDashboardPath = (path: string) => {
-    const prefix = user.role === "admin" ? "/admin" : user.role === "owner" ? "/owner-dashboard" : "/dashboard";
-    return `${prefix}${path}`;
+    // With unified /dashboard, role-based prefix is no longer needed here
+    // It simplifies navigation links significantly.
+    return `/dashboard${path}`;
   };
 
   const handleLogout = () => {
@@ -50,6 +50,10 @@ export function DashboardHeader({ user, onMobileMenuOpen }: DashboardHeaderProps
       default: return <Info className="w-4 h-4 text-amber-500" />;
     }
   };
+
+  if (!user) {
+    return null; // Or a loading skeleton
+  }
 
   return (
     <header className="h-16 border-b border-border bg-background flex items-center justify-between px-6 sticky top-0 z-40">

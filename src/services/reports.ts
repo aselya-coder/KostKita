@@ -26,7 +26,7 @@ export const submitReport = async (reporterId: string, targetId: string, type: R
   await notifyAdmins(
     'Laporan Baru',
     `Ada laporan baru mengenai ${type}. Alasan: ${reason.substring(0, 50)}${reason.length > 50 ? '...' : ''}`,
-    '/admin/reports'
+    '/admin-dashboard/reports'
   );
 
   return { success: true, data: data?.[0] };

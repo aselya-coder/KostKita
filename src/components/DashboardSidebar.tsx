@@ -26,14 +26,10 @@ interface SidebarItem {
   icon: LucideIcon;
 }
 
-interface DashboardSidebarProps {
-  role: "admin" | "owner" | "student";
-}
-
-export function DashboardSidebar({ role }: DashboardSidebarProps) {
+export function DashboardSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -41,47 +37,41 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
   };
 
   const getSidebarItems = (): SidebarItem[] => {
+    const role = user?.role;
+
+    const studentItems: SidebarItem[] = [
+      { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
+      { title: "My Items", href: "/dashboard/my-items", icon: ShoppingBag },
+      { title: "Sell Item", href: "/dashboard/sell-item", icon: PlusCircle },
+      { title: "Favorites", href: "/dashboard/favorites", icon: Heart },
+      { title: "Profile", href: "/dashboard/profile", icon: User },
+      { title: "Settings", href: "/dashboard/settings", icon: SettingsIcon },
+    ];
+
+    const ownerItems: SidebarItem[] = [
+      { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
+      { title: "My Boarding Houses", href: "/dashboard/my-kos", icon: Building2 },
+      { title: "Add Boarding House", href: "/dashboard/add-kos", icon: PlusCircle },
+      { title: "My Items", href: "/dashboard/my-items", icon: ShoppingBag },
+      { title: "Sell Item", href: "/dashboard/sell-item", icon: PlusCircle },
+      { title: "Favorites", href: "/dashboard/favorites", icon: Heart },
+      { title: "Profile", href: "/dashboard/profile", icon: User },
+      { title: "Settings", href: "/dashboard/settings", icon: SettingsIcon },
+    ];
+
     switch (role) {
-      case "admin":
-        return [
-          { title: "Overview", href: "/admin", icon: LayoutDashboard },
-          { title: "Users", href: "/admin/users", icon: Users },
-          { title: "Boarding Houses", href: "/admin/kos", icon: Building2 },
-          { title: "Marketplace", href: "/admin/marketplace", icon: ShoppingBag },
-          { title: "Reports", href: "/admin/reports", icon: ShieldAlert },
-          { title: "Activity Log", href: "/admin/activity-log", icon: BarChart3 },
-          { title: "Top Up Koin", href: "/admin/topup", icon: Coins },
-          { title: "System Settings", href: "/admin/system-settings", icon: SettingsIcon },
-          { title: "Favorites", href: "/admin/favorites", icon: Heart },
-        ];
       case "owner":
-        return [
-          { title: "Overview", href: "/owner-dashboard", icon: LayoutDashboard },
-          { title: "My Boarding Houses", href: "/owner-dashboard/my-kos", icon: Building2 },
-          { title: "Add Boarding House", href: "/owner-dashboard/add-kos", icon: PlusCircle },
-          { title: "My Items", href: "/owner-dashboard/my-items", icon: ShoppingBag },
-          { title: "Sell Item", href: "/owner-dashboard/sell-item", icon: PlusCircle },
-          { title: "Laporan", href: "/owner-dashboard/reports", icon: ShieldAlert },
-          { title: "Top Up Koin", href: "/owner-dashboard/topup", icon: Coins },
-          { title: "System Settings", href: "/owner-dashboard/system-settings", icon: SettingsIcon },
-          { title: "Favorites", href: "/owner-dashboard/favorites", icon: Heart },
-          { title: "Profile", href: "/owner-dashboard/profile", icon: User },
-        ];
+        return ownerItems;
       case "student":
-        return [
-          { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
-          { title: "My Items", href: "/dashboard/my-items", icon: ShoppingBag },
-          { title: "Sell Item", href: "/dashboard/sell-item", icon: PlusCircle },
-          { title: "Laporan", href: "/dashboard/reports", icon: ShieldAlert },
-          { title: "Top Up Koin", href: "/dashboard/topup", icon: Coins },
-          { title: "System Settings", href: "/dashboard/system-settings", icon: SettingsIcon },
-          { title: "Favorites", href: "/dashboard/favorites", icon: Heart },
-          { title: "Profile", href: "/dashboard/profile", icon: User },
-        ];
+        return studentItems;
       default:
         return [];
     }
   };
+
+  if (!user) {
+    return null; // Don't render sidebar if no user
+  }
 
   const items = getSidebarItems();
 

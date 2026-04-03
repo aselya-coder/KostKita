@@ -152,7 +152,7 @@ export const addKosListing = async (userId: string, kosData: Partial<KosListing>
     await notifyAdmins(
       'Listing Kos Baru',
       `Kos baru '${data.title}' telah ditambahkan dan menunggu verifikasi.`,
-      `/admin/kos`
+      `/admin-dashboard/kos`
     );
   }
 
