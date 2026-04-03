@@ -8,6 +8,9 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   isLoading: boolean;
   fetchUserProfile: () => Promise<void>;
+  simulatedUserId: string | null;
+  simulatedUserRole: 'USER' | 'ADMIN' | null;
+  setSimulatedUser: (id: string | null, role: 'USER' | 'ADMIN' | null) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

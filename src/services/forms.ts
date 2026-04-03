@@ -1,84 +1,79 @@
 import { supabase } from '@/lib/supabase';
 import { type KosListing, type MarketplaceItem } from '@/data/mockData';
 import { logUserActivity } from './marketplace';
-import { processListingPayment, getListingExpiration } from './coin';
+
+const BACKEND_URL = 'http://localhost:3000/api'; // Adjust if your backend runs on a different port or domain
 
 // KOS LISTINGS
 export const createKosListing = async (listing: any, durationDays: number = 30) => {
-  // 0. Check Coin/Free Upload Eligibility
-  const result = await processListingPayment(listing.owner_id, durationDays);
-  if (!result.success) {
-    return { success: false, error: result.message };
-  }
+  try {
+    const response = await fetch(`${BACKEND_URL}/listings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': listing.owner_id, // Simulate user ID from auth
+        // 'x-user-role': 'USER', // Simulate user role if needed for testing
+      },
+      body: JSON.stringify({ ...listing, userId: listing.owner_id, durationDays }),
+    });
 
-  // 1. Set Expiration based on duration
-  listing.expires_at = getListingExpiration(result.duration);
-  listing.coin_used = result.cost;
-  listing.is_free = result.is_free;
-  listing.listing_status = 'active';
+    const result = await response.json();
 
-  console.log('Sending kos listing to Supabase with Daily Coin logic:', listing);
+    if (!response.ok) {
+      throw new Error(result.message || 'Gagal membuat listing kos');
+    }
 
-  const { data, error } = await supabase
-    .from('kos_listings')
-    .insert([listing])
-    .select();
+    // Log activity
+    if (result.data) {
+      await logUserActivity(
+        result.data.listing.userId,
+        'Memasang kos baru (Real-time)',
+        result.data.listing.title,
+        `/kos/${result.data.listing.id}`
+      );
+    }
 
-  if (error) {
-    console.error('Supabase Error (Kos):', error);
+    return { success: true, data: result.data };
+  } catch (error: any) {
+    console.error('Backend API Error (Kos):', error);
     return { success: false, error: error.message };
   }
-
-  // Log activity
-  if (data?.[0]) {
-    await logUserActivity(
-      data[0].owner_id,
-      'Memasang kos baru (Real-time)',
-      data[0].title,
-      `/kos/${data[0].id}`
-    );
-  }
-
-  return { success: true, data: data[0] };
 };
 
 // MARKETPLACE ITEMS
 export const createMarketplaceItem = async (item: any, durationDays: number = 30) => {
-  // 0. Check Coin/Free Upload Eligibility
-  const result = await processListingPayment(item.seller_id, durationDays);
-  if (!result.success) {
-    return { success: false, error: result.message };
-  }
+  try {
+    const response = await fetch(`${BACKEND_URL}/listings`, { // Assuming marketplace items also use the /listings endpoint
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': item.seller_id, // Simulate user ID from auth
+        // 'x-user-role': 'USER', // Simulate user role if needed for testing
+      },
+      body: JSON.stringify({ ...item, userId: item.seller_id, durationDays }),
+    });
 
-  // 1. Set Expiration based on duration
-  item.expires_at = getListingExpiration(result.duration);
-  item.coin_used = result.cost;
-  item.is_free = result.is_free;
-  item.listing_status = 'active';
+    const result = await response.json();
 
-  console.log('Sending item to Supabase with Daily Coin logic:', item);
+    if (!response.ok) {
+      throw new Error(result.message || 'Gagal membuat listing barang marketplace');
+    }
 
-  const { data, error } = await supabase
-    .from('marketplace_items')
-    .insert([item])
-    .select();
+    // Log activity
+    if (result.data) {
+      await logUserActivity(
+        result.data.listing.userId,
+        'Menjual barang baru (Real-time)',
+        result.data.listing.title,
+        `/item/${result.data.listing.id}`
+      );
+    }
 
-  if (error) {
-    console.error('Supabase Error (Item):', error);
+    return { success: true, data: result.data };
+  } catch (error: any) {
+    console.error('Backend API Error (Item):', error);
     return { success: false, error: error.message };
   }
-
-  // Log activity
-  if (data?.[0]) {
-    await logUserActivity(
-      data[0].seller_id,
-      'Menjual barang baru (Real-time)',
-      data[0].title,
-      `/item/${data[0].id}`
-    );
-  }
-
-  return { success: true, data: data[0] };
 };
 
 

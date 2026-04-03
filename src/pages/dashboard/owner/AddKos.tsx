@@ -9,21 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Camera, X, Plus, Loader2, MapPin } from 'lucide-react';
+import { X, Plus, Loader2, MapPin, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { QuotaAlertModal } from '@/components/QuotaAlertModal';
-import { checkUploadEligibility } from '@/services/payment';
 
 export default function AddKosPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingQuota, setIsCheckingQuota] = useState(true);
   const [quotaModalOpen, setQuotaModalOpen] = useState(false);
   const [quotaMessage, setQuotaMessage] = useState('');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [loadingStatus, setLoadingStatus] = useState<string>('');
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
@@ -40,25 +36,6 @@ export default function AddKosPage() {
     rating: '5.0',
     durationDays: '30', // Default duration
   });
-  const [isFreeUpload, setIsFreeUpload] = useState(false);
-
-  // Check quota on mount
-  useEffect(() => {
-    const verifyQuota = async () => {
-      if (!user) return;
-      
-      const { eligible, message, is_free } = await checkUploadEligibility(user.id);
-      setIsFreeUpload(is_free);
-      
-      if (!eligible) {
-        setQuotaMessage(message);
-        setQuotaModalOpen(true);
-      }
-      setIsCheckingQuota(false);
-    };
-    
-    verifyQuota();
-  }, [user]);
 
 
   // Cleanup object URLs to avoid memory leaks
@@ -133,7 +110,6 @@ export default function AddKosPage() {
     }
 
     setIsLoading(true);
-    setLoadingStatus('Mengupload gambar...');
 
     try {
       // 1. Upload Images
@@ -146,7 +122,6 @@ export default function AddKosPage() {
         toast.warning(`${errors.length} gambar gagal diunggah, melanjutkan dengan yang berhasil.`);
       }
 
-      setLoadingStatus('Menyimpan data kos...');
 
       // 2. Prepare and Save Listing Data
       const priceClean = parseInt(formData.price.replace(/\D/g, ''));
@@ -176,7 +151,7 @@ export default function AddKosPage() {
 
 
 
-      setLoadingStatus('Berhasil!');
+
       toast.success('Kos berhasil dipublikasikan!');
       navigate('/owner-dashboard/my-kos');
 
@@ -185,7 +160,6 @@ export default function AddKosPage() {
       toast.error(message);
     } finally {
       setIsLoading(false);
-      setLoadingStatus('');
     }
   };
 
@@ -338,25 +312,23 @@ export default function AddKosPage() {
             <Input name="rating" type="number" min="1" max="5" step="0.1" value={formData.rating} onChange={handleChange} required className="rounded-xl" />
           </div>
 
-          {!isFreeUpload && (
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
-                Durasi Iklan (1 Koin/Hari)
-                <Zap className="w-3 h-3 fill-current" />
-              </label>
-              <Select onValueChange={(v) => setFormData(p => ({ ...p, durationDays: v }))} defaultValue={formData.durationDays}>
-                <SelectTrigger className="rounded-xl border-primary/50 bg-primary/5">
-                  <SelectValue placeholder="Pilih Durasi" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">3 Hari (3 Koin)</SelectItem>
-                  <SelectItem value="7">7 Hari (7 Koin)</SelectItem>
-                  <SelectItem value="14">14 Hari (14 Koin)</SelectItem>
-                  <SelectItem value="30">30 Hari (30 Koin)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
+              Durasi Iklan (1 Koin/Hari)
+              <Zap className="w-3 h-3 fill-current" />
+            </label>
+            <Select onValueChange={(v) => setFormData(p => ({ ...p, durationDays: v }))} defaultValue={formData.durationDays}>
+              <SelectTrigger className="rounded-xl border-primary/50 bg-primary/5">
+                <SelectValue placeholder="Pilih Durasi" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="3">3 Hari (3 Koin)</SelectItem>
+                <SelectItem value="7">7 Hari (7 Koin)</SelectItem>
+                <SelectItem value="14">14 Hari (14 Koin)</SelectItem>
+                <SelectItem value="30">30 Hari (30 Koin)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
 

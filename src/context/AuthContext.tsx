@@ -8,6 +8,13 @@ import { logUserActivity } from "@/services/marketplace";
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [simulatedUserId, setSimulatedUserId] = useState<string | null>(null);
+  const [simulatedUserRole, setSimulatedUserRole] = useState<'USER' | 'ADMIN' | null>(null);
+
+  const setSimulatedUser = (id: string | null, role: 'USER' | 'ADMIN' | null) => {
+    setSimulatedUserId(id);
+    setSimulatedUserRole(role);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -166,6 +173,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         // Log activity
         await logUserActivity(data.user.id, 'Masuk ke akun (Login)');
+        // Set simulated user for backend calls
+        setSimulatedUser(data.user.id, (data.user.user_metadata?.role || 'USER') as 'USER' | 'ADMIN');
         // The onAuthStateChange listener will handle setting the user state.
         return { success: true };
       }
@@ -196,6 +205,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         // Log activity
         await logUserActivity(data.user.id, 'Mendaftar akun baru');
+        // Set simulated user for backend calls
+        setSimulatedUser(data.user.id, (metadata.role || 'USER') as 'USER' | 'ADMIN');
         // Immediately try to log in after successful signup
         const loginResponse = await login(email, password);
         return loginResponse;
@@ -213,10 +224,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     await supabase.auth.signOut();
     setUser(null);
+    setSimulatedUser(null, null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, fetchUserProfile }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, fetchUserProfile, simulatedUserId, simulatedUserRole, setSimulatedUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { Building2, Users, MessageCircle, BarChart3, Trash2, Edit2, Eye, Plus, ShoppingBag } from "lucide-react";
+import { Building2, Users, MessageCircle, BarChart3, Trash2, Edit2, Eye, Plus, ShoppingBag, Wallet } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getWalletBalance } from "@/services/wallet";
 
 export default function OwnerOverview() {
   const { user } = useAuth();
@@ -19,14 +20,16 @@ export default function OwnerOverview() {
   const [myKos, setMyKos] = useState<KosListing[]>([]);
   const [ownerInquiries, setOwnerInquiries] = useState<Inquiry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
 
   const fetchData = async () => {
     if (!user) return;
     try {
-      const [statsData, kosData, inquiriesData] = await Promise.all([
+      const [statsData, kosData, inquiriesData, balanceData] = await Promise.all([
         getOwnerDashboardStats(user.id),
         getKosListings(user.id),
-        getInquiries(user.id)
+        getInquiries(user.id),
+        getWalletBalance(user.id)
       ]);
       setStats({
         propertiesCount: kosData.length,
@@ -34,6 +37,7 @@ export default function OwnerOverview() {
       });
       setMyKos(kosData);
       setOwnerInquiries(inquiriesData.slice(0, 5));
+      setWalletBalance(balanceData);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -159,6 +163,13 @@ export default function OwnerOverview() {
           icon={BarChart3} 
           description="Monthly estimated"
           to="/owner-dashboard/my-kos"
+        />
+        <StatsCard 
+          title="Saldo Koin" 
+          value={isLoading ? '...' : (walletBalance !== null ? `${walletBalance} Koin` : 'N/A')} 
+          icon={Wallet} 
+          description="Koin Anda saat ini"
+          to="/dashboard/transactions"
         />
       </div>
 

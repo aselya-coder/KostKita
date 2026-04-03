@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// Remove enums for SQLite compatibility
+// enum Role {
+//   USER
+//   ADMIN
+// }
+
+// enum ListingStatus {
+//   active
+//   expired
+//   archived
+// }
+
+// enum CoinLogType {
+//   credit
+//   debit
+// }
+
+// enum TransactionStatus {
+//   pending
+//   success
+//   failed
+// }
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  role         String        @default("USER") // Changed from enum Role
+  wallet       Wallet?
+  listings     Listing[]
+  transactions Transaction[]
+  coinLogs     CoinLog[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("wallets")
+}
+
+model Listing {
+  id          String        @id @default(uuid())
+  userId      String        @map("user_id")
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  price       Float
+  status      String        @default("active") // Changed from ListingStatus
+  isFree      Boolean       @default(false) @map("is_free")
+  dailyCost   Int           @default(1) @map("daily_cost")
+  expiresAt   DateTime?     @map("expires_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@map("listings")
+}
+
+model CoinPackage {
+  id           String        @id @default(uuid())
+  name         String
+  coinAmount   Int           @map("coin_amount")
+  price        Float
+  isActive     Boolean       @default(true) @map("is_active")
+  transactions Transaction[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  @@map("coin_packages")
+}
+
+model Transaction {
+  id            String            @id @default(uuid())
+  userId        String            @map("user_id")
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coinPackageId String            @map("coin_package_id")
+  coinPackage   CoinPackage       @relation(fields: [coinPackageId], references: [id])
+  amount        Float
+  coinAmount    Int               @map("coin_amount")
+  status        String            @default("pending") // Changed from TransactionStatus
+  externalId    String?           @unique @map("external_id")
+  createdAt     DateTime          @default(now()) @map("created_at")
+
+  @@map("transactions")
+}
+
+model CoinLog {
+  id          String      @id @default(uuid())
+  userId      String      @map("user_id")
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String      // Changed from CoinLogType
+  amount      Int
+  description String?
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@map("coin_logs")
+}

@@ -24,7 +24,6 @@ type KosDbRecord = {
 };
 import { logUserActivity } from '@/services/marketplace';
 import { notifyAdmins } from './notifications';
-import { checkUploadEligibility, recordUpload } from './payment';
 
 export const getKosListings = async (ownerId?: string): Promise<KosListing[]> => {
   let query = supabase
@@ -114,12 +113,6 @@ export const getKosById = async (id: string): Promise<KosListing | null> => {
 };
 
 export const addKosListing = async (userId: string, kosData: Partial<KosListing>) => {
-  // 0. Check quota eligibility
-  const { eligible, message } = await checkUploadEligibility(userId);
-  if (!eligible) {
-    throw new Error(message);
-  }
-
   const dbData = {
     owner_id: userId,
     title: kosData.title,
@@ -148,9 +141,6 @@ export const addKosListing = async (userId: string, kosData: Partial<KosListing>
 
   // Log activity
   if (data) {
-    // 1. Record the upload in paid content system
-    await recordUpload(userId, 'kos', data.id);
-
     await logUserActivity(
       userId,
       'Memasang kos baru',
