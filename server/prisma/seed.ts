@@ -3,25 +3,31 @@ import prisma from '../src/config/prisma.js';
 async function main() {
   console.log('Seeding coin packages...');
 
+  // Clear existing packages first
+  await prisma.coinPackage.deleteMany({});
+
   const packages = [
-    { name: '5 Koin', coinAmount: 5, price: 50000 },
-    { name: '10 Koin', coinAmount: 10, price: 95000 },
-    { name: '20 Koin', coinAmount: 20, price: 180000 },
-    { name: '50 Koin', coinAmount: 50, price: 450000 },
-    { name: '100 Koin', coinAmount: 100, price: 850000 },
+    { name: 'Paket Starter', coinAmount: 5, price: 50000 },
+    { name: 'Paket Basic', coinAmount: 10, price: 95000 },
+    { name: 'Paket Pro', coinAmount: 20, price: 180000 },
+    { name: 'Paket Business', coinAmount: 50, price: 450000 },
+    { name: 'Paket Enterprise', coinAmount: 100, price: 850000 },
   ];
 
-  for (const pkg of packages) {
-    await prisma.coinPackage.upsert({
-      where: { id: pkg.name }, // This is a placeholder, usually use a unique field or check existence
-      update: {},
-      create: {
-        name: pkg.name,
-        coinAmount: pkg.coinAmount,
-        price: pkg.price,
-      },
-    });
-  }
+  await prisma.coinPackage.createMany({
+    data: packages.map((pkg) => ({
+      name: pkg.name,
+      coinAmount: pkg.coinAmount,
+      price: pkg.price,
+      isActive: true,
+    })),
+  });
+
+  const created = await prisma.coinPackage.findMany();
+  console.log('Coin packages created:', created.length);
+  created.forEach((p) =>
+    console.log(`  - ${p.name}: ${p.coinAmount} koin @ Rp${p.price.toLocaleString('id-ID')}`)
+  );
 
   console.log('Seed completed.');
 }

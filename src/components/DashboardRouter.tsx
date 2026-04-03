@@ -31,6 +31,7 @@ import Reports from "@/pages/dashboard/Reports";
 import UserReports from "@/pages/dashboard/UserReports";
 import SystemSettings from "@/pages/dashboard/SystemSettings";
 import ActivityLogPage from "@/pages/dashboard/admin/ActivityLog";
+import TopUpPage from "@/pages/dashboard/TopUp";
 
 export function DashboardRouter() {
   const { user, isLoading } = useAuth();
@@ -60,6 +61,7 @@ export function DashboardRouter() {
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
             <Route path="pricing" element={<PricingPage />} />
+            <Route path="topup" element={<TopUpPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="system-settings" element={<SystemSettings />} />
             <Route path="notifications" element={<Notifications />} />
@@ -83,6 +85,7 @@ export function DashboardRouter() {
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
             <Route path="pricing" element={<PricingPage />} />
+            <Route path="topup" element={<TopUpPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="system-settings" element={<SystemSettings />} />
             <Route path="notifications" element={<Notifications />} />
@@ -100,6 +103,7 @@ export function DashboardRouter() {
             <Route path="reports" element={<Reports />} />
             <Route path="activity-log" element={<ActivityLogPage />} />
             <Route path="pricing" element={<PricingPage />} />
+            <Route path="topup" element={<TopUpPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="system-settings" element={<SystemSettings />} />
             <Route path="favorites" element={<Favorites />} />
