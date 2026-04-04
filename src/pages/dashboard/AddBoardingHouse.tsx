@@ -202,7 +202,7 @@ export default function AddBoardingHouse() {
                     className="text-[10px] text-primary hover:underline flex items-center gap-1 font-bold uppercase tracking-tighter"
                   >
                     <MapPin className="w-3 h-3" />
-                    Cek di Maps
+                    View on Maps
                   </a>
                 )}
               </div>
@@ -218,17 +218,38 @@ export default function AddBoardingHouse() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold ml-1">Price per Month</label>
+              <label className="text-sm font-semibold ml-1">Available Rooms</label>
+              <input 
+                required
+                name="available_rooms"
+                type="number"
+                min="1"
+                value={formData.available_rooms}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold ml-1">Price per Month (IDR)</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">Rp</span>
                 <input 
                   required
                   name="price"
-                  type="number" 
+                  type="text" 
                   value={formData.price}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const rawValue = e.target.value.replace(/\D/g, '');
+                    if (rawValue === '') {
+                      setFormData(prev => ({ ...prev, price: '' }));
+                      return;
+                    }
+                    const formattedValue = parseInt(rawValue).toLocaleString('id-ID');
+                    setFormData(prev => ({ ...prev, price: formattedValue }));
+                  }}
                   placeholder="1.500.000" 
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-primary"
                 />
               </div>
             </div>

@@ -139,26 +139,26 @@ const KosDetail = () => {
           />
 
           {/* Images */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-            {/* Image 1 */}
-            <div className="aspect-video md:aspect-[4/3] rounded-2xl overflow-hidden bg-muted/30">
-              <img src={kos.images[0]} alt={kos.title} className="w-full h-full object-cover" />
-            </div>
-
-            {/* Secondary Images */}
-            {kos.images.length > 1 && (
-              <div className={`hidden lg:grid gap-4 ${kos.images.length > 2 ? 'grid-rows-2' : ''}`}>
-                {kos.images[1] && (
-                  <div className="aspect-video md:aspect-[4/3] rounded-2xl overflow-hidden bg-muted/30">
-                    <img src={kos.images[1]} alt={`${kos.title} 2`} className="w-full h-full object-cover" />
-                  </div>
-                )}
-                {kos.images[2] && (
-                  <div className="aspect-video md:aspect-[4/3] rounded-2xl overflow-hidden bg-muted/30">
-                    <img src={kos.images[2]} alt={`${kos.title} 3`} className="w-full h-full object-cover" />
-                  </div>
-                )}
+          <div className="mb-8">
+            <div className="flex lg:grid lg:grid-cols-2 gap-4 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 snap-x snap-mandatory hide-scrollbar">
+              {/* Image 1 */}
+              <div className="min-w-[85vw] sm:min-w-[60vw] lg:min-w-full aspect-video md:aspect-[4/3] rounded-2xl overflow-hidden bg-muted/30 snap-center">
+                <img src={kos.images[0]} alt={kos.title} className="w-full h-full object-cover" />
               </div>
+
+              {/* Secondary Images */}
+              {kos.images.length > 1 && (
+                <div className={`flex lg:grid gap-4 ${kos.images.length > 2 ? 'lg:grid-rows-2' : ''}`}>
+                  {kos.images.slice(1, 3).map((img, idx) => (
+                    <div key={idx} className="min-w-[85vw] sm:min-w-[60vw] lg:min-w-full aspect-video md:aspect-[4/3] rounded-2xl overflow-hidden bg-muted/30 snap-center">
+                      <img src={img} alt={`${kos.title} ${idx + 2}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {kos.images.length > 1 && (
+              <p className="text-[10px] text-muted-foreground mt-2 lg:hidden italic">Geser untuk melihat foto lainnya</p>
             )}
           </div>
 

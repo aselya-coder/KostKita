@@ -34,7 +34,7 @@ const ADVERTISE_PACKAGES: AdvertisePackage[] = [
     id: '1',
     name: 'Boost Standar',
     duration_days: 7,
-    coin_cost: 100,
+    coin_cost: 7,
     boost_level: 1,
     description: 'Tampilkan kos Anda di bagian atas selama 7 hari'
   },
@@ -42,7 +42,7 @@ const ADVERTISE_PACKAGES: AdvertisePackage[] = [
     id: '2',
     name: 'Boost Premium',
     duration_days: 30,
-    coin_cost: 300,
+    coin_cost: 30,
     boost_level: 2,
     description: 'Tingkatkan visibilitas selama 1 bulan dengan badge premium'
   },
@@ -50,7 +50,7 @@ const ADVERTISE_PACKAGES: AdvertisePackage[] = [
     id: '3',
     name: 'Boost Eksklusif',
     duration_days: 60,
-    coin_cost: 500,
+    coin_cost: 60,
     boost_level: 3,
     description: 'Promosi maksimal selama 2 bulan dengan featured placement'
   }
@@ -141,6 +141,12 @@ export const AdvertiseKosModal: React.FC<AdvertiseKosModalProps> = ({
         amount: selectedPackage.coin_cost,
         description: `Promosi kos - ${selectedPackage.name} (${selectedPackage.duration_days} hari)`
       });
+
+      // Update kos premium status
+      await supabase
+        .from('kos_listings')
+        .update({ is_premium: true })
+        .eq('id', kosId);
 
       toast.success(`Promosi ${selectedPackage.name} berhasil! Kos Anda akan ditampilkan di bagian atas.`);
       setWalletBalance(walletBalance - selectedPackage.coin_cost);

@@ -141,22 +141,22 @@ export default function AddItemPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-12">
+    <div className="max-w-3xl mx-auto space-y-6 pb-12 px-4 md:px-0">
       <BackButton to="/dashboard/my-items" />
       
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-display font-bold text-foreground">Jual Barang</h1>
-        <p className="text-muted-foreground">Punya barang tidak terpakai? Jual ke sesama mahasiswa di sini.</p>
+        <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">Jual Barang</h1>
+        <p className="text-sm text-muted-foreground">Punya barang tidak terpakai? Jual ke sesama mahasiswa di sini.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-card rounded-3xl border border-border p-8 space-y-8 shadow-sm">
+      <form onSubmit={handleSubmit} className="bg-card rounded-2xl md:rounded-3xl border border-border p-5 md:p-8 space-y-6 md:space-y-8 shadow-sm">
         {/* Image Upload */}
         <div className="space-y-4 text-center flex flex-col items-center">
-          <label className="text-sm font-bold text-foreground uppercase tracking-wider self-start">Foto Barang</label>
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider self-start">Foto Barang</label>
           
           <div className="relative group">
             {previewUrl ? (
-              <div className="relative w-64 aspect-square rounded-2xl overflow-hidden border border-border shadow-md">
+              <div className="relative w-48 h-48 md:w-64 md:h-64 aspect-square rounded-2xl overflow-hidden border border-border shadow-md">
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                 <button 
                   type="button"

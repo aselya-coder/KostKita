@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserRepository } from '../repositories/user.repository.js';
-import { Role } from '@prisma/client';
+
+// Define Role as a string since SQLite doesn't support Enums in the same way as PostgreSQL
+type Role = string;
 
 // Extend the Request type to include user property
 declare global {
@@ -49,13 +51,16 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const authorize = (allowedRoles: Role[]) => {
+export const authorize = (allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Unauthorized: User not authenticated' });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const userRole = req.user.role.toUpperCase();
+    const roles = allowedRoles.map(r => r.toUpperCase());
+
+    if (!roles.includes(userRole)) {
       return res.status(403).json({ success: false, message: 'Forbidden: Insufficient permissions' });
     }
 

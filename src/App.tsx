@@ -39,6 +39,7 @@ import UserManagement from "@/pages/dashboard/UserManagement";
 import EditKos from "@/pages/dashboard/admin/EditKos";
 import KosManagement from "@/pages/dashboard/KosManagement";
 import MarketplaceModeration from "@/pages/dashboard/MarketplaceModeration";
+import AdminAdvertisements from "@/pages/dashboard/admin/Advertisements";
 import Reports from "@/pages/dashboard/Reports";
 import ActivityLog from "@/pages/dashboard/admin/ActivityLog";
 import CoinPackages from "@/pages/dashboard/admin/CoinPackages";
@@ -110,6 +111,7 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="kos" element={<KosManagement />} />
+              <Route path="advertisements" element={<AdminAdvertisements />} />
               <Route path="marketplace" element={<MarketplaceModeration />} />
               <Route path="reports" element={<Reports />} />
               <Route path="activity-log" element={<ActivityLog />} />

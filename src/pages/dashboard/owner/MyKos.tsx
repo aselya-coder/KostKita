@@ -60,14 +60,14 @@ export default function MyKos() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
       <BackButton to="/owner-dashboard" className="mb-0" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Kos Saya</h1>
-          <p className="text-muted-foreground">Kelola semua listing kos yang Anda miliki.</p>
+          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Kos Saya</h1>
+          <p className="text-muted-foreground text-xs md:text-sm">Kelola semua listing kos yang Anda miliki.</p>
         </div>
-        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
           <Link to="/owner-dashboard/add-kos">
             <Plus className="w-4 h-4 mr-2" />
             Tambah Kos Baru
@@ -77,76 +77,78 @@ export default function MyKos() {
 
       {myKos.length > 0 ? (
         <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-secondary/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider">
-                <tr>
-                  <th className="px-6 py-4">Nama Kos</th>
-                  <th className="px-6 py-4">Tipe</th>
-                  <th className="px-6 py-4">Harga/Bulan</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y border-border text-foreground">
-                {myKos.map((kos) => (
-                  <tr key={kos.id} className="hover:bg-secondary/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <img 
-                          src={kos.images[0]} 
-                          alt={kos.title} 
-                          className="w-12 h-12 rounded-lg object-cover bg-muted" 
-                        />
-                        <div className="min-w-0">
-                          <p className="font-semibold truncate max-w-[200px]">{kos.title}</p>
-                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{kos.location}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="capitalize">{kos.type}</span>
-                    </td>
-                    <td className="px-6 py-4 font-medium">
-                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(kos.price)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={cn(
-                        "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                        kos.status === "approved" ? "bg-emerald-50 text-emerald-600" :
-                        kos.status === "pending" ? "bg-amber-50 text-amber-600" :
-                        "bg-red-50 text-red-600"
-                      )}>
-                        {kos.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
-                          <Link to={`/kos/${kos.id}`}>
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
-                          <Link to={`/owner-dashboard/edit-kos/${kos.id}`}>
-                            <Edit2 className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(kos.id)}
-                          title="Hapus Kos"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
+          <div className="overflow-x-auto -mx-4 md:mx-0">
+            <div className="inline-block min-w-full align-middle">
+              <table className="w-full text-xs md:text-sm text-left">
+                <thead className="bg-secondary/50 text-muted-foreground uppercase text-[9px] md:text-[10px] font-bold tracking-wider">
+                  <tr>
+                    <th className="px-4 md:px-6 py-4">Nama Kos</th>
+                    <th className="px-4 md:px-6 py-4">Tipe</th>
+                    <th className="px-4 md:px-6 py-4">Harga/Bulan</th>
+                    <th className="px-4 md:px-6 py-4">Status</th>
+                    <th className="px-4 md:px-6 py-4 text-right">Aksi</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y border-border text-foreground">
+                  {myKos.map((kos) => (
+                    <tr key={kos.id} className="hover:bg-secondary/30 transition-colors">
+                      <td className="px-4 md:px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={kos.images[0]} 
+                            alt={kos.title} 
+                            className="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover bg-muted flex-shrink-0" 
+                          />
+                          <div className="min-w-0">
+                            <p className="font-semibold truncate max-w-[120px] md:max-w-[200px]">{kos.title}</p>
+                            <p className="text-[10px] md:text-xs text-muted-foreground truncate max-w-[120px] md:max-w-[200px]">{kos.location}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 md:px-6 py-4">
+                        <span className="capitalize">{kos.type}</span>
+                      </td>
+                      <td className="px-4 md:px-6 py-4 font-medium whitespace-nowrap">
+                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(kos.price)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider",
+                          kos.status === "approved" ? "bg-emerald-50 text-emerald-600" :
+                          kos.status === "pending" ? "bg-amber-50 text-amber-600" :
+                          "bg-red-50 text-red-600"
+                        )}>
+                          {kos.status}
+                        </span>
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1 md:gap-2">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
+                            <Link to={`/kos/${kos.id}`}>
+                              <Eye className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            </Link>
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
+                            <Link to={`/owner-dashboard/edit-kos/${kos.id}`}>
+                              <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            </Link>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDelete(kos.id)}
+                            title="Hapus Kos"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       ) : (

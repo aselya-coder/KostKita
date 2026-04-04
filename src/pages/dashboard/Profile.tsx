@@ -128,28 +128,28 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
       <BackButton to={basePath} className="mb-0" />
       <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Account Profile</h1>
-        <p className="text-muted-foreground">Manage your personal information and public profile.</p>
+        <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Account Profile</h1>
+        <p className="text-xs md:text-sm text-muted-foreground">Manage your personal information and public profile.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         {/* Left Column - Profile Card */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-card rounded-2xl border border-border p-6 shadow-sm text-center">
             <div className="relative inline-block mx-auto mb-4">
-              <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
+              <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-background shadow-lg">
                 <AvatarImage src={user.avatar} />
-                <AvatarFallback className="text-2xl">{user?.name ? user.name.charAt(0) : "U"}</AvatarFallback>
+                <AvatarFallback className="text-xl md:text-2xl">{user?.name ? user.name.charAt(0) : "U"}</AvatarFallback>
               </Avatar>
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors border-2 border-background disabled:opacity-50"
+                className="absolute bottom-0 right-0 p-1.5 md:p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors border-2 border-background disabled:opacity-50"
               >
-                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                {isUploading ? <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" /> : <Camera className="w-3 h-3 md:w-4 md:h-4" />}
               </button>
               <input 
                 type="file" 
@@ -159,20 +159,20 @@ export default function Profile() {
                 className="hidden" 
               />
             </div>
-            <h3 className="text-lg font-display font-bold">{user.name}</h3>
-            <p className="text-sm text-muted-foreground capitalize mb-4">{user.role}</p>
+            <h3 className="text-base md:text-lg font-display font-bold">{user.name}</h3>
+            <p className="text-xs md:text-sm text-muted-foreground capitalize mb-4">{user.role}</p>
             <div className="flex justify-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[9px] md:text-[10px] font-bold uppercase tracking-wider">
                 Verified
               </span>
             </div>
           </div>
 
-          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-            <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Member Since</h4>
+          <div className="bg-card rounded-2xl border border-border p-4 md:p-6 shadow-sm">
+            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3 md:mb-4">Member Since</h4>
             <div className="flex items-center gap-3 text-foreground">
               <Calendar className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">{new Date(user.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              <span className="text-xs md:text-sm font-medium">{new Date(user.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
           </div>
 
@@ -216,55 +216,55 @@ export default function Profile() {
 
         {/* Right Column - Forms */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card rounded-2xl border border-border p-8 shadow-sm space-y-8">
-            <div className="grid gap-6 sm:grid-cols-2">
+          <div className="bg-card rounded-2xl border border-border p-5 md:p-8 shadow-sm space-y-6 md:space-y-8">
+            <div className="grid gap-4 md:gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-semibold ml-1">Full Name</label>
+                <label className="text-xs md:text-sm font-semibold ml-1">Full Name</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    className="w-full pl-10 pr-4 py-2 md:py-2.5 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold ml-1">Email Address</label>
+                <label className="text-xs md:text-sm font-semibold ml-1">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input 
                     defaultValue={user.email}
                     disabled
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-muted border border-border text-muted-foreground cursor-not-allowed"
+                    className="w-full pl-10 pr-4 py-2 md:py-2.5 rounded-xl bg-muted border border-border text-muted-foreground cursor-not-allowed text-sm"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold ml-1">WhatsApp Number</label>
+                <label className="text-xs md:text-sm font-semibold ml-1">WhatsApp Number</label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input 
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    className="w-full pl-10 pr-4 py-2 md:py-2.5 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-semibold ml-1">City / Region</label>
+                  <label className="text-xs md:text-sm font-semibold ml-1">City / Region</label>
                   {user.location && (
                     <a 
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(user.location)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] text-primary hover:underline flex items-center gap-1 font-bold uppercase tracking-tighter"
+                      className="text-[9px] md:text-[10px] text-primary hover:underline flex items-center gap-1 font-bold uppercase tracking-tighter"
                     >
-                      <MapPin className="w-3 h-3" />
+                      <MapPin className="w-2.5 h-2.5 md:w-3 md:h-3" />
                       Cek di Maps
                     </a>
                   )}
@@ -274,28 +274,28 @@ export default function Profile() {
                   <input 
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    className="w-full pl-10 pr-4 py-2 md:py-2.5 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
                   />
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold ml-1">About Me</label>
+              <label className="text-xs md:text-sm font-semibold ml-1">About Me</label>
               <textarea 
                 rows={4}
                 value={about}
                 onChange={(e) => setAbout(e.target.value)}
                 placeholder="Tell us a bit about yourself..."
-                className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-sm"
               />
             </div>
 
-            <div className="pt-4 flex justify-end">
+            <div className="pt-2 md:pt-4 flex justify-end">
               <Button 
                 onClick={handleProfileUpdate}
                 disabled={isUpdating || isUploading}
-                className="bg-primary hover:bg-primary/90 px-8 py-6 rounded-xl font-bold shadow-lg shadow-primary/20"
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90 px-8 py-5 md:py-6 rounded-xl font-bold shadow-lg shadow-primary/20"
               >
                 {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Changes"}
               </Button>

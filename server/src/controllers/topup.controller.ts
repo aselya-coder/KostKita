@@ -81,7 +81,10 @@ export class TopupController {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
       const { transactionId, method, provider } = req.body as { transactionId: string; method: 'QRIS' | 'EWALLET' | 'VA'; provider?: string };
-      const result = await topupService.initiatePayment(req.user, transactionId, method, provider);
+      const result = await topupService.initiatePayment({
+        id: req.user.id,
+        role: req.user.role as 'USER' | 'ADMIN'
+      }, transactionId, method, provider);
       return res.json({ success: true, data: result });
     } catch (error: unknown) {
       return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Gagal menginisiasi pembayaran' });

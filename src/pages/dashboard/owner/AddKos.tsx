@@ -211,7 +211,7 @@ export default function AddKosPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="max-w-4xl mx-auto space-y-6 pb-12 px-4 md:px-0">
       <QuotaAlertModal 
         isOpen={quotaModalOpen} 
         onClose={() => {
@@ -226,22 +226,22 @@ export default function AddKosPage() {
       <BackButton to="/dashboard" />
       
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-display font-bold text-foreground">Tambah Kos Baru</h1>
-        <p className="text-muted-foreground">Lengkapi data kos Anda untuk mulai mendapatkan penyewa.</p>
+        <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">Tambah Kos Baru</h1>
+        <p className="text-sm text-muted-foreground">Lengkapi data kos Anda untuk mulai mendapatkan penyewa.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-card rounded-3xl border border-border p-8 space-y-8 shadow-sm">
+      <form onSubmit={handleSubmit} className="bg-card rounded-2xl md:rounded-3xl border border-border p-5 md:p-8 space-y-6 md:space-y-8 shadow-sm">
         {/* Image Upload Section */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-bold text-foreground uppercase tracking-wider">Foto Properti ({images.length}/8)</label>
-            <span className="text-xs text-muted-foreground italic">Gunakan foto berkualitas tinggi</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <label className="text-xs font-bold text-foreground uppercase tracking-wider">Foto Properti ({images.length}/8)</label>
+            <span className="text-[10px] text-muted-foreground italic">Gunakan foto berkualitas tinggi</span>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
             {previewUrls.map((url, index) => (
               <div key={index} className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border group shadow-sm bg-muted/20">
-                <img src={url} alt={`Preview ${index}`} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" />
+                <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button 
                     type="button"

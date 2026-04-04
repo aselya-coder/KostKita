@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { X, Plus, Loader2 } from 'lucide-react';
+import { X, Plus, Loader2, MapPin } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { type KosListing } from '@/data/mockData';
 
@@ -55,10 +55,11 @@ export default function EditKosPage() {
         const data = await getKosById(kosId);
         if (data) {
           setKos(data);
+          const formattedPrice = data.price ? data.price.toLocaleString('id-ID') : '';
           setFormData({
             title: data.title,
             location: data.location,
-            price: data.price.toString(),
+            price: formattedPrice,
             type: data.type,
             description: data.description,
             availableRooms: String(data.availableRooms),
@@ -212,7 +213,7 @@ export default function EditKosPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {existingImageUrls.map((url, index) => (
               <div key={`existing-${index}`} className="relative aspect-[4/3] rounded-2xl overflow-hidden border group shadow-sm bg-muted/20">
-                <img src={url} alt={`Existing ${index}`} className="w-full h-full object-contain" />
+                <img src={url} alt={`Existing ${index}`} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button type="button" onClick={() => removeExistingImage(index)} className="p-2 rounded-full bg-destructive text-white hover:bg-destructive/90 transform scale-75 group-hover:scale-100 transition-all"><X className="w-5 h-5" /></button>
                 </div>
@@ -220,7 +221,7 @@ export default function EditKosPage() {
             ))}
             {previewUrls.map((url, index) => (
               <div key={`new-${index}`} className="relative aspect-[4/3] rounded-2xl overflow-hidden border group shadow-sm bg-muted/20">
-                <img src={url} alt={`New ${index}`} className="w-full h-full object-contain" />
+                <img src={url} alt={`New ${index}`} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button type="button" onClick={() => removeNewImage(index)} className="p-2 rounded-full bg-destructive text-white hover:bg-destructive/90 transform scale-75 group-hover:scale-100 transition-all"><X className="w-5 h-5" /></button>
                 </div>
@@ -242,12 +243,44 @@ export default function EditKosPage() {
             <Input name="title" placeholder="Contoh: Kos Harmoni Depok" value={formData.title} onChange={handleChange} required className="rounded-xl" />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Lokasi</label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Lokasi</label>
+              {formData.location && (
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-primary hover:underline flex items-center gap-1 font-bold uppercase tracking-tighter"
+                >
+                  <MapPin className="w-3 h-3" />
+                  Cek di Maps
+                </a>
+              )}
+            </div>
             <Input name="location" placeholder="Contoh: Jl. Margonda No. 12" value={formData.location} onChange={handleChange} required className="rounded-xl" />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Harga per Bulan</label>
-            <Input name="price" type="text" placeholder="1.500.000" value={formData.price} onChange={(e) => setFormData(p => ({...p, price: e.target.value.replace(/\D/g, '')}))} required className="rounded-xl" />
+            <label className="text-xs font-bold text-muted-foreground uppercase">Harga per Bulan (IDR)</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">Rp</span>
+              <Input 
+                name="price" 
+                type="text" 
+                placeholder="1.500.000" 
+                value={formData.price} 
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace(/\D/g, '');
+                  if (rawValue === '') {
+                    setFormData(prev => ({ ...prev, price: '' }));
+                    return;
+                  }
+                  const formattedValue = parseInt(rawValue).toLocaleString('id-ID');
+                  setFormData(prev => ({ ...prev, price: formattedValue }));
+                }} 
+                required 
+                className="pl-11 rounded-xl font-bold text-primary" 
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase">Tipe Kos</label>

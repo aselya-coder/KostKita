@@ -122,56 +122,56 @@ export default function CoinPackagesPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12">
-      <BackButton to="/dashboard" className="mb-0" />
+    <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
+      <BackButton to="/admin" className="mb-0" />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Manajemen Paket Koin</h1>
-          <p className="text-muted-foreground text-sm">Kelola paket koin yang tersedia untuk top-up pengguna.</p>
+          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Manajemen Paket Koin</h1>
+          <p className="text-muted-foreground text-xs md:text-sm">Kelola paket koin yang tersedia untuk top-up pengguna.</p>
         </div>
-        <Button onClick={openCreateModal} className="rounded-xl">
-          <Plus className="w-4 h-4 mr-2" /> Tambah Paket Baru
+        <Button onClick={openCreateModal} className="rounded-xl w-full sm:w-auto">
+          <Plus className="w-4 h-4 mr-2" /> Tambah Paket
         </Button>
       </div>
 
       <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
         {isLoading ? (
-          <div className="p-20 flex flex-col items-center justify-center gap-4 text-muted-foreground">
+          <div className="p-10 md:p-20 flex flex-col items-center justify-center gap-4 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <p className="text-sm font-medium">Memuat data...</p>
           </div>
         ) : packages.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-secondary/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider">
+            <table className="w-full text-xs md:text-sm text-left">
+              <thead className="bg-secondary/50 text-muted-foreground uppercase text-[9px] md:text-[10px] font-bold tracking-wider">
                 <tr>
-                  <th className="px-6 py-4">Nama Paket</th>
-                  <th className="px-6 py-4">Jumlah Koin</th>
-                  <th className="px-6 py-4">Harga</th>
-                  <th className="px-6 py-4">Aktif</th>
-                  <th className="px-6 py-4 text-right">Aksi</th>
+                  <th className="px-4 md:px-6 py-4">Nama Paket</th>
+                  <th className="px-4 md:px-6 py-4">Koin</th>
+                  <th className="px-4 md:px-6 py-4">Harga</th>
+                  <th className="px-4 md:px-6 py-4">Aktif</th>
+                  <th className="px-4 md:px-6 py-4 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y border-border">
                 {packages.map((pkg) => (
                   <tr key={pkg.id} className="hover:bg-secondary/20 transition-colors">
-                    <td className="px-6 py-4 font-medium text-foreground">{pkg.name}</td>
-                    <td className="px-6 py-4">{pkg.coinAmount} Koin</td>
-                    <td className="px-6 py-4 font-bold text-primary">{formatCurrency(pkg.price)}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4 font-medium text-foreground">{pkg.name}</td>
+                    <td className="px-4 md:px-6 py-4">{pkg.coinAmount}</td>
+                    <td className="px-4 md:px-6 py-4 font-bold text-primary whitespace-nowrap">{formatCurrency(pkg.price)}</td>
+                    <td className="px-4 md:px-6 py-4">
                       {pkg.isActive ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                        <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
                       ) : (
-                        <XCircle className="w-5 h-5 text-red-500" />
+                        <XCircle className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEditModal(pkg)}>
-                        <Edit className="w-4 h-4" />
+                    <td className="px-4 md:px-6 py-4 text-right whitespace-nowrap">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditModal(pkg)}>
+                        <Edit className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeletePackage(pkg.id)}>
-                        <Trash2 className="w-4 h-4 text-destructive" />
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeletePackage(pkg.id)}>
+                        <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-destructive" />
                       </Button>
                     </td>
                   </tr>
@@ -196,6 +196,9 @@ export default function CoinPackagesPage() {
         <DialogContent className="sm:max-w-[425px] rounded-2xl">
           <DialogHeader>
             <DialogTitle>{currentPackage ? "Edit Paket Koin" : "Tambah Paket Koin Baru"}</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              {currentPackage ? "Perbarui informasi paket koin yang sudah ada." : "Buat paket koin baru untuk sistem top-up."}
+            </p>
           </DialogHeader>
           <form onSubmit={handleSavePackage} className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -257,7 +260,7 @@ export default function CoinPackagesPage() {
             <DialogFooter>
               <Button type="submit" className="rounded-xl" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Simpan Perubahan
+                {currentPackage ? "Simpan Perubahan" : "Tambah Paket"}
               </Button>
             </DialogFooter>
           </form>

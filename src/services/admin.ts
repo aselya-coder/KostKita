@@ -1,44 +1,29 @@
-const BACKEND_URL = 'http://localhost:3000/api'; // Adjust if your backend runs on a different port or domain
-
-// Mock Data for fallback
-const mockAdminPackages: AdminCoinPackage[] = [
-  { id: "p1", name: "Paket 5 Koin", coinAmount: 5, price: 50000, isActive: true, createdAt: new Date().toISOString() },
-  { id: "p2", name: "Paket 10 Koin", coinAmount: 10, price: 100000, isActive: true, createdAt: new Date().toISOString() },
-  { id: "p3", name: "Paket 50 Koin", coinAmount: 50, price: 500000, isActive: true, createdAt: new Date().toISOString() },
-  { id: "p4", name: "Paket 100 Koin", coinAmount: 100, price: 1000000, isActive: true, createdAt: new Date().toISOString() },
-];
-
-const mockAdminTransactions: AdminTransaction[] = [
-  {
-    id: "t1",
-    userId: "u2",
-    coinPackageId: "p2",
-    amount: 105000,
-    coinAmount: 10,
-    status: "success",
-    createdAt: "2024-03-20T10:00:00Z",
-    coinPackage: { name: "Paket 10 Koin" }
-  }
-];
+import { supabase } from "@/lib/supabase";
 
 export type AdminCoinPackage = {
   id: string;
   name: string;
-  coinAmount: number;
+  coin_amount: number;
+  coinAmount: number; // Added for camelCase compatibility
   price: number;
-  isActive: boolean;
-  createdAt: string;
+  is_active: boolean;
+  isActive: boolean; // Added for camelCase compatibility
+  created_at: string;
 };
 
 export type AdminTransaction = {
   id: string;
+  user_id: string;
   userId: string;
-  coinPackageId: string;
+  coin_package_id: string;
   amount: number;
-  coinAmount: number;
+  coin_amount: number;
+  coinAmount: number; // Added for camelCase compatibility
   status: 'pending' | 'success' | 'failed';
-  externalId?: string;
-  createdAt: string;
+  external_id?: string;
+  externalId?: string; // Added for camelCase compatibility
+  created_at: string;
+  createdAt: string; // Added for camelCase compatibility
   coinPackage: {
     name: string;
   };
@@ -46,82 +31,125 @@ export type AdminTransaction = {
 
 export type AdminCoinLog = {
   id: string;
-  userId: string;
+  user_id: string;
+  userId: string; // Added for camelCase compatibility
   type: 'credit' | 'debit';
   amount: number;
   description?: string;
-  createdAt: string;
+  created_at: string;
+  createdAt: string; // Added for camelCase compatibility
 };
 
-const getAuthHeaders = (userId: string, userRole: 'USER' | 'ADMIN') => ({
-  'Content-Type': 'application/json',
-  'x-user-id': userId,
-  'x-user-role': userRole,
-});
-
 // Coin Packages
-export const getAllAdminCoinPackages = async (userId: string, userRole: 'ADMIN') => {
-  try {
-    // Return mock data immediately to avoid ERR_CONNECTION_REFUSED
-    return mockAdminPackages;
-  } catch (error: any) {
-    console.error('Backend API Error (getAllAdminCoinPackages):', error);
-    return mockAdminPackages; // Fallback
-  }
+export const getAllAdminCoinPackages = async (userId: string, userRole: 'ADMIN'): Promise<AdminCoinPackage[]> => {
+  const { data, error } = await supabase
+    .from('coin_packages')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  
+  return (data || []).map((pkg: any) => ({
+    ...pkg,
+    coinAmount: pkg.coin_amount,
+    isActive: pkg.is_active
+  }));
 };
 
 export const createAdminCoinPackage = async (userId: string, userRole: 'ADMIN', data: { name: string; coinAmount: number; price: number; isActive?: boolean }) => {
-  try {
-    const newPackage: AdminCoinPackage = {
-      id: `p${Date.now()}`,
+  const { data: newPackage, error } = await supabase
+    .from('coin_packages')
+    .insert({
       name: data.name,
-      coinAmount: data.coinAmount,
+      coin_amount: data.coinAmount,
       price: data.price,
-      isActive: data.isActive ?? true,
-      createdAt: new Date().toISOString()
-    };
-    return newPackage;
-  } catch (error: any) {
-    console.error('Backend API Error (createAdminCoinPackage):', error);
-    throw error;
-  }
+      is_active: data.isActive ?? true
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  
+  return {
+    ...newPackage,
+    coinAmount: newPackage.coin_amount,
+    isActive: newPackage.is_active
+  };
 };
 
 export const updateAdminCoinPackage = async (userId: string, userRole: 'ADMIN', id: string, data: { name?: string; coinAmount?: number; price?: number; isActive?: boolean }) => {
-  try {
-    return { id, ...data } as AdminCoinPackage;
-  } catch (error: any) {
-    console.error('Backend API Error (updateAdminCoinPackage):', error);
-    throw error;
-  }
+  const { data: updatedPackage, error } = await supabase
+    .from('coin_packages')
+    .update({
+      name: data.name,
+      coin_amount: data.coinAmount,
+      price: data.price,
+      is_active: data.isActive
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  
+  return {
+    ...updatedPackage,
+    coinAmount: updatedPackage.coin_amount,
+    isActive: updatedPackage.is_active
+  };
 };
 
 export const deleteAdminCoinPackage = async (userId: string, userRole: 'ADMIN', id: string) => {
-  try {
-    return { success: true };
-  } catch (error: any) {
-    console.error('Backend API Error (deleteAdminCoinPackage):', error);
-    throw error;
-  }
+  const { error } = await supabase
+    .from('coin_packages')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return { success: true };
 };
 
 // Transactions
-export const getAllAdminTransactions = async (userId: string, userRole: 'ADMIN') => {
-  try {
-    return mockAdminTransactions;
-  } catch (error: any) {
-    console.error('Backend API Error (getAllAdminTransactions):', error);
-    return mockAdminTransactions;
-  }
-};
+export const getAllAdminTransactions = async (userId: string, userRole: 'ADMIN'): Promise<AdminTransaction[]> => {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select(`
+      *,
+      coin_packages:coin_package_id(name)
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  
+  // Map Supabase response to AdminTransaction type
+    return (data || []).map((tx: any) => ({
+      ...tx,
+      userId: tx.user_id, // For UI compatibility
+      coinAmount: tx.coin_amount || 0, // For UI compatibility
+      externalId: tx.external_id, // For UI compatibility
+      createdAt: tx.created_at, // For UI compatibility
+      coinPackage: {
+        name: tx.coin_packages?.name || 'Unknown'
+      }
+    }));
+  };
 
 // Coin Logs
-export const getAllAdminCoinLogs = async (userId: string, userRole: 'ADMIN') => {
-  try {
-    return [];
-  } catch (error: any) {
-    console.error('Backend API Error (getAllAdminCoinLogs):', error);
-    return [];
-  }
+export const getAllAdminCoinLogs = async (userId: string, userRole: 'ADMIN'): Promise<AdminCoinLog[]> => {
+  const { data, error } = await supabase
+    .from('coin_logs')
+    .select(`
+      *,
+      profiles:user_id(name)
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  
+  return (data || []).map((log: any) => ({
+    ...log,
+    userId: log.user_id,
+    createdAt: log.created_at
+  }));
 };
 

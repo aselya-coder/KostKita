@@ -28,7 +28,9 @@ export class UserRepository {
     if (data.id) {
       return prisma.user.upsert({
         where: { id: data.id },
-        update: {},
+        update: {
+          role: data.role || 'USER',
+        },
         create: {
           id: data.id,
           email: data.email,

@@ -241,29 +241,29 @@ export default function PaymentCheckout() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-4 space-y-6">
+    <div className="max-w-5xl mx-auto p-4 space-y-6 md:space-y-8 pb-12">
       <BackButton to="/dashboard/topup" />
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="inline-flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Wallet className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Top Up Koin</h1>
-            <p className="text-xs text-muted-foreground">ID Transaksi: {trx.id}</p>
+            <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Top Up Koin</h1>
+            <p className="text-[10px] md:text-xs text-muted-foreground truncate max-w-[200px]">ID: {trx.id}</p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-muted-foreground">Status</p>
+        <div className="flex items-center justify-between md:flex-col md:items-end gap-2">
+          <p className="text-xs md:text-sm text-muted-foreground">Status Pembayaran</p>
           <StatusBadge status={phase === "select" || phase === "process" ? "pending" : trx.status} />
         </div>
       </div>
 
       {phase === "select" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="lg:col-span-2 space-y-6 md:space-y-8">
             <SectionTitle title="Pilih Metode Pembayaran" />
-            <div className="grid gap-4">
+            <div className="grid gap-6">
               <Group title="E-Wallet">
                 <MethodCard
                   active={selected?.group === "EWALLET" && selected.method === "SHOPEEPAY"}
@@ -291,8 +291,8 @@ export default function PaymentCheckout() {
                 <MethodCard
                   active={selected?.group === "QRIS"}
                   icon={<QrCode className="w-5 h-5 text-emerald-600" />}
-                  title="Bayar dengan QR Code"
-                  subtitle="Instan"
+                  title="QRIS (Semua E-Wallet)"
+                  subtitle="Scan QR Code"
                   onClick={() => setSelected({ group: "QRIS", method: "QRIS" })}
                 />
               </Group>
@@ -301,29 +301,29 @@ export default function PaymentCheckout() {
                   active={selected?.group === "VA" && selected.method === "BCA"}
                   icon={<Banknote className="w-5 h-5 text-blue-600" />}
                   title="BCA"
-                  subtitle="Instan"
+                  subtitle="Transfer Bank"
                   onClick={() => setSelected({ group: "VA", method: "BCA" })}
                 />
                 <MethodCard
                   active={selected?.group === "VA" && selected.method === "BRI"}
                   icon={<Banknote className="w-5 h-5 text-indigo-600" />}
                   title="BRI"
-                  subtitle="Instan"
+                  subtitle="Transfer Bank"
                   onClick={() => setSelected({ group: "VA", method: "BRI" })}
                 />
                 <MethodCard
                   active={selected?.group === "VA" && selected.method === "MANDIRI"}
                   icon={<Banknote className="w-5 h-5 text-yellow-600" />}
                   title="Mandiri"
-                  subtitle="Instan"
+                  subtitle="Transfer Bank"
                   onClick={() => setSelected({ group: "VA", method: "MANDIRI" })}
                 />
               </Group>
             </div>
 
-            <div className="flex justify-end">
-              <Button className="h-12 rounded-xl px-6 font-bold" onClick={startProcess} disabled={!selected}>
-                Bayar Sekarang
+            <div className="flex justify-end pt-4">
+              <Button className="w-full md:w-auto h-12 md:h-14 rounded-xl px-10 text-base md:text-lg font-bold shadow-lg shadow-primary/20" onClick={startProcess} disabled={!selected}>
+                Lanjutkan Pembayaran
               </Button>
             </div>
           </div>
