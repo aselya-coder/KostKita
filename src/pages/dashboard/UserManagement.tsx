@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { BackButton } from "@/components/BackButton";
-import { Search, UserPlus, MoreVertical, Shield, User as UserIcon, Mail, Calendar, Trash2, Edit2 } from "lucide-react";
+import { Search, UserPlus, MoreVertical, Shield, User as UserIcon, Mail, Calendar, Trash2, Edit2, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -116,7 +116,7 @@ export default function UserManagement() {
               <tr>
                 <th className="px-6 py-4">Pengguna</th>
                 <th className="px-6 py-4">Peran</th>
-                <th className="px-6 py-4">Kontak</th>
+                <th className="px-6 py-4 text-center">Saldo Koin</th>
                 <th className="px-6 py-4">Bergabung</th>
                 <th className="px-6 py-4 text-right">Aksi</th>
               </tr>
@@ -139,26 +139,20 @@ export default function UserManagement() {
                   <td className="px-6 py-4">
                     <span className={cn(
                       "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1",
-                      u.role === "admin" ? "bg-purple-50 text-purple-600" :
-                      u.role === "owner" ? "bg-blue-50 text-blue-600" :
-                      "bg-emerald-50 text-emerald-600"
+                      u.role === "admin" ? "bg-purple-50 text-purple-600 border border-purple-100" :
+                      u.role === "owner" ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                      "bg-emerald-50 text-emerald-600 border border-emerald-100"
                     )}>
                       {u.role === "admin" && <Shield className="w-3 h-3" />}
                       {u.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Mail className="w-3 h-3" />
-                        {u.email}
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center border border-amber-100">
+                        <Coins className="w-4 h-4 text-amber-600" />
                       </div>
-                      {u.phone && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className="text-[10px] font-bold">WA:</span>
-                          {u.phone}
-                        </div>
-                      )}
+                      <span className="font-bold text-foreground">{u.role === 'admin' ? '-' : (Math.floor(Math.random() * 50))}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-muted-foreground text-xs">

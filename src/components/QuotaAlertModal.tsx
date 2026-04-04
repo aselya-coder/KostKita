@@ -22,8 +22,7 @@ export function QuotaAlertModal({ isOpen, onClose, message, role }: QuotaAlertMo
 
   const handleUpgrade = () => {
     onClose();
-    const basePath = role === "owner" ? "/owner-dashboard" : "/dashboard";
-    navigate(`${basePath}/pricing`);
+    navigate('/dashboard/topup');
   };
 
   return (
@@ -34,11 +33,12 @@ export function QuotaAlertModal({ isOpen, onClose, message, role }: QuotaAlertMo
             <ShieldAlert className="w-8 h-8 text-amber-500" />
           </div>
           <DialogTitle className="text-2xl font-display font-bold text-center">
-            Batas Upload Tercapai
+            Jatah Iklan Gratis Habis
           </DialogTitle>
           <DialogDescription className="text-center text-muted-foreground pt-2">
-            {message || "Anda telah menggunakan jatah 1 iklan gratis. Untuk upload iklan berikutnya, silakan isi saldo koin Anda."}
+            {message || "Anda hanya memiliki jatah 1 kali upload iklan GRATIS (Kos atau Barang). Karena Anda sudah menggunakannya, upload berikutnya wajib menggunakan Koin."}
           </DialogDescription>
+
         </DialogHeader>
         
         <div className="bg-secondary/30 rounded-2xl p-4 my-4 border border-border/50">
@@ -70,7 +70,7 @@ export function QuotaAlertModal({ isOpen, onClose, message, role }: QuotaAlertMo
             onClick={handleUpgrade} 
             className="flex-1 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20"
           >
-            Beli Kuota Sekarang
+            Top Up Koin Sekarang
           </Button>
         </DialogFooter>
       </DialogContent>

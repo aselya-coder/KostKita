@@ -11,7 +11,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import AdminLayout from "@/pages/admin/AdminLayout";
+import AdminLayout from "@/pages/dashboard/admin/AdminLayout";
 
 // Page Imports
 import Home from "@/pages/Index";
@@ -21,9 +21,14 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
 import Favorites from "@/pages/Favorites";
+import Marketplace from "@/pages/Marketplace";
+import ItemDetail from "@/pages/ItemDetail";
+import Contact from "@/pages/Contact";
+import FAQ from "@/pages/FAQ";
+import Owner from "@/pages/Owner";
 import AddKos from "@/pages/dashboard/owner/AddKos";
-import OwnerDashboard from "@/pages/dashboard/OwnerOverview";
-import StudentDashboard from "@/pages/dashboard/StudentOverview";
+import OwnerEditKos from "@/pages/dashboard/owner/EditKos";
+import UserOverview from "@/pages/dashboard/UserOverview";
 import MyBoardingHouses from "@/pages/dashboard/MyBoardingHouses";
 import Profile from "@/pages/dashboard/Profile";
 import Settings from "@/pages/dashboard/Settings";
@@ -32,11 +37,17 @@ import Settings from "@/pages/dashboard/Settings";
 import AdminDashboard from "@/pages/dashboard/admin/AdminDashboard";
 import UserManagement from "@/pages/dashboard/UserManagement";
 import EditKos from "@/pages/dashboard/admin/EditKos";
+import KosManagement from "@/pages/dashboard/KosManagement";
+import MarketplaceModeration from "@/pages/dashboard/MarketplaceModeration";
+import Reports from "@/pages/dashboard/Reports";
+import ActivityLog from "@/pages/dashboard/admin/ActivityLog";
+import CoinPackages from "@/pages/dashboard/admin/CoinPackages";
+import SystemSettings from "@/pages/dashboard/SystemSettings";
 
 // Route Protection
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AdminRoute } from "@/components/AdminRoute";
-import { OwnerRoute } from "@/components/OwnerRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AdminRoute } from "./components/AdminRoute";
+import { OwnerRoute } from "./components/OwnerRoute";
 
 const queryClient = new QueryClient();
 
@@ -53,16 +64,6 @@ const PublicLayout = () => (
   </div>
 );
 
-// Helper component to render the correct dashboard index based on role
-const DashboardIndex = () => {
-  const { user } = useAuth();
-  if (user?.role === 'owner') {
-    return <OwnerDashboard />;
-  }
-  // Default to student dashboard
-  return <StudentDashboard />;
-};
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -78,27 +79,23 @@ const App = () => (
               <Route path="/search" element={<SearchResults />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/marketplace/:id" element={<ItemDetail />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/owner" element={<Owner />} />
+              <Route path="/favorites" element={<Favorites />} />
             </Route>
 
             {/* Unified Dashboard for Students and Owners */}
             <Route 
-              path="/dashboard"
+              path="/dashboard/*"
               element={
                 <ProtectedRoute>
                   <DashboardLayout />
                 </ProtectedRoute>
               }
-            >
-              <Route index element={<DashboardIndex />} />
-              <Route path="favorites" element={<Favorites />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="settings" element={<Settings />} />
-              
-              {/* Owner-Specific Routes */}
-              <Route path="my-kos" element={<OwnerRoute><MyBoardingHouses /></OwnerRoute>} />
-              <Route path="add-kos" element={<OwnerRoute><AddKos /></OwnerRoute>} />
-              <Route path="edit-kos/:id" element={<OwnerRoute><AddKos isEditMode /></OwnerRoute>} />
-            </Route>
+            />
 
             {/* Admin Routes */}
             <Route 
@@ -111,6 +108,12 @@ const App = () => (
             >
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<UserManagement />} />
+              <Route path="kos" element={<KosManagement />} />
+              <Route path="marketplace" element={<MarketplaceModeration />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="activity-log" element={<ActivityLog />} />
+              <Route path="coin-packages" element={<CoinPackages />} />
+              <Route path="system-settings" element={<SystemSettings />} />
               <Route path="edit-kos/:id" element={<EditKos />} />
             </Route>
 

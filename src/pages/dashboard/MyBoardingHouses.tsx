@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Building2, Edit2, Trash2, Eye } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { type KosListing, formatPrice } from "@/data/mockData";
+import { type KosListing } from "@/data/mockData";
 import { getKosListings, deleteKosListing } from "@/services/kos";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
@@ -26,7 +26,6 @@ export default function MyBoardingHouses() {
   useEffect(() => {
     fetchMyKos();
 
-    // REALTIME: Listen for changes in kos_listings
     const channel = supabase
       .channel('my-kos-changes')
       .on('postgres_changes', { 
@@ -75,10 +74,10 @@ export default function MyBoardingHouses() {
               <thead className="bg-secondary/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider">
                 <tr>
                   <th className="px-6 py-4">Property</th>
-                  <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4">Price</th>
-                  <th className="px-6 py-4">Rooms</th>
                   <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Expiry</th>
+                  <th className="px-6 py-4">Cost/Day</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -99,26 +98,31 @@ export default function MyBoardingHouses() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="capitalize">{kos.type}</span>
-                    </td>
-                    <td className="px-6 py-4 font-medium">
-                      {formatPrice(kos.price)}
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      {kos.availableRooms} Available
+                      <p className="font-semibold text-foreground">Rp {kos.price.toLocaleString('id-ID')}</p>
                     </td>
                     <td className="px-6 py-4">
                       <span className={cn(
                         "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                        kos.status === "approved" ? "bg-emerald-50 text-emerald-600" : 
-                        kos.status === "pending" ? "bg-amber-50 text-amber-600" : 
-                        "bg-red-50 text-red-600"
+                        kos.status === "active" ? "bg-emerald-50 text-emerald-600 border border-emerald-200" :
+                        kos.status === "expired" ? "bg-red-50 text-red-600 border border-red-200" :
+                        "bg-amber-50 text-amber-600 border border-amber-200"
                       )}>
-                        {kos.status || "Approved"}
+                        {kos.status || "pending"}
                       </span>
                     </td>
+                    <td className="px-6 py-4">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {kos.expiryDate ? new Date(kos.expiryDate).toLocaleDateString('id-ID') : '-'}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-primary">1</span>
+                        <span className="text-[10px] text-muted-foreground font-bold">KOIN</span>
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
                           <Link to={`/kos/${kos.id}`}>
                             <Eye className="w-4 h-4" />
@@ -134,10 +138,14 @@ export default function MyBoardingHouses() {
                           size="icon" 
                           className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                           onClick={() => handleDelete(kos.id)}
-                          title="Hapus Properti"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
+                        {kos.status === "expired" && (
+                          <Button size="sm" className="ml-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8">
+                            Perpanjang
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -148,18 +156,13 @@ export default function MyBoardingHouses() {
         </div>
       ) : (
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Building2 className="w-8 h-8 text-primary" />
+          <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
+            <Building2 className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-display font-bold mb-2">No listings found</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto mb-8">
-            You haven't added any boarding house listings yet. Start promoting your property today!
-          </p>
+          <h3 className="text-lg font-semibold mb-2">No Properties Yet</h3>
+          <p className="text-muted-foreground mb-6">Start by adding your first boarding house listing.</p>
           <Button asChild>
-            <Link to="/owner-dashboard/add-kos">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Kos
-            </Link>
+            <Link to="/owner-dashboard/add-kos">Add New Kos</Link>
           </Button>
         </div>
       )}

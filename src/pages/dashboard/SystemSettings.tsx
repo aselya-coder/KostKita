@@ -1,66 +1,67 @@
 import { useState } from "react";
 import { BackButton } from "@/components/BackButton";
 import { 
-  Settings as SettingsIcon, 
   Shield, 
   Globe, 
-  Bell, 
   Database, 
-  Percent, 
-  Users, 
-  Lock,
   Save,
-  RefreshCw
+  RefreshCw,
+  Coins,
+  CreditCard,
+  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function SystemSettings() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [isSaving, setIsLoading] = useState(false);
 
   const handleSave = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      toast({
-        title: "Settings Saved",
-        description: "System configuration has been updated successfully.",
-      });
+      toast.success("Konfigurasi sistem berhasil diperbarui.");
     }, 1500);
   };
 
-  const sections = [
+  const monetizationSections = [
     {
-      title: "Platform Configuration",
-      icon: Globe,
+      title: "Monetisasi & Koin",
+      icon: Coins,
       items: [
-        { label: "Marketplace Service Fee (%)", type: "number", value: "5", description: "Fee charged to sellers for each successful transaction." },
-        { label: "Premium Listing Price (IDR)", type: "number", value: "50000", description: "Monthly cost for owners to promote their kos as premium." },
+        { label: "Harga per Koin (IDR)", type: "number", value: "10000", description: "Harga dasar 1 koin dalam Rupiah." },
+        { label: "Biaya Iklan per Hari (Koin)", type: "number", value: "1", description: "Jumlah koin yang didebet setiap hari untuk iklan aktif." },
+        { label: "Durasi Iklan Gratis (Hari)", type: "number", value: "30", description: "Lama waktu iklan pertama gratis untuk user baru." },
       ]
     },
     {
-      title: "Moderation & Safety",
-      icon: Shield,
+      title: "Biaya Layanan (Admin Fee)",
+      icon: CreditCard,
       items: [
-        { label: "Auto-Approve Listings", type: "switch", value: false, description: "Automatically approve new listings without manual review." },
-        { label: "User Reporting System", type: "switch", value: true, description: "Allow users to report suspicious content or accounts." },
-        { label: "Email Verification Required", type: "switch", value: true, description: "Users must verify their email before posting listings." },
-      ]
-    },
-    {
-      title: "Maintenance",
-      icon: Database,
-      items: [
-        { label: "Maintenance Mode", type: "switch", value: false, description: "Put the entire platform into maintenance mode for all users." },
-        { label: "Debug Logs", type: "switch", value: true, description: "Enable detailed logging for system troubleshooting." },
+        { label: "Tipe Biaya Admin", type: "select", options: ["Flat", "Persentase"], value: "Flat", description: "Cara menghitung biaya admin pada top up." },
+        { label: "Nilai Biaya Admin", type: "number", value: "2500", description: "Nilai flat (Rp) atau persentase (%) biaya admin." },
+        { label: "Minimal Top Up (Koin)", type: "number", value: "5", description: "Batas minimum pembelian koin per transaksi." },
+        { label: "Maksimal Top Up (Koin)", type: "number", value: "100", description: "Batas maksimum pembelian koin per transaksi." },
       ]
     }
   ];
+
+  const platformSections = [
+    {
+      title: "Moderasi & Keamanan",
+      icon: Shield,
+      items: [
+        { label: "Auto-Approve Iklan", type: "switch", value: false, description: "Setujui iklan baru secara otomatis tanpa review manual." },
+        { label: "Sistem Laporan User", type: "switch", value: true, description: "Izinkan user melaporkan konten atau akun mencurigakan." },
+      ]
+    }
+  ];
+
 
   const getBackPath = () => {
     if (!user) return "/";
@@ -93,7 +94,7 @@ export default function SystemSettings() {
       </div>
 
       <div className="space-y-6">
-        {sections.map((section, idx) => (
+        {[...monetizationSections, ...platformSections].map((section, idx) => (
           <div key={idx} className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
             <div className="p-6 border-b border-border bg-secondary/30 flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -101,22 +102,26 @@ export default function SystemSettings() {
               </div>
               <h3 className="font-display font-bold text-foreground">{section.title}</h3>
             </div>
-            <div className="divide-y border-border">
+            <div className="p-6 divide-y divide-border">
               {section.items.map((item, itemIdx) => (
-                <div key={itemIdx} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-foreground">{item.label}</h4>
-                    <p className="text-xs text-muted-foreground max-w-md">{item.description}</p>
+                <div key={itemIdx} className="py-6 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1 max-w-md">
+                    <label className="text-sm font-bold text-foreground">{item.label}</label>
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
                   </div>
-                  <div className="shrink-0">
+                  <div className="flex-shrink-0 w-full sm:w-auto min-w-[120px]">
                     {item.type === "switch" ? (
-                      <Switch defaultChecked={item.value as boolean} />
-                    ) : (
-                      <input 
+                      <Switch checked={item.value as boolean} />
+                    ) : item.type === "number" ? (
+                      <Input 
                         type="number" 
-                        defaultValue={item.value as string}
-                        className="w-32 px-3 py-2 rounded-lg bg-surface border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 text-right font-mono"
+                        defaultValue={item.value as string} 
+                        className="bg-surface text-right font-medium" 
                       />
+                    ) : (
+                      <select className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                        {item.options?.map(opt => <option key={opt}>{opt}</option>)}
+                      </select>
                     )}
                   </div>
                 </div>

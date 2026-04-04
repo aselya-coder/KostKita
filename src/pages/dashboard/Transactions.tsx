@@ -3,12 +3,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { BackButton } from "@/components/BackButton";
 import { CreditCard, Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getCoinLogs, CoinLog } from "@/services/wallet";
+import { getTransactions } from "@/services/wallet";
 import { getAllAdminTransactions, AdminTransaction } from "@/services/admin";
+import { type Transaction } from "@/data/mockData";
 
 export default function TransactionsPage() {
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<CoinLog[] | AdminTransaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[] | AdminTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -16,11 +17,11 @@ export default function TransactionsPage() {
       if (!user) return;
       setIsLoading(true);
       try {
-        let data: CoinLog[] | AdminTransaction[];
+        let data: Transaction[] | AdminTransaction[];
         if (user.role === 'admin') {
           data = await getAllAdminTransactions(user.id, 'ADMIN');
         } else {
-          data = await getCoinLogs(user.id);
+          data = await getTransactions(user.id);
         }
         setTransactions(data || []);
       } catch (error) {
@@ -117,12 +118,13 @@ export default function TransactionsPage() {
                     <tr>
                       <th className="px-6 py-4 text-center w-16">No</th>
                       <th className="px-6 py-4">Tipe / Deskripsi</th>
-                      <th className="px-6 py-4">Jumlah Koin</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Detail</th>
                       <th className="px-6 py-4">Tanggal</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y border-border">
-                    {(transactions as CoinLog[]).map((log, i) => (
+                    {(transactions as Transaction[]).map((log, i) => (
                       <tr key={log.id} className="hover:bg-secondary/20 transition-colors">
                         <td className="px-6 py-4 text-center font-medium text-muted-foreground">
                           {i + 1}
@@ -130,15 +132,23 @@ export default function TransactionsPage() {
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
                             <span className="font-bold text-foreground">
-                              {log.type === 'credit' ? 'Top Up Koin' : 'Penggunaan Koin'}
+                              {log.type === 'topup' ? 'Top Up Koin' : log.type === 'ad_payment' ? 'Iklan' : 'Penghasilan'}
                             </span>
                             <span className="text-[10px] text-muted-foreground">
                               {log.description || '-'}
                             </span>
                           </div>
                         </td>
+                        <td className="px-6 py-4">
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                            log.status === 'paid' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                          )}>
+                            {log.status}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 font-bold text-foreground">
-                          {log.amount} Koin
+                          {log.amount > 0 ? `Rp ${log.amount.toLocaleString('id-ID')}` : `${log.coins} Koin`}
                         </td>
                         <td className="px-6 py-4 text-muted-foreground">
                           {formatDate(log.createdAt)}

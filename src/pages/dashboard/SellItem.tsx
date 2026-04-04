@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ArrowRight, Camera, MapPin, X, Loader2 } from "lucide-react";
+import { Plus, ArrowRight, Camera, MapPin, X, Loader2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,9 @@ import { createMarketplaceItem } from "@/services/forms";
 import { notifyAdmins } from '@/services/notifications';
 import { toast as sonnerToast } from "sonner";
 import { QuotaAlertModal } from "@/components/QuotaAlertModal";
+import { getUserDashboardStats } from '@/services/dashboard';
+import { getWalletBalance } from '@/services/wallet';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SellItem() {
   const navigate = useNavigate();
@@ -18,8 +21,11 @@ export default function SellItem() {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingQuota, setIsCheckingQuota] = useState(true);
   const [quotaModalOpen, setQuotaModalOpen] = useState(false);
   const [quotaMessage, setQuotaMessage] = useState('');
+  const [hasFreeQuota, setHasFreeQuota] = useState(true);
+  const [userCoins, setUserCoins] = useState(0);
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
@@ -42,6 +48,40 @@ export default function SellItem() {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
+  useEffect(() => {
+    const checkQuota = async () => {
+      if (!user) return;
+      if (user.role === 'admin') {
+        setIsCheckingQuota(false);
+        return;
+      }
+
+      try {
+        const [stats, balance] = await Promise.all([
+          getUserDashboardStats(user.id),
+          getWalletBalance(user.id)
+        ]);
+
+        const totalListings = (stats as any).propertiesCount + (stats as any).myListingsCount;
+        const isFirstUpload = totalListings === 0;
+        
+        setHasFreeQuota(isFirstUpload);
+        setUserCoins(balance);
+
+        if (!isFirstUpload && balance <= 0) {
+          setQuotaMessage("Anda telah menggunakan jatah 1 iklan gratis. Untuk upload iklan berikutnya, Anda memerlukan minimal 1 koin per hari.");
+          setQuotaModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Error checking quota:", error);
+      } finally {
+        setIsCheckingQuota(false);
+      }
+    };
+
+    checkQuota();
+  }, [user]);
 
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,20 +173,32 @@ export default function SellItem() {
     }
   };
 
-  const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
+  if (isCheckingQuota) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-auto space-y-8 pb-12">
       <QuotaAlertModal 
         isOpen={quotaModalOpen} 
-        onClose={() => setQuotaModalOpen(false)} 
+        onClose={() => {
+          setQuotaModalOpen(false);
+          if (!hasFreeQuota && userCoins <= 0) {
+            navigate('/dashboard');
+          }
+        }} 
         message={quotaMessage}
         role={user?.role}
       />
       <div className="flex items-center gap-4">
-        <BackButton to={`${basePath}/my-items`} className="mb-0" />
+        <BackButton to="/dashboard" className="mb-0" />
         <h1 className="text-2xl font-display font-bold text-foreground">Sell New Item</h1>
       </div>
+
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
@@ -312,28 +364,52 @@ export default function SellItem() {
           />
         </div>
 
-        <div className="flex gap-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="flex-1 py-6 rounded-xl border-border"
-            onClick={() => navigate(`${basePath}/my-items`)}
-          >
-            Cancel
-          </Button>
+        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
+              Durasi Iklan
+              <Zap className="w-3 h-3 fill-current" />
+            </label>
+            <Select 
+              onValueChange={(v) => setFormData(p => ({ ...p, durationDays: v }))} 
+              defaultValue={hasFreeQuota ? "30" : "3"}
+            >
+              <SelectTrigger className="rounded-xl border-primary/50 bg-primary/5">
+                <SelectValue placeholder="Pilih Durasi" />
+              </SelectTrigger>
+              <SelectContent>
+                {hasFreeQuota ? (
+                  <SelectItem value="30">30 Hari (GRATIS - Iklan Pertama)</SelectItem>
+                ) : (
+                  <>
+                    <SelectItem value="3">3 Hari (3 Koin)</SelectItem>
+                    <SelectItem value="7">7 Hari (7 Koin)</SelectItem>
+                    <SelectItem value="30">30 Hari (30 Koin)</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground mt-1 italic">
+              {hasFreeQuota 
+                ? "* Upload pertama GRATIS (30 hari)." 
+                : `* Iklan berikutnya: 1 koin/hari. Saldo Anda: ${userCoins} Koin.`
+              }
+            </p>
+          </div>
+
           <Button 
             type="submit" 
-            disabled={isLoading}
-            className="flex-[2] py-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 group"
+            className="w-full py-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base shadow-lg shadow-primary/20 group transition-all active:scale-[0.98]"
+            disabled={isLoading || (!hasFreeQuota && userCoins <= 0)}
           >
             {isLoading ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Listing Item...</span>
-              </div>
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Mempublikasikan...
+              </>
             ) : (
               <>
-                List Item for Sale
+                Pasang Iklan Sekarang
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </>
             )}

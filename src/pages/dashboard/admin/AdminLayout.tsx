@@ -8,23 +8,36 @@ import {
   Settings,
   BarChart,
   Coins,
+  ShoppingBag,
+  User,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const AdminLayout = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const navItems = [
-    { href: "/admin-dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin-dashboard/users", label: "User Management", icon: Users },
-    { href: "/admin-dashboard/kos", label: "Kos Management", icon: Building2 },
-    { href: "/admin-dashboard/reports", label: "Reports", icon: ShieldAlert },
-    { href: "/admin-dashboard/activity-log", label: "Activity Log", icon: BarChart },
-    { href: "/admin-dashboard/coin-packages", label: "Coin Packages", icon: Coins },
-    { href: "/admin-dashboard/system-settings", label: "System Settings", icon: Settings },
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/users", label: "User Management", icon: Users },
+    { href: "/admin/kos", label: "Kos Management", icon: Building2 },
+    { href: "/admin/marketplace", label: "Marketplace", icon: ShoppingBag },
+    { href: "/admin/reports", label: "Reports", icon: ShieldAlert },
+    { href: "/admin/activity-log", label: "Activity Log", icon: BarChart },
+    { href: "/admin/coin-packages", label: "Coin Packages", icon: Coins },
+    { href: "/admin/system-settings", label: "System Settings", icon: Settings },
+    { href: "/dashboard/profile", label: "My Profile", icon: User },
   ];
 
   return (
@@ -37,7 +50,7 @@ const AdminLayout = () => {
           <h1 className="text-xl font-bold font-display">Admin Panel</h1>
         </div>
 
-        <nav className="flex-grow space-y-2">
+        <nav className="flex-grow space-y-2 overflow-y-auto pr-2 custom-scrollbar">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -55,15 +68,24 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        <div className="mt-auto">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary">
-            <Avatar className="w-10 h-10 border-2 border-primary">
+        <div className="mt-auto pt-6 space-y-4">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 px-4 py-2.5 text-sm font-medium text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </Button>
+
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/50">
+            <Avatar className="w-10 h-10 border-2 border-primary/20">
               <AvatarImage src={user?.avatar} />
               <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
             </Avatar>
-            <div>
-              <p className="text-sm font-semibold">{user?.name}</p>
-              <p className="text-xs text-muted-foreground">Administrator</p>
+            <div className="min-w-0">
+              <p className="text-sm font-bold truncate">{user?.name}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Administrator</p>
             </div>
           </div>
         </div>

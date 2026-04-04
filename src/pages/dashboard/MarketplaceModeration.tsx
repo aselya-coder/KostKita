@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { formatPrice } from "@/data/mockData";
 import { BackButton } from "@/components/BackButton";
-import { Search, ShoppingBag, Eye, Trash2, AlertTriangle, CheckCircle2, MoreVertical, Shield } from "lucide-react";
+import { Search, ShoppingBag, Eye, Trash2, AlertTriangle, CheckCircle2, MoreVertical, Shield, Coins, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -53,7 +53,8 @@ export default function MarketplaceModeration() {
   }, []);
 
   const filteredItems = items.filter(i => 
-    i.title?.toLowerCase().includes(searchQuery.toLowerCase())
+    i.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    i.seller_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const removeItem = async (id: string) => {
@@ -82,7 +83,7 @@ export default function MarketplaceModeration() {
 
   return (
     <div className="space-y-8 pb-12">
-      <BackButton to="/admin-dashboard" className="mb-0" />
+      <BackButton to="/admin" className="mb-0" />
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -100,7 +101,7 @@ export default function MarketplaceModeration() {
               placeholder="Cari nama barang atau penjual..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -110,91 +111,114 @@ export default function MarketplaceModeration() {
             <thead className="bg-secondary/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider">
               <tr>
                 <th className="px-6 py-4">Barang</th>
-                <th className="px-6 py-4">Kategori</th>
-                <th className="px-6 py-4">Harga</th>
                 <th className="px-6 py-4">Penjual</th>
+                <th className="px-6 py-4">Harga</th>
+                <th className="px-6 py-4">Status Koin</th>
+                <th className="px-6 py-4">Masa Tayang</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y border-border">
-              {filteredItems.map((item) => (
-                <tr key={item.id} className="hover:bg-secondary/20 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <img src={item.image} alt={item.title} className="w-10 h-10 rounded-lg object-cover bg-muted" />
-                      <div className="min-w-0">
-                        <p className="font-semibold text-foreground truncate max-w-[180px]">{item.title}</p>
-                        <p className="text-xs text-muted-foreground truncate max-w-[180px]">{item.location}</p>
+              {isLoading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-10 w-40 bg-secondary rounded-lg"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-24 bg-secondary rounded-md"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-20 bg-secondary rounded-md"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-20 bg-secondary rounded-md"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-20 bg-secondary rounded-md"></div></td>
+                    <td className="px-6 py-4"><div className="h-6 w-16 bg-secondary rounded-full"></div></td>
+                    <td className="px-6 py-4 text-right"><div className="h-8 w-8 bg-secondary rounded-lg ml-auto"></div></td>
+                  </tr>
+                ))
+              ) : filteredItems.length > 0 ? (
+                filteredItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-secondary/20 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <img src={item.image} alt="" className="w-10 h-10 rounded-lg object-cover bg-muted" />
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground truncate max-w-[200px]">{item.title}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.category}</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="px-2 py-0.5 rounded-full bg-secondary text-[10px] font-bold uppercase tracking-wider">
-                      {item.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 font-bold text-foreground">
-                    {formatPrice(item.price)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-foreground">{item.sellerName}</p>
-                      <p className="text-[10px] text-muted-foreground">{item.sellerPhone}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={cn(
-                      "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1",
-                      item.status === "active" || !item.status ? "bg-emerald-50 text-emerald-600" :
-                      item.status === "sold" ? "bg-blue-50 text-blue-600" :
-                      "bg-red-50 text-red-600"
-                    )}>
-                      {item.status === "active" || !item.status ? (
-                        <CheckCircle2 className="w-3 h-3" />
-                      ) : item.status === "sold" ? (
-                        <ShoppingBag className="w-3 h-3" />
-                      ) : (
-                        <AlertTriangle className="w-3 h-3" />
-                      )}
-                      {item.status || "Active"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                          <MoreVertical className="w-4 h-4" />
+                    </td>
+                    <td className="px-6 py-4 font-medium">{item.seller_name || "Unknown"}</td>
+                    <td className="px-6 py-4">{formatPrice(item.price)}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-md bg-amber-50 flex items-center justify-center border border-amber-100">
+                          <Coins className="w-3.5 h-3.5 text-amber-600" />
+                        </div>
+                        <span className="text-xs font-bold text-foreground">
+                          {item.is_free_first_ad ? "FREE" : "1 Koin/Hari"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                        <Clock className="w-3.5 h-3.5" />
+                        {item.expiry_date ? new Date(item.expiry_date).toLocaleDateString('id-ID') : '-'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={cn(
+                        "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                        item.status === "active" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                        item.status === "expired" ? "bg-red-50 text-red-600 border-red-100" :
+                        "bg-amber-50 text-amber-600 border-amber-100"
+                      )}>
+                        {item.status || "active"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary" asChild>
+                          <a href={`/marketplace/${item.id}`} target="_blank" rel="noopener noreferrer">
+                            <Eye className="w-4 h-4" />
+                          </a>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuLabel>Aksi Moderasi</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Eye className="w-4 h-4 mr-2" />
-                          Lihat Halaman
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer text-amber-600">
-                          <AlertTriangle className="w-4 h-4 mr-2" />
-                          Beri Peringatan
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-destructive cursor-pointer"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Hapus Listing
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel>Moderasi</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => removeItem(item.id)}>
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Hapus Barang
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <AlertTriangle className="w-4 h-4 mr-2" />
+                              Beri Peringatan
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                              <Shield className="w-4 h-4 mr-2" />
+                              Banned Penjual
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground italic">
+                    Belum ada barang di marketplace.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
         
-        {filteredItems.length === 0 && (
+        {filteredItems.length === 0 && !isLoading && (
           <div className="p-12 text-center">
             <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
               <ShoppingBag className="w-8 h-8 text-muted-foreground/40" />

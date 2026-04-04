@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { createKosListing } from '@/services/forms';
 import { uploadMultipleFiles } from '@/services/storage';
+import { getUserDashboardStats } from '@/services/dashboard';
+import { getWalletBalance } from '@/services/wallet';
 
 import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
@@ -18,8 +20,11 @@ export default function AddKosPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingQuota, setIsCheckingQuota] = useState(true);
   const [quotaModalOpen, setQuotaModalOpen] = useState(false);
   const [quotaMessage, setQuotaMessage] = useState('');
+  const [hasFreeQuota, setHasFreeQuota] = useState(true);
+  const [userCoins, setUserCoins] = useState(0);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
@@ -44,6 +49,40 @@ export default function AddKosPage() {
       previewUrls.forEach(url => URL.revokeObjectURL(url));
     };
   }, [previewUrls]);
+
+  useEffect(() => {
+    const checkQuota = async () => {
+      if (!user) return;
+      if (user.role === 'admin') {
+        setIsCheckingQuota(false);
+        return;
+      }
+
+      try {
+        const [stats, balance] = await Promise.all([
+          getUserDashboardStats(user.id),
+          getWalletBalance(user.id)
+        ]);
+
+        const totalListings = (stats as any).propertiesCount + (stats as any).myListingsCount;
+        const isFirstUpload = totalListings === 0;
+        
+        setHasFreeQuota(isFirstUpload);
+        setUserCoins(balance);
+
+        if (!isFirstUpload && balance <= 0) {
+          setQuotaMessage("Anda telah menggunakan jatah 1 iklan gratis. Untuk upload iklan berikutnya, Anda memerlukan minimal 1 koin per hari.");
+          setQuotaModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Error checking quota:", error);
+      } finally {
+        setIsCheckingQuota(false);
+      }
+    };
+
+    checkQuota();
+  }, [user]);
 
 
   const handleAddAmenity = () => {
@@ -163,15 +202,28 @@ export default function AddKosPage() {
     }
   };
 
+  if (isCheckingQuota) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <QuotaAlertModal 
         isOpen={quotaModalOpen} 
-        onClose={() => setQuotaModalOpen(false)} 
+        onClose={() => {
+          setQuotaModalOpen(false);
+          if (!hasFreeQuota && userCoins <= 0) {
+            navigate('/dashboard');
+          }
+        }} 
         message={quotaMessage}
         role={user?.role}
       />
-      <BackButton to="/owner-dashboard/my-kos" />
+      <BackButton to="/dashboard" />
       
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-display font-bold text-foreground">Tambah Kos Baru</h1>
@@ -314,21 +366,37 @@ export default function AddKosPage() {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
-              Durasi Iklan (1 Koin/Hari)
+              Durasi Iklan
               <Zap className="w-3 h-3 fill-current" />
             </label>
-            <Select onValueChange={(v) => setFormData(p => ({ ...p, durationDays: v }))} defaultValue={formData.durationDays}>
+            <Select 
+              onValueChange={(v) => setFormData(p => ({ ...p, durationDays: v }))} 
+              defaultValue={hasFreeQuota ? "30" : "3"}
+            >
               <SelectTrigger className="rounded-xl border-primary/50 bg-primary/5">
                 <SelectValue placeholder="Pilih Durasi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3">3 Hari (3 Koin)</SelectItem>
-                <SelectItem value="7">7 Hari (7 Koin)</SelectItem>
-                <SelectItem value="14">14 Hari (14 Koin)</SelectItem>
-                <SelectItem value="30">30 Hari (30 Koin)</SelectItem>
+                {hasFreeQuota ? (
+                  <SelectItem value="30">30 Hari (GRATIS - Iklan Pertama)</SelectItem>
+                ) : (
+                  <>
+                    <SelectItem value="3">3 Hari (3 Koin)</SelectItem>
+                    <SelectItem value="7">7 Hari (7 Koin)</SelectItem>
+                    <SelectItem value="30">30 Hari (30 Koin)</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
+            <p className="text-[10px] text-muted-foreground mt-1 italic">
+              {hasFreeQuota 
+                ? "* Upload pertama GRATIS (30 hari)." 
+                : `* Iklan berikutnya: 1 koin/hari. Saldo Anda: ${userCoins} Koin.`
+              }
+            </p>
+
           </div>
+
         </div>
 
 
@@ -407,7 +475,11 @@ export default function AddKosPage() {
         </div>
 
         <div className="pt-4">
-          <Button type="submit" className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95" 
+            disabled={isLoading || (!hasFreeQuota && userCoins <= 0)}
+          >
             {isLoading ? (
               <div className="flex items-center gap-3">
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -416,6 +488,7 @@ export default function AddKosPage() {
             ) : 'Daftarkan Properti Kos'}
           </Button>
         </div>
+
       </form>
     </div>
   );

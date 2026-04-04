@@ -42,6 +42,18 @@ export const getOwnerDashboardStats = async (userId: string) => {
   };
 };
 
+export const getUserDashboardStats = async (userId: string) => {
+  const [studentStats, ownerStats] = await Promise.all([
+    getStudentDashboardStats(userId),
+    getOwnerDashboardStats(userId)
+  ]);
+
+  return {
+    ...studentStats,
+    ...ownerStats
+  };
+};
+
 export const getAdminDashboardStats = async () => {
   const { data: users, error: usersError } = await supabase
     .from('profiles')

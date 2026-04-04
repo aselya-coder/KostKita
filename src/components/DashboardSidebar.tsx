@@ -39,20 +39,11 @@ export function DashboardSidebar() {
   const getSidebarItems = (): SidebarItem[] => {
     const role = user?.role;
 
-    const studentItems: SidebarItem[] = [
-      { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
-      { title: "My Items", href: "/dashboard/my-items", icon: ShoppingBag },
-      { title: "Sell Item", href: "/dashboard/sell-item", icon: PlusCircle },
-      { title: "Favorites", href: "/dashboard/favorites", icon: Heart },
-      { title: "Profile", href: "/dashboard/profile", icon: User },
-      { title: "Settings", href: "/dashboard/settings", icon: SettingsIcon },
-    ];
-
-    const ownerItems: SidebarItem[] = [
+    const unifiedUserItems: SidebarItem[] = [
       { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
       { title: "My Boarding Houses", href: "/dashboard/my-kos", icon: Building2 },
       { title: "Add Boarding House", href: "/dashboard/add-kos", icon: PlusCircle },
-      { title: "My Items", href: "/dashboard/my-items", icon: ShoppingBag },
+      { title: "My Marketplace", href: "/dashboard/my-items", icon: ShoppingBag },
       { title: "Sell Item", href: "/dashboard/sell-item", icon: PlusCircle },
       { title: "Favorites", href: "/dashboard/favorites", icon: Heart },
       { title: "Profile", href: "/dashboard/profile", icon: User },
@@ -60,10 +51,18 @@ export function DashboardSidebar() {
     ];
 
     switch (role) {
+      case "admin":
+        // Admins should usually use the /admin layout, but if they hit /dashboard,
+        // we can show them some basic items or just the overview.
+        return [
+          { title: "Admin Panel", href: "/admin", icon: ShieldAlert },
+          { title: "Profile", href: "/dashboard/profile", icon: User },
+          { title: "Settings", href: "/dashboard/settings", icon: SettingsIcon },
+        ];
+      case "user":
       case "owner":
-        return ownerItems;
       case "student":
-        return studentItems;
+        return unifiedUserItems;
       default:
         return [];
     }

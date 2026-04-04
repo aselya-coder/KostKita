@@ -18,7 +18,7 @@ export function MarketplaceCard({ item }: MarketplaceCardProps) {
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className="group relative rounded-2xl bg-card shadow-card hover:shadow-card-hover ring-1 ring-foreground/5 overflow-hidden transition-shadow duration-300"
     >
-      <Link to={`/item/${item.id}`}>
+      <Link to={`/marketplace/${item.id}`}>
         <div className="relative aspect-square overflow-hidden">
           <img
             src={item.image}
@@ -44,7 +44,7 @@ export function MarketplaceCard({ item }: MarketplaceCardProps) {
         />
       </motion.button>
       <div className="p-4">
-        <Link to={`/item/${item.id}`}>
+        <Link to={`/marketplace/${item.id}`}>
           <span className="text-lg text-price text-foreground">{formatPrice(item.price)}</span>
           <h3 className="font-display font-semibold text-sm leading-snug tracking-tight truncate mt-1 text-foreground">
             {item.title}

@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import StudentOverview from "@/pages/dashboard/StudentOverview";
-import OwnerOverview from "@/pages/dashboard/OwnerOverview";
+import UserOverview from "@/pages/dashboard/UserOverview";
 import AdminOverview from "@/pages/dashboard/AdminOverview";
 import Favorites from "@/pages/Favorites";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,10 +48,14 @@ export function DashboardRouter() {
 
   return (
     <Routes>
-      {/* Student Routes */}
-      {role === "student" && (
+      {/* Unified User Routes (Student/Owner/User) */}
+      {(role === "user" || role === "student" || role === "owner") && (
         <>
-          <Route index element={<StudentOverview />} />
+          <Route index element={<UserOverview />} />
+          <Route path="my-kos" element={<MyBoardingHouses />} />
+          <Route path="add-kos" element={<AddBoardingHouse />} />
+          <Route path="edit-kos/:id" element={<EditKosPage />} />
+          <Route path="inquiries" element={<Inquiries />} />
           <Route path="my-items" element={<MyMarketplaceItems />} />
           <Route path="sell-item" element={<SellItem />} />
           <Route path="edit-item/:id" element={<EditItem />} />
@@ -69,50 +72,14 @@ export function DashboardRouter() {
         </>
       )}
 
-      {/* Owner Routes */}
-      {role === "owner" && (
-        <>
-          <Route index element={<OwnerOverview />} />
-          <Route path="my-kos" element={<MyBoardingHouses />} />
-          <Route path="add-kos" element={<AddBoardingHouse />} />
-          <Route path="edit-kos/:id" element={<EditKosPage />} /> {/* Add the edit route */}
-          <Route path="inquiries" element={<Inquiries />} />
-          <Route path="my-items" element={<MyMarketplaceItems />} />
-          <Route path="sell-item" element={<SellItem />} />
-          <Route path="edit-item/:id" element={<EditItem />} />
-          <Route path="reports" element={<UserReports />} />
-          <Route path="favorites" element={<Favorites />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="pricing" element={<PricingPage />} />
-          <Route path="topup" element={<TopUpPage />} />
-          <Route path="transactions" element={<TransactionsPage />} />
-          <Route path="system-settings" element={<SystemSettings />} />
-          <Route path="notifications" element={<Notifications />} />
-          <Route path="*" element={<Navigate to="/owner-dashboard" replace />} />
-        </>
-      )}
-
-      {/* Admin Routes */}
+      {/* Admin Routes - Common routes under /dashboard, others redirect to /admin */}
       {role === "admin" && (
         <>
-          <Route index element={<AdminOverview />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="kos" element={<KosManagement />} />
-          <Route path="marketplace" element={<MarketplaceModeration />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="activity-log" element={<ActivityLogPage />} />
-          <Route path="coin-packages" element={<CoinPackagesPage />} />
-          <Route path="edit-kos/:id" element={<EditKosPage />} />
-          <Route path="pricing" element={<PricingPage />} />
-          <Route path="topup" element={<TopUpPage />} />
-          <Route path="transactions" element={<TransactionsPage />} />
-          <Route path="system-settings" element={<SystemSettings />} />
-          <Route path="favorites" element={<Favorites />} />
+          <Route index element={<Navigate to="/admin" replace />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="notifications" element={<Notifications />} />
-          <Route path="*" element={<Navigate to="/admin-dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
         </>
       )}
     </Routes>

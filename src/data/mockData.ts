@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   password?: string;
-  role: "admin" | "owner" | "student";
+  role: "admin" | "owner" | "student" | "user";
   avatar?: string;
   phone?: string;
   location: string;
@@ -45,7 +45,11 @@ export interface KosListing {
   rules: string[];
   type: "putra" | "putri" | "campur";
   availableRooms: number;
-  status?: "pending" | "approved" | "rejected";
+  status?: "pending" | "approved" | "rejected" | "active" | "expired" | "archived";
+  isFreeFirstAd?: boolean;
+  adDurationDays?: number;
+  coinCostPerDay?: number;
+  expiryDate?: string;
 }
 
 export interface MarketplaceItem {
@@ -61,8 +65,89 @@ export interface MarketplaceItem {
   location: string;
   description: string;
   createdAt: string;
-  status?: "active" | "sold" | "removed" | "pending";
+  status?: "active" | "sold" | "removed" | "pending" | "expired" | "archived";
+  isFreeFirstAd?: boolean;
+  adDurationDays?: number;
+  coinCostPerDay?: number;
+  expiryDate?: string;
 }
+
+export interface CoinPackage {
+  id: string;
+  coins: number;
+  price: number;
+  adminFee: number;
+}
+
+export interface Wallet {
+  userId: string;
+  balance: number;
+  totalEarnings: number;
+}
+
+export interface Transaction {
+  id: string;
+  userId: string;
+  type: "topup" | "ad_payment" | "sale_income";
+  amount: number; // in IDR
+  coins?: number;
+  adminFee?: number;
+  status: "pending" | "paid" | "failed";
+  description: string;
+  createdAt: string;
+}
+
+export const mockCoinPackages: CoinPackage[] = [
+  { id: "p1", coins: 5, price: 50000, adminFee: 2500 },
+  { id: "p2", coins: 10, price: 100000, adminFee: 5000 },
+  { id: "p3", coins: 50, price: 500000, adminFee: 15000 },
+  { id: "p4", coins: 100, price: 1000000, adminFee: 25000 },
+];
+
+export const mockWallets: Wallet[] = [
+  { userId: "u1", balance: 0, totalEarnings: 5450000 }, // Admin wallet tracks revenue
+  { userId: "u2", balance: 25, totalEarnings: 15000000 },
+  { userId: "u3", balance: 10, totalEarnings: 500000 },
+];
+
+export const mockTransactions: Transaction[] = [
+  {
+    id: "t1",
+    userId: "u2",
+    type: "topup",
+    amount: 105000,
+    coins: 10,
+    adminFee: 5000,
+    status: "paid",
+    description: "Top up 10 koin",
+    createdAt: "2024-03-20T10:00:00Z",
+  },
+  {
+    id: "t2",
+    userId: "u2",
+    type: "ad_payment",
+    amount: 0,
+    coins: 7,
+    status: "paid",
+    description: "Iklan Kos Harmoni (7 hari)",
+    createdAt: "2024-03-21T14:30:00Z",
+  },
+];
+
+export interface SystemSettings {
+  coinPrice: number;
+  adminFeeType: "flat" | "percent";
+  adminFeeValue: number;
+  adCostPerDay: number;
+}
+
+export const defaultSystemSettings: SystemSettings = {
+  coinPrice: 10000,
+  adminFeeType: "flat",
+  adminFeeValue: 2500,
+  adCostPerDay: 1,
+};
+
 
 export interface Inquiry {
   id: string;

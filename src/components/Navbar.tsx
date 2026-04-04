@@ -17,8 +17,7 @@ export function Navbar() {
 
   const getDashboardLink = () => {
     if (!user) return "/login";
-    if (user.role === "admin") return "/admin-dashboard";
-    if (user.role === "owner") return "/owner-dashboard";
+    if (user.role === "admin") return "/admin";
     return "/dashboard";
   };
 
@@ -64,7 +63,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             {user?.role === "admin" && (
               <Link
-                to="/admin-dashboard"
+                to="/admin"
                 className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                 title="Admin Panel"
               >
@@ -72,7 +71,7 @@ export function Navbar() {
               </Link>
             )}
             <Link
-              to={user ? (user.role === "owner" ? "/owner-dashboard/favorites" : "/dashboard/favorites") : "/login"}
+              to={user ? "/dashboard/favorites" : "/login"}
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <Heart className="w-5 h-5" />
@@ -122,7 +121,7 @@ export function Navbar() {
               ))}
               <hr className="my-2 border-border" />
               <Link
-                to={user ? (user.role === "owner" ? "/owner-dashboard/favorites" : "/dashboard/favorites") : "/login"}
+                to={user ? "/dashboard/favorites" : "/login"}
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary"
               >
