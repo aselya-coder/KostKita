@@ -43,6 +43,7 @@ import Reports from "@/pages/dashboard/Reports";
 import ActivityLog from "@/pages/dashboard/admin/ActivityLog";
 import CoinPackages from "@/pages/dashboard/admin/CoinPackages";
 import SystemSettings from "@/pages/dashboard/SystemSettings";
+import TopupUsers from "@/pages/dashboard/admin/TopupUsers";
 
 // Route Protection
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -113,6 +114,7 @@ const App = () => (
               <Route path="reports" element={<Reports />} />
               <Route path="activity-log" element={<ActivityLog />} />
               <Route path="coin-packages" element={<CoinPackages />} />
+              <Route path="topup-users" element={<TopupUsers />} />
               <Route path="system-settings" element={<SystemSettings />} />
               <Route path="edit-kos/:id" element={<EditKos />} />
             </Route>

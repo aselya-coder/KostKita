@@ -25,6 +25,8 @@ router.get('/listings/user/:userId', authenticate, authorize(['USER', 'ADMIN']),
 router.get('/coin-packages', topupController.getPackages); // Publicly accessible
 router.post('/topup', authenticate, authorize(['USER', 'ADMIN']), topupController.createTopup);
 router.post('/payment-webhook', topupController.webhook); // No auth needed for webhook
+router.get('/transactions/:id', authenticate, authorize(['USER', 'ADMIN']), topupController.getTransaction);
+router.post('/payments/initiate', authenticate, authorize(['USER', 'ADMIN']), topupController.initiatePayment);
 
 // Wallet Routes
 router.get('/wallet/balance/:userId', authenticate, authorize(['USER', 'ADMIN']), walletController.getBalance);
@@ -37,5 +39,6 @@ router.put('/admin/coin-packages/:id', authenticate, authorize(['ADMIN']), admin
 router.delete('/admin/coin-packages/:id', authenticate, authorize(['ADMIN']), adminController.deleteCoinPackage);
 router.get('/admin/transactions', authenticate, authorize(['ADMIN']), adminController.getAllTransactions);
 router.get('/admin/coin-logs', authenticate, authorize(['ADMIN']), adminController.getAllCoinLogs);
+router.get('/admin/topup-users', authenticate, authorize(['ADMIN']), adminController.getTopupUsers);
 
 export default router;

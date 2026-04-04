@@ -1,15 +1,29 @@
 import prisma from '../config/prisma.js';
 import { TransactionRepository } from '../repositories/transaction.repository.js';
 import { WalletRepository } from '../repositories/wallet.repository.js';
-import { TransactionStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export class TopupService {
   private transactionRepository: TransactionRepository;
   private walletRepository: WalletRepository;
+  private readonly COIN_PRICE: number;
+  private readonly ADMIN_FEE_TYPE: 'flat' | 'percent';
+  private readonly ADMIN_FEE_VALUE: number;
 
   constructor() {
     this.transactionRepository = new TransactionRepository();
     this.walletRepository = new WalletRepository();
+    this.COIN_PRICE = Number(process.env.COIN_PRICE || 10000);
+    const t = (process.env.ADMIN_FEE_TYPE || 'flat').toLowerCase();
+    this.ADMIN_FEE_TYPE = (t === 'percent' ? 'percent' : 'flat');
+    this.ADMIN_FEE_VALUE = Number(process.env.ADMIN_FEE_VALUE || 2500);
+  }
+
+  private computeAdminFee(baseAmount: number) {
+    if (this.ADMIN_FEE_TYPE === 'percent') {
+      return Math.round((baseAmount * this.ADMIN_FEE_VALUE) / 100);
+    }
+    return this.ADMIN_FEE_VALUE;
   }
 
   async createTopup(userId: string, packageId: string) {
@@ -27,18 +41,22 @@ export class TopupService {
     }
 
     const externalId = `TRX-${Date.now()}-${userId.substring(0, 8)}`;
+    const calculatedAmount = coinPackage.coinAmount * this.COIN_PRICE;
+    const adminFee = this.computeAdminFee(calculatedAmount);
+    const totalAmount = calculatedAmount + adminFee;
 
     const transaction = await this.transactionRepository.createTransaction({
       userId,
       coinPackageId: packageId,
-      amount: coinPackage.price,
+      amount: totalAmount,
       coinAmount: coinPackage.coinAmount,
       status: 'pending',
       externalId,
     });
 
-    // Mock payment gateway URL (e.g., Midtrans)
-    const paymentUrl = `https://mock-payment-gateway.com/pay/${externalId}`;
+    // Return app checkout URL for local/dev flow (avoid unreachable mock domain)
+    const appBase = process.env.APP_BASE_URL || 'http://localhost:8080';
+    const paymentUrl = `${appBase}/dashboard/topup/checkout?trx=${transaction.id}`;
 
     return {
       transaction,
@@ -62,7 +80,7 @@ export class TopupService {
       
       const updatedTransaction = await tx.transaction.update({
         where: { id: transaction.id },
-        data: { status: updatedStatus as TransactionStatus },
+        data: { status: updatedStatus },
       });
 
       if (status === 'success') {
@@ -89,9 +107,54 @@ export class TopupService {
   }
 
   async getAllPackages() {
-    return prisma.coinPackage.findMany({
+    const pkgs = await prisma.coinPackage.findMany({
       where: { isActive: true },
       orderBy: { coinAmount: 'asc' },
     });
+    return pkgs.map(p => {
+      const price = p.coinAmount * this.COIN_PRICE;
+      const adminFee = this.computeAdminFee(price);
+      return {
+        ...p,
+        price,
+        adminFee,
+      };
+    });
+  }
+
+  async getTransactionById(id: string) {
+    return prisma.transaction.findUnique({
+      where: { id },
+      include: { coinPackage: true },
+    });
+  }
+
+  async initiatePayment(user: { id: string; role: 'USER' | 'ADMIN' }, transactionId: string, method: 'QRIS' | 'EWALLET' | 'VA', provider?: string) {
+    const trx = await prisma.transaction.findUnique({
+      where: { id: transactionId },
+      include: { coinPackage: true },
+    });
+    if (!trx) throw new Error('Transaksi tidak ditemukan');
+    if (user.role === 'USER' && trx.userId !== user.id) throw new Error('Forbidden');
+    if (trx.status !== 'pending') throw new Error('Transaksi tidak dalam status pending');
+
+    if (method === 'VA') {
+      const map: Record<string, string> = { BCA: '014', BRI: '002', MANDIRI: '008' };
+      const bank = provider && map[provider] ? provider : 'BCA';
+      const prefix = map[bank];
+      const body = (trx.externalId || trx.id).replace(/\D/g, '').slice(-10).padStart(10, '0');
+      const vaNumber = `${prefix}${body}`;
+      return { method, provider: bank, vaNumber };
+    }
+
+    if (method === 'QRIS') {
+      const payload = `KOSKITA|TRX|${trx.externalId || trx.id}|AMOUNT|${trx.amount}`;
+      return { method, qrisPayload: payload, expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString() };
+    }
+
+    // EWALLET
+    const appBase = process.env.APP_BASE_URL || 'http://localhost:8080';
+    const redirectUrl = `${appBase}/dashboard/topup/checkout?trx=${trx.id}`;
+    return { method, provider: provider || 'SHOPEEPAY', redirectUrl };
   }
 }

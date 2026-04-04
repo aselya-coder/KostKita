@@ -68,13 +68,20 @@ export default function PricingPage() {
     }
     setIsProcessing(pkg.id);
     try {
-      const result = await createTopupRequest(user.id, pkg.id, toBackendRole(user.role));
+      type TopupResponse = { transaction?: { id: string }; paymentUrl?: string };
+      const result: TopupResponse = await createTopupRequest(user.id, pkg.id, toBackendRole(user.role));
+      const trxId = result?.transaction?.id || "—";
+      const paymentUrl = result?.paymentUrl;
       toast.success(`Pesanan "${pkg.name}" berhasil dibuat!`, {
-        description: `ID Transaksi: ${result.id} — mengarahkan ke pembayaran...`,
-        duration: 5000,
+        description: `ID Transaksi: ${trxId}. Mengarahkan ke pembayaran...`,
+        duration: 4000,
       });
-    } catch (error: any) {
-      toast.error(error.message || "Gagal memproses pembayaran.");
+      if (paymentUrl) {
+        window.open(paymentUrl, "_blank");
+      }
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Gagal memproses pembayaran.";
+      toast.error(msg);
     } finally {
       setIsProcessing(null);
     }

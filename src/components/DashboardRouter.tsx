@@ -32,6 +32,7 @@ import SystemSettings from "@/pages/dashboard/SystemSettings";
 import ActivityLogPage from "@/pages/dashboard/admin/ActivityLog";
 import CoinPackagesPage from "@/pages/dashboard/admin/CoinPackages";
 import TopUpPage from "@/pages/dashboard/TopUp";
+import PaymentCheckout from "@/pages/dashboard/PaymentCheckout";
 
 export function DashboardRouter() {
   const { user, isLoading } = useAuth();
@@ -65,6 +66,7 @@ export function DashboardRouter() {
           <Route path="settings" element={<Settings />} />
           <Route path="pricing" element={<PricingPage />} />
           <Route path="topup" element={<TopUpPage />} />
+          <Route path="topup/checkout" element={<PaymentCheckout />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="system-settings" element={<SystemSettings />} />
           <Route path="notifications" element={<Notifications />} />

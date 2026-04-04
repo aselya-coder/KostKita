@@ -8,8 +8,8 @@ export class AdminController {
     try {
       const packages = await adminService.getAllCoinPackages();
       return res.json({ success: true, data: packages });
-    } catch (error: any) {
-      return res.status(400).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Error' });
     }
   }
 
@@ -18,8 +18,8 @@ export class AdminController {
       const { name, coinAmount, price, isActive } = req.body;
       const newPackage = await adminService.createCoinPackage({ name, coinAmount, price, isActive });
       return res.status(201).json({ success: true, data: newPackage });
-    } catch (error: any) {
-      return res.status(400).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Error' });
     }
   }
 
@@ -29,8 +29,8 @@ export class AdminController {
       const { name, coinAmount, price, isActive } = req.body;
       const updatedPackage = await adminService.updateCoinPackage(id, { name, coinAmount, price, isActive });
       return res.json({ success: true, data: updatedPackage });
-    } catch (error: any) {
-      return res.status(400).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Error' });
     }
   }
 
@@ -39,8 +39,8 @@ export class AdminController {
       const id = req.params.id as string;
       await adminService.deleteCoinPackage(id);
       return res.json({ success: true, message: 'Coin package deleted' });
-    } catch (error: any) {
-      return res.status(400).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Error' });
     }
   }
 
@@ -48,8 +48,8 @@ export class AdminController {
     try {
       const transactions = await adminService.getAllTransactions();
       return res.json({ success: true, data: transactions });
-    } catch (error: any) {
-      return res.status(400).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Error' });
     }
   }
 
@@ -57,8 +57,17 @@ export class AdminController {
     try {
       const coinLogs = await adminService.getAllCoinLogs();
       return res.json({ success: true, data: coinLogs });
-    } catch (error: any) {
-      return res.status(400).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Error' });
+    }
+  }
+
+  async getTopupUsers(req: Request, res: Response) {
+    try {
+      const data = await adminService.getTopupUsers();
+      return res.json({ success: true, data });
+    } catch (error: unknown) {
+      return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Error' });
     }
   }
 }

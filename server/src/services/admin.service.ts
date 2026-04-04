@@ -1,7 +1,6 @@
 import { CoinPackageRepository } from '../repositories/coinPackage.repository.js';
 import { TransactionRepository } from '../repositories/transaction.repository.js';
 import { WalletRepository } from '../repositories/wallet.repository.js';
-import { CoinLogType, TransactionStatus } from '@prisma/client';
 
 export class AdminService {
   private coinPackageRepository: CoinPackageRepository;
@@ -45,5 +44,23 @@ export class AdminService {
   // Coin Logs
   async getAllCoinLogs() {
     return this.walletRepository.getLogs(); // Admin can view all coin logs
+  }
+
+  async getTopupUsers() {
+    const all = await this.transactionRepository.findUserTransactions();
+    const map: Record<string, { userId: string; totalAmount: number; totalCoins: number; count: number; lastAt: string }> = {};
+    for (const t of all) {
+      if (t.status !== 'success') continue;
+      if (!map[t.userId]) {
+        map[t.userId] = { userId: t.userId, totalAmount: 0, totalCoins: 0, count: 0, lastAt: t.createdAt as unknown as string };
+      }
+      map[t.userId].totalAmount += t.amount;
+      map[t.userId].totalCoins += t.coinAmount;
+      map[t.userId].count += 1;
+      const prev = new Date(map[t.userId].lastAt).getTime();
+      const cur = new Date(t.createdAt as unknown as string).getTime();
+      if (cur > prev) map[t.userId].lastAt = t.createdAt as unknown as string;
+    }
+    return Object.values(map).sort((a, b) => b.totalAmount - a.totalAmount);
   }
 }

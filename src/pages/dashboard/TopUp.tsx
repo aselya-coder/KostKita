@@ -1,23 +1,31 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { getTransactions, topUpCoins } from "@/services/wallet";
-import { mockCoinPackages, type Transaction, type CoinPackage } from "@/data/mockData";
+import { getTransactions } from "@/services/wallet";
+import { type Transaction } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
 import { toast } from "sonner";
-import { Coins, CreditCard, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Coins, CreditCard, Clock, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getCoinPackages, createTopupRequest, type CoinPackage } from "@/services/payment";
+import { useNavigate } from "react-router-dom";
 
 export default function TopUpPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); 
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
+  const [packages, setPackages] = useState<CoinPackage[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<"SHOPEEPAY" | "DANA" | "QRIS" | "VA" | null>(null);
 
   useEffect(() => {
-    if (user) {
-      fetchTransactions();
-    }
+    if (!user) return;
+    fetchTransactions();
+    fetchPackages();
   }, [user]);
 
   const fetchTransactions = async () => {
@@ -31,18 +39,41 @@ export default function TopUpPage() {
     }
   };
 
-  const handleTopUp = async () => {
-    if (!selectedPackage || !user) return;
-    
+  const fetchPackages = async () => {
     try {
-      const { success, message } = await topUpCoins(user.id, selectedPackage.id);
-      if (success) {
-        toast.success(message);
-        fetchTransactions();
-      }
-    } catch (error) {
-      toast.error("Gagal melakukan top up");
+      const list = await getCoinPackages();
+      setPackages(list);
+    } catch {
+      toast.error("Gagal memuat paket koin");
     }
+  };
+
+  const beginPayment = async () => {
+    if (!selectedPackage || !user) return;
+    setIsProcessing(true);
+    try {
+      type TopupResponse = { transaction: { id: string }; paymentUrl?: string };
+      const result: TopupResponse = await createTopupRequest(user.id, selectedPackage.id);
+      const trxId = result?.transaction?.id;
+      if (trxId) {
+        navigate(`/dashboard/topup/checkout?trx=${trxId}`, { state: { paymentUrl: result.paymentUrl } });
+        return;
+      }
+      toast.success("Transaksi berhasil dibuat. Mengarahkan ke pembayaran...");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Gagal membuat sesi pembayaran";
+      toast.error(msg);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const proceedToPayment = () => {
+    if (!paymentUrl) return;
+    window.open(paymentUrl, "_blank");
+    setShowPaymentDialog(false);
+    setSelectedMethod(null);
+    fetchTransactions();
   };
 
   return (
@@ -57,7 +88,7 @@ export default function TopUpPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {mockCoinPackages.map((pkg) => (
+            {packages.map((pkg) => (
               <div 
                 key={pkg.id}
                 onClick={() => setSelectedPackage(pkg)}
@@ -76,10 +107,10 @@ export default function TopUpPage() {
                     <CheckCircle2 className="w-6 h-6 text-primary" />
                   )}
                 </div>
-                <h3 className="text-xl font-bold text-foreground">{pkg.coins} KOIN</h3>
+                <h3 className="text-xl font-bold text-foreground">{pkg.coinAmount} KOIN</h3>
                 <p className="text-sm text-muted-foreground mt-1">Rp {pkg.price.toLocaleString('id-ID')}</p>
                 <div className="mt-4 pt-4 border-t border-border flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">Admin Fee: Rp {pkg.adminFee.toLocaleString('id-ID')}</span>
+                  <span className="text-xs text-muted-foreground">Metode: ShopeePay, DANA, QRIS</span>
                 </div>
               </div>
             ))}
@@ -90,24 +121,27 @@ export default function TopUpPage() {
             {selectedPackage ? (
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Harga Koin ({selectedPackage.coins} Koin)</span>
+                  <span className="text-muted-foreground">
+                    Harga Koin {selectedPackage.coinAmount} Koin
+                  </span>
                   <span className="font-medium">Rp {selectedPackage.price.toLocaleString('id-ID')}</span>
                 </div>
                 <div className="flex justify-between text-sm text-emerald-600">
                   <span>Biaya Admin</span>
-                  <span className="font-medium">+ Rp {selectedPackage.adminFee.toLocaleString('id-ID')}</span>
+                  <span className="font-medium">+ Rp {(selectedPackage.adminFee ?? 0).toLocaleString('id-ID')}</span>
                 </div>
                 <div className="pt-3 border-t border-border flex justify-between items-center">
                   <span className="font-bold">Total Bayar</span>
                   <span className="text-xl font-bold text-primary">
-                    Rp {(selectedPackage.price + selectedPackage.adminFee).toLocaleString('id-ID')}
+                    Rp {(selectedPackage.price + (selectedPackage.adminFee ?? 0)).toLocaleString('id-ID')}
                   </span>
                 </div>
                 <Button 
-                  onClick={handleTopUp}
+                  onClick={beginPayment}
+                  disabled={isProcessing}
                   className="w-full mt-4 h-12 rounded-xl text-lg font-bold"
                 >
-                  Bayar Sekarang
+                  {isProcessing ? "Memproses..." : "Bayar Sekarang"}
                 </Button>
               </div>
             ) : (
@@ -152,6 +186,8 @@ export default function TopUpPage() {
           </div>
         </div>
       </div>
+
+      {/* Dialog pemilihan metode dipindah ke halaman checkout */}
     </div>
   );
 }
