@@ -225,8 +225,8 @@ export default function CoinPackagesPage() {
                 value={form.coinAmount}
                 onChange={handleFormChange}
                 className="col-span-3 rounded-xl"
-                min={5}
-                max={100}
+                min={1}
+                max={1000}
                 required
               />
             </div>

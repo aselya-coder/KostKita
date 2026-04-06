@@ -61,7 +61,7 @@ export default function KosManagement() {
       .from('kos_listings')
       .select(`
         *,
-        profiles:owner_id (name)
+        profiles!owner_id (name)
       `)
       .order('created_at', { ascending: false });
     
@@ -162,8 +162,8 @@ export default function KosManagement() {
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Verifikasi Kos</h1>
-          <p className="text-muted-foreground text-sm">Tinjau dan setujui listing kos baru yang masuk.</p>
+          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Manajemen Iklan Kos</h1>
+          <p className="text-muted-foreground text-xs md:text-sm">Verifikasi dan kelola semua daftar iklan kos terdaftar.</p>
         </div>
       </div>
 

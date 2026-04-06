@@ -23,11 +23,19 @@ export default function UserManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const search = params.get('search');
+    if (search) {
+      setSearchQuery(search);
+    }
+  }, []);
+
   const fetchUsers = async () => {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, wallets(balance)')
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -42,9 +50,22 @@ export default function UserManagement() {
   useEffect(() => {
     fetchUsers();
 
-    // REALTIME: Listen for profile changes
-    const channel = supabase.channel('public-profiles-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchUsers())
+    // REALTIME: Listen for ANY changes in profiles table
+    const channel = supabase.channel('admin-user-management')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'profiles' 
+      }, (payload) => {
+        console.log('New user detected:', payload.new);
+        toast.info(`Pengguna baru terdeteksi: ${payload.new.name || payload.new.id.slice(0, 8)}`);
+        fetchUsers();
+      })
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'profiles' 
+      }, () => fetchUsers())
       .subscribe();
 
     return () => {
@@ -54,7 +75,8 @@ export default function UserManagement() {
 
   const filteredUsers = users.filter(u => 
     u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.id?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const deleteUser = async (id: string) => {
@@ -152,7 +174,7 @@ export default function UserManagement() {
                       <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center border border-amber-100">
                         <Coins className="w-4 h-4 text-amber-600" />
                       </div>
-                      <span className="font-bold text-foreground">{u.role === 'admin' ? '-' : (Math.floor(Math.random() * 50))}</span>
+                      <span className="font-bold text-foreground">{u.role === 'admin' ? '-' : (Array.isArray(u.wallets) ? u.wallets[0]?.balance : u.wallets?.balance) ?? 0}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-muted-foreground text-xs">

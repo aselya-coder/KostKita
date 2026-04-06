@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 interface Activity {
   id: string;
   created_at: string;
-  action: string;
-  description: string | null;
+  activity: string;
+  target_name: string | null;
   target_url: string | null;
   profiles: {
     name: string | null;
@@ -98,10 +98,10 @@ export default function ActivityLogPage() {
             <div className="flex-grow">
               <p className="font-medium pr-8">
                 <span className="font-bold text-primary">{activity.profiles?.name || 'Pengguna'}</span>
-                {' '}{activity.action.toLowerCase()}
-                {activity.description && (
+                {' '}{(activity.activity || '').toLowerCase()}
+                {activity.target_name && (
                   <span className="text-muted-foreground italic">
-                    : "{activity.description}"
+                    : "{activity.target_name}"
                   </span>
                 )}
               </p>

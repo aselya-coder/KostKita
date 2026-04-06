@@ -95,11 +95,16 @@ const KosDetail = () => {
   let sanitizedPhone = rawPhone.replace(/\D/g, '');
   if (sanitizedPhone.startsWith('0')) {
     sanitizedPhone = '62' + sanitizedPhone.slice(1);
+  } else if (sanitizedPhone.startsWith('8')) {
+    sanitizedPhone = '62' + sanitizedPhone;
   }
   
-  const waLink = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(
-    `Hi, saya tertarik dengan ${kos.title} di KosKita. Apakah masih tersedia?`
-  )}`;
+  const hasPhone = sanitizedPhone.length >= 10;
+  const waLink = hasPhone 
+    ? `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(
+        `Hi, saya tertarik dengan ${kos.title} di KosKita. Apakah masih tersedia?`
+      )}`
+    : "#";
 
   return (
     <>
@@ -248,50 +253,21 @@ const KosDetail = () => {
                 </div>
                 <a
                   href={waLink}
-                  target="_blank"
+                  target={hasPhone ? "_blank" : "_self"}
                   rel="noopener noreferrer"
-                  className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm transition-colors hover:bg-primary/90 shadow-md active:scale-95 ${
-                    !kos.ownerPhone ? 'opacity-80' : ''
+                  onClick={(e) => !hasPhone && e.preventDefault()}
+                  className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-sm transition-all shadow-md active:scale-95 ${
+                    !hasPhone 
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
                   }`}
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Chat via WhatsApp
+                  {hasPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
                 </a>
-                {user && user.id === kos.ownerId && (
-                  <Button
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() => navigate(`/owner-dashboard/edit-kos/${kos.id}`)}
-                  >
-                    Edit Kos
-                  </Button>
-                )}
-                {user && user.id === kos.ownerId && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setIsAdvertiseModalOpen(true)}
-                  >
-                    Iklankan Kos
-                  </Button>
-                )}
                 <p className="text-xs text-muted-foreground text-center">
                   Terhubung langsung dengan Pemilik Kos
                 </p>
-                {user && user.role === "admin" && (
-                  <div className="mt-4 pt-4 border-t border-border space-y-2">
-                    <p className="text-xs font-semibold text-center text-muted-foreground tracking-wider">
-                      ADMIN ACTIONS
-                    </p>
-                    <Button 
-                      variant="secondary" 
-                      className="w-full"
-                      onClick={() => navigate(`/admin-dashboard/edit-kos/${kos.id}`)}
-                    >
-                      Edit Kos
-                    </Button>
-                  </div>
-                )}
               </div>
             </div>
           </div>

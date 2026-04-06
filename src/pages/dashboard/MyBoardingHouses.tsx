@@ -56,8 +56,8 @@ export default function MyBoardingHouses() {
       <BackButton to="/dashboard" className="mb-0" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Kos Saya</h1>
-          <p className="text-muted-foreground">Kelola dan pantau daftar properti Anda.</p>
+          <h1 className="text-2xl font-display font-bold text-foreground">Iklan Kos Saya</h1>
+          <p className="text-muted-foreground">Kelola dan pantau daftar iklan kos Anda.</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Link to="/dashboard/add-kos">

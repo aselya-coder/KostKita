@@ -26,11 +26,11 @@ CREATE TABLE IF NOT EXISTS public.wallets (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- COIN_PACKAGES: Admin defined packages (Min 5, Max 100)
+-- COIN_PACKAGES: Admin defined packages (1 Coin = 10,000 IDR)
 CREATE TABLE IF NOT EXISTS public.coin_packages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
-  coin_amount INT NOT NULL CHECK (coin_amount >= 5 AND coin_amount <= 100),
+  coin_amount INT NOT NULL CHECK (coin_amount >= 1 AND coin_amount <= 1000),
   price NUMERIC NOT NULL,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -181,16 +181,17 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ==========================================
--- 5. SEED DATA (Min 5, Max 100)
+-- 5. SEED DATA (1 Koin = 10,000 IDR)
 -- ==========================================
 -- Clear old packages first
 DELETE FROM public.coin_packages;
 
 INSERT INTO public.coin_packages (name, coin_amount, price)
 VALUES 
+  ('1 Koin', 1, 10000),
   ('5 Koin', 5, 50000),
-  ('10 Koin', 10, 95000),
-  ('20 Koin', 20, 180000),
-  ('50 Koin', 50, 450000),
-  ('100 Koin', 100, 850000)
+  ('10 Koin', 10, 100000),
+  ('20 Koin', 20, 200000),
+  ('50 Koin', 50, 500000),
+  ('100 Koin', 100, 1000000)
 ON CONFLICT DO NOTHING;

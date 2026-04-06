@@ -114,11 +114,12 @@ export default function MyKos() {
                       <td className="px-4 md:px-6 py-4">
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider",
+                          kos.expiryDate && new Date(kos.expiryDate) < new Date() ? "bg-red-50 text-red-600" :
                           kos.status === "approved" ? "bg-emerald-50 text-emerald-600" :
                           kos.status === "pending" ? "bg-amber-50 text-amber-600" :
                           "bg-red-50 text-red-600"
                         )}>
-                          {kos.status}
+                          {kos.expiryDate && new Date(kos.expiryDate) < new Date() ? "expired" : kos.status}
                         </span>
                       </td>
                       <td className="px-4 md:px-6 py-4 text-right">

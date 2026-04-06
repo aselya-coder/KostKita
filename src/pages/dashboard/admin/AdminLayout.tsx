@@ -39,7 +39,6 @@ const AdminLayout = () => {
     { href: "/", label: "Lihat Website", icon: Globe, isExternal: true },
     { href: "/admin/users", label: "User Management", icon: Users },
     { href: "/admin/kos", label: "Kos Management", icon: Building2 },
-    { href: "/admin/advertisements", label: "Advertisements", icon: Zap },
     { href: "/admin/marketplace", label: "Marketplace", icon: ShoppingBag },
     { href: "/admin/topup-users", label: "Topup Users", icon: Coins },
     { href: "/admin/reports", label: "Reports", icon: ShieldAlert },

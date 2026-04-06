@@ -158,21 +158,21 @@ export default function UserOverview() {
         
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <StatsCard 
-            title="Kos Saya" 
+            title="Iklan Kos Saya" 
             value={isLoading ? '...' : stats.propertiesCount} 
             icon={Building2} 
-            description="Total kos terdaftar"
+            description="Total iklan kos terdaftar"
             to="/dashboard/my-kos"
           />
           <StatsCard 
-            title="Inquiries" 
+            title="Pertanyaan (Inquiries)" 
             value={isLoading ? '...' : stats.inquiriesCount} 
             icon={MessageCircle} 
             trend={{ value: 0, isUp: true }}
             to="/dashboard/inquiries"
           />
           <StatsCard 
-            title="Barang Saya" 
+            title="Iklan Barang Saya" 
             value={isLoading ? '...' : stats.myListingsCount} 
             icon={ShoppingBag} 
             description="Iklan marketplace aktif"

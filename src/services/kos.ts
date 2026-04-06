@@ -3,53 +3,61 @@ import { type KosListing, mockKosListings } from '@/data/mockData';
 import { logUserActivity } from '@/services/activity';
 
 export const getKosListings = async (ownerId?: string): Promise<KosListing[]> => {
-  let query = supabase
-    .from('kos_listings')
-    .select(`
-      *,
-      profiles (
-        name,
-        phone
-      )
-    `);
+  try {
+    let query = supabase
+      .from('kos_listings')
+      .select('*');
 
-  if (ownerId) {
-    query = query.eq('owner_id', ownerId);
-  } else {
-    const now = new Date().toISOString();
-    query = query.eq('status', 'approved').gt('expires_at', now);
-  }
+    if (ownerId) {
+      query = query.eq('owner_id', ownerId);
+    } else {
+      const now = new Date().toISOString();
+      query = query.eq('status', 'approved').gt('expires_at', now);
+    }
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) {
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      if (!ownerId) return mockKosListings.filter(k => k.status !== 'pending');
+      return [];
+    }
+
+    // Get unique owner IDs
+    const ownerIds = [...new Set(data.map(k => k.owner_id))];
+
+    // Fetch profiles
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, name, phone')
+      .in('id', ownerIds);
+
+    const profileMap: Record<string, any> = {};
+    profiles?.forEach(p => { profileMap[p.id] = p; });
+
+    return data.map((k: any) => ({
+      id: k.id,
+      ownerId: k.owner_id,
+      title: k.title,
+      location: k.location,
+      price: k.price,
+      images: k.images || [],
+      amenities: k.amenities || [],
+      rating: k.rating || 0,
+      isPremium: k.is_premium || false,
+      ownerName: profileMap[k.owner_id]?.name || 'Pemilik Kos',
+      ownerPhone: profileMap[k.owner_id]?.phone || '',
+      description: k.description || '',
+      rules: k.rules || [],
+      type: k.type,
+      availableRooms: k.available_rooms || 0,
+      status: k.status,
+      createdAt: k.created_at,
+    })) as KosListing[];
+  } catch (error) {
     console.error('Error fetching kos listings:', error);
     return [];
   }
-
-  // FALLBACK: If database is empty and it's a public search, show mock data
-  if (!ownerId && (!data || data.length === 0)) {
-    return mockKosListings.filter(k => k.status !== 'pending');
-  }
-
-  return (data || []).map((k: any) => ({
-    id: k.id,
-    ownerId: k.owner_id,
-    title: k.title,
-    location: k.location,
-    price: k.price,
-    images: k.images || [],
-    amenities: k.amenities || [],
-    rating: k.rating || 0,
-    isPremium: k.is_premium || false,
-    ownerName: k.profiles?.name || 'Pemilik Kos',
-    ownerPhone: k.profiles?.phone || '',
-    description: k.description || '',
-    rules: k.rules || [],
-    type: k.type,
-    availableRooms: k.available_rooms || 0,
-    status: k.status
-  })) as KosListing[];
 };
 
 export const getKosById = async (id: string): Promise<KosListing | null> => {
@@ -87,7 +95,8 @@ export const getKosById = async (id: string): Promise<KosListing | null> => {
     rules: k.rules || [],
     type: k.type,
     availableRooms: k.available_rooms || 0,
-    status: k.status
+    status: k.status,
+    expiryDate: k.expires_at
   } as KosListing;
 };
 

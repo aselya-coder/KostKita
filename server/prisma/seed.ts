@@ -7,11 +7,12 @@ async function main() {
   await prisma.coinPackage.deleteMany({});
 
   const packages = [
-    { name: 'Paket Starter', coinAmount: 5, price: 50000 },
-    { name: 'Paket Basic', coinAmount: 10, price: 95000 },
-    { name: 'Paket Pro', coinAmount: 20, price: 180000 },
-    { name: 'Paket Business', coinAmount: 50, price: 450000 },
-    { name: 'Paket Enterprise', coinAmount: 100, price: 850000 },
+    { name: 'Paket 1 Koin', coinAmount: 1, price: 10000 },
+    { name: 'Paket 5 Koin', coinAmount: 5, price: 50000 },
+    { name: 'Paket 10 Koin', coinAmount: 10, price: 100000 },
+    { name: 'Paket 20 Koin', coinAmount: 20, price: 200000 },
+    { name: 'Paket 50 Koin', coinAmount: 50, price: 500000 },
+    { name: 'Paket 100 Koin', coinAmount: 100, price: 1000000 },
   ];
 
   await prisma.coinPackage.createMany({

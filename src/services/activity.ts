@@ -25,24 +25,49 @@ export const logUserActivity = async (
 };
 
 export const getUserActivities = async (userId?: string) => {
-  let query = supabase
-    .from('user_activities')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50);
+  try {
+    let query = supabase
+      .from('user_activities')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
 
-  if (userId) {
-    query = query.eq('user_id', userId);
-  }
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
 
-  const { data, error } = await query;
+    const { data: activities, error } = await query;
 
-  if (error) {
+    if (error) throw error;
+    if (!activities || activities.length === 0) return [];
+
+    // Get unique user IDs
+    const userIds = [...new Set(activities.map(a => a.user_id))];
+
+    // Fetch profiles
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, name, avatar')
+      .in('id', userIds);
+
+    if (profileError) {
+      console.warn('Could not fetch profiles for activities:', profileError);
+    }
+
+    const profileMap: Record<string, any> = {};
+    profiles?.forEach(p => {
+      profileMap[p.id] = p;
+    });
+
+    // Merge data
+    return activities.map(a => ({
+      ...a,
+      profiles: profileMap[a.user_id] || null
+    }));
+  } catch (error) {
     console.error('Error fetching user activities:', error);
     throw error;
   }
-
-  return data || [];
 };
 
 export const deleteActivity = async (id: string) => {

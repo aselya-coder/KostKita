@@ -59,7 +59,7 @@ export default function Profile() {
 
       if (url) {
         try {
-          await updateUserProfile(user.id, { avatar_url: url });
+          await updateUserProfile(user.id, { avatar: url });
           await fetchUserProfile(); // Re-fetch user profile to update context
           toast.success("Avatar updated successfully!");
         } catch (updateError) {

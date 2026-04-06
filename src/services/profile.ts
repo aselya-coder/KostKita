@@ -5,7 +5,7 @@ export const updateUserProfile = async (userId: string, data: {
   phone?: string;
   location?: string;
   about?: string;
-  avatar_url?: string;
+  avatar?: string;
 }) => {
   const { error } = await supabase
     .from('profiles')

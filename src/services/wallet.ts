@@ -61,3 +61,33 @@ export const getTransactions = async (userId: string): Promise<Transaction[]> =>
     return [];
   }
 };
+
+export const addWalletBalance = async (userId: string, amount: number): Promise<boolean> => {
+  try {
+    const currentBalance = await getWalletBalance(userId);
+    const newBalance = currentBalance + amount;
+
+    const { error } = await supabase
+      .from('wallets')
+      .upsert({ 
+        user_id: userId, 
+        balance: newBalance,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+
+    if (error) throw error;
+
+    // Log the transaction
+    await supabase.from('coin_logs').insert({
+      user_id: userId,
+      type: 'credit',
+      amount: amount,
+      description: 'Top up koin (Simulasi)'
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error adding wallet balance:', error);
+    return false;
+  }
+};

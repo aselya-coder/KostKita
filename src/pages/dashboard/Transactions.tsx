@@ -74,8 +74,10 @@ export default function TransactionsPage() {
                         <th className="px-4 md:px-6 py-4">Paket</th>
                         <th className="px-4 md:px-6 py-4">Koin</th>
                         <th className="px-4 md:px-6 py-4">Harga</th>
+                        <th className="px-4 md:px-6 py-4">Admin Fee</th>
+                        <th className="px-4 md:px-6 py-4">Total</th>
                         <th className="px-4 md:px-6 py-4">Status</th>
-                        <th className="px-4 md:px-6 py-4">Tanggal</th>
+                        <th className="px-4 md:px-6 py-4 text-right">Tanggal</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y border-border">
@@ -91,8 +93,14 @@ export default function TransactionsPage() {
                             {tx.coinPackage.name}
                           </td>
                           <td className="px-4 md:px-6 py-4 whitespace-nowrap">{tx.coinAmount}</td>
-                          <td className="px-4 md:px-6 py-4 font-bold text-primary whitespace-nowrap">
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                             {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(tx.amount)}
+                          </td>
+                          <td className="px-4 md:px-6 py-4 text-muted-foreground whitespace-nowrap">
+                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(tx.adminFee || 0)}
+                          </td>
+                          <td className="px-4 md:px-6 py-4 font-bold text-primary whitespace-nowrap">
+                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(tx.totalAmount || tx.amount)}
                           </td>
                           <td className="px-4 md:px-6 py-4">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider ${tx.status === 'success' ? 'bg-emerald-50 text-emerald-600' :
@@ -102,7 +110,7 @@ export default function TransactionsPage() {
                               {tx.status}
                             </span>
                           </td>
-                          <td className="px-4 md:px-6 py-4 text-muted-foreground whitespace-nowrap text-[10px] md:text-xs">
+                          <td className="px-4 md:px-6 py-4 text-muted-foreground text-right whitespace-nowrap text-[10px] md:text-xs">
                             {formatDate(tx.createdAt)}
                           </td>
                         </tr>

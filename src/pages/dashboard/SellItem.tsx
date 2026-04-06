@@ -196,28 +196,28 @@ export default function SellItem() {
       />
       <div className="flex items-center gap-4">
         <BackButton to="/dashboard" className="mb-0" />
-        <h1 className="text-2xl font-display font-bold text-foreground">Sell New Item</h1>
+        <h1 className="text-2xl font-display font-bold text-foreground">Pasang Iklan Barang Baru</h1>
       </div>
 
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold ml-1">Item Title</label>
+            <label className="text-sm font-semibold ml-1">Nama Barang</label>
             <input 
               name="title"
               value={formData.title}
               onChange={handleChange}
               required
               type="text" 
-              placeholder="e.g. MacBook Pro M1 2020" 
+              placeholder="Contoh: MacBook Pro M1 2020" 
               className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-semibold ml-1">Price</label>
+              <label className="text-sm font-semibold ml-1">Harga</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">Rp</span>
                 <input 
@@ -234,7 +234,7 @@ export default function SellItem() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold ml-1">Category</label>
+              <label className="text-sm font-semibold ml-1">Kategori</label>
               <select 
                 name="category"
                 value={formData.category}
@@ -246,7 +246,7 @@ export default function SellItem() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold ml-1">Condition</label>
+              <label className="text-sm font-semibold ml-1">Kondisi</label>
               <select 
                 name="condition"
                 value={formData.condition}
@@ -259,7 +259,7 @@ export default function SellItem() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between px-1">
-                <label className="text-sm font-semibold">Location</label>
+                <label className="text-sm font-semibold">Lokasi</label>
                 <a 
                   href={formData.location
                     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location)}`
@@ -293,34 +293,16 @@ export default function SellItem() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold ml-1">Description</label>
+            <label className="text-sm font-semibold ml-1">Deskripsi</label>
             <textarea 
               name="description"
               value={formData.description}
               onChange={handleChange}
               required
               rows={4}
-              placeholder="Describe the item condition, usage duration, and other details..." 
+              placeholder="Jelaskan kondisi barang, lama pemakaian, dan detail lainnya..." 
               className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
             />
-          </div>
-
-          <div className="space-y-2 pt-2">
-            <label className="text-sm font-bold text-primary flex items-center gap-2">
-              Ad Duration (1 Coin/Day)
-              <Plus className="w-3 h-3 fill-current" />
-            </label>
-            <select 
-              name="durationDays"
-              value={formData.durationDays}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl bg-primary/5 border border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none font-bold text-primary"
-            >
-              <option value="3">3 Days (3 Coins)</option>
-              <option value="7">7 Days (7 Coins)</option>
-              <option value="14">14 Days (14 Coins)</option>
-              <option value="30">30 Days (30 Coins)</option>
-            </select>
           </div>
         </div>
 
@@ -392,7 +374,7 @@ export default function SellItem() {
             <p className="text-[10px] text-muted-foreground mt-1 italic">
               {hasFreeQuota 
                 ? "* Upload pertama GRATIS (30 hari)." 
-                : `* Iklan berikutnya: 1 koin/hari. Saldo Anda: ${userCoins} Koin.`
+                : `* Iklan berikutnya: 1 koin/hari (1 Koin = Rp 10.000). Saldo Anda: ${userCoins} Koin.`
               }
             </p>
           </div>

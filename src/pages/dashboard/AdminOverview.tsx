@@ -1,4 +1,20 @@
-import { Users, Building2, ShoppingBag, ShieldAlert, TrendingUp, CheckCircle2, XCircle, MapPin, Settings } from "lucide-react";
+import { 
+  Users, 
+  UserPlus,
+  Building2, 
+  ShoppingBag, 
+  ShieldAlert, 
+  TrendingUp, 
+  CheckCircle2, 
+  XCircle, 
+  MapPin, 
+  Settings,
+  CreditCard,
+  Coins,
+  ArrowUpRight,
+  Flame,
+  LayoutDashboard
+} from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,10 +25,21 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatPrice } from "@/data/mockData";
 
 export default function AdminOverview() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ totalUsers: 0, totalKos: 0, totalItems: 0 });
+  const [stats, setStats] = useState<any>({ 
+    totalUsers: 0, 
+    totalKos: 0, 
+    totalItems: 0,
+    totalRevenue: 0,
+    topUpRevenue: 0,
+    adminFeeRevenue: 0,
+    coinsSold: 0,
+    coinsUsed: 0,
+    totalActiveAds: 0
+  });
   const [pendingListings, setPendingListings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -155,32 +182,67 @@ export default function AdminOverview() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard 
+          title="Total Revenue" 
+          value={isLoading ? '...' : formatPrice(stats.totalRevenue)} 
+          icon={TrendingUp} 
+          trend={{ value: 12.5, isUp: true }}
+          description="Total income from all sources"
+        />
+        <StatsCard 
+          title="Revenue (Top Up)" 
+          value={isLoading ? '...' : formatPrice(stats.topUpRevenue)} 
+          icon={CreditCard} 
+          trend={{ value: 8.2, isUp: true }}
+          description="Revenue from coin purchases"
+        />
+        <StatsCard 
+          title="Revenue (Admin Fee)" 
+          value={isLoading ? '...' : formatPrice(stats.adminFeeRevenue)} 
+          icon={Settings} 
+          trend={{ value: 4.5, isUp: true }}
+          description="Revenue from admin fees"
+        />
+        <StatsCard 
+          title="Koin Terjual" 
+          value={isLoading ? '...' : stats.coinsSold} 
+          icon={Coins} 
+          trend={{ value: 15.2, isUp: true }}
+          description="Total coins purchased by users"
+        />
+        <StatsCard 
+          title="Koin Digunakan" 
+          value={isLoading ? '...' : stats.coinsUsed} 
+          icon={ShoppingBag} 
+          trend={{ value: 9.8, isUp: true }}
+          description="Total coins used for ads"
+        />
+        <StatsCard 
           title="Total Users" 
           value={isLoading ? '...' : stats.totalUsers} 
           icon={Users} 
-          trend={{ value: 0, isUp: true }}
-          to="/admin-dashboard/users"
+          trend={{ value: 2.1, isUp: true }}
+          to="/admin/users"
         />
         <StatsCard 
-          title="Boarding Houses" 
+          title="User Baru Hari Ini" 
+          value={isLoading ? '...' : stats.newUsersToday} 
+          icon={UserPlus} 
+          description="Pendaftaran hari ini"
+          to="/admin/users"
+        />
+        <StatsCard 
+          title="Iklan Kos" 
           value={isLoading ? '...' : stats.totalKos} 
           icon={Building2} 
-          trend={{ value: 0, isUp: true }}
-          to="/admin-dashboard/kos"
+          trend={{ value: 5.4, isUp: true }}
+          to="/admin/kos"
         />
         <StatsCard 
-          title="Marketplace Items" 
+          title="Iklan Barang" 
           value={isLoading ? '...' : stats.totalItems} 
           icon={ShoppingBag} 
-          trend={{ value: 0, isUp: true }}
-          to="/admin-dashboard/marketplace"
-        />
-        <StatsCard 
-          title="Pending Reports" 
-          value="0" // Replace with real data
-          icon={ShieldAlert} 
-          trend={{ value: 0, isUp: false }}
-          to="/admin-dashboard/reports"
+          trend={{ value: 3.2, isUp: true }}
+          to="/admin/marketplace"
         />
       </div>
 
@@ -193,11 +255,11 @@ export default function AdminOverview() {
             <table className="w-full text-sm text-left">
               <thead className="bg-secondary/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider">
                 <tr>
-                  <th className="px-6 py-3">Property / Item</th>
-                  <th className="px-6 py-3">Owner / Seller</th>
-                  <th className="px-6 py-3">Type</th>
-                  <th className="px-6 py-3">Date</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
+                  <th className="px-6 py-3">Iklan Kos / Barang</th>
+                  <th className="px-6 py-3">Pemilik / Penjual</th>
+                  <th className="px-6 py-3">Tipe</th>
+                  <th className="px-6 py-3">Tanggal</th>
+                  <th className="px-6 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y border-border">
@@ -254,7 +316,7 @@ export default function AdminOverview() {
                 {pendingListings.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
-                      Tidak ada listing baru yang menunggu persetujuan.
+                      Tidak ada iklan baru yang menunggu persetujuan.
                     </td>
                   </tr>
                 )}

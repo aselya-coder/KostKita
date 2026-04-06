@@ -2,8 +2,6 @@ import { supabase } from '@/lib/supabase';
 import { type KosListing, type MarketplaceItem } from '@/data/mockData';
 import { logUserActivity } from './activity';
 
-const BACKEND_URL = 'http://localhost:3000/api'; // Adjust if your backend runs on a different port or domain
-
 // KOS LISTINGS
 export const createKosListing = async (listing: any, durationDays: number = 30) => {
   try {

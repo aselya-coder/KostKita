@@ -43,17 +43,42 @@ export default function AdminAdvertisements() {
   const fetchAds = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch ads first
+      const { data: adsData, error: adsError } = await supabase
         .from('kos_advertisements')
-        .select(`
-          *,
-          kos_listings (title, location),
-          profiles:owner_id (name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setAds(data as any || []);
+      if (adsError) throw adsError;
+      if (!adsData || adsData.length === 0) {
+        setAds([]);
+        return;
+      }
+
+      // Get unique kos IDs and owner IDs
+      const kosIds = [...new Set(adsData.map(ad => ad.kos_id))];
+      const ownerIds = [...new Set(adsData.map(ad => ad.owner_id))];
+
+      // Fetch kos listings and owner profiles
+      const [kosRes, profilesRes] = await Promise.all([
+        supabase.from('kos_listings').select('id, title, location').in('id', kosIds),
+        supabase.from('profiles').select('id, name').in('id', ownerIds)
+      ]);
+
+      const kosMap: Record<string, any> = {};
+      kosRes.data?.forEach(k => { kosMap[k.id] = k; });
+
+      const profileMap: Record<string, any> = {};
+      profilesRes.data?.forEach(p => { profileMap[p.id] = p; });
+
+      // Format data
+      const formattedAds = adsData.map(ad => ({
+        ...ad,
+        kos_listings: kosMap[ad.kos_id] || { title: 'Unknown', location: '-' },
+        profiles: profileMap[ad.owner_id] || { name: 'Unknown' }
+      }));
+
+      setAds(formattedAds as any);
     } catch (error: any) {
       console.error("Error fetching advertisements:", error);
       toast.error("Gagal mengambil data iklan.");
@@ -123,8 +148,8 @@ export default function AdminAdvertisements() {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Manajemen Iklan Kos</h1>
-          <p className="text-muted-foreground text-xs md:text-sm">Pantau dan kelola masa aktif iklan premium kos.</p>
+          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Manajemen Iklan Premium</h1>
+          <p className="text-muted-foreground text-xs md:text-sm">Pantau dan kelola masa aktif fitur boost iklan kos premium.</p>
         </div>
       </div>
 
@@ -223,13 +248,13 @@ export default function AdminAdvertisements() {
             </table>
           </div>
         ) : (
-          <div className="p-20 text-center space-y-4">
-            <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto">
-              <Zap className="w-8 h-8 text-muted-foreground/40" />
+          <div className="p-10 md:p-20 flex flex-col items-center justify-center gap-4 text-muted-foreground">
+            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
+              <Zap className="w-8 h-8 opacity-20" />
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-foreground">Belum ada iklan kos</h3>
-              <p className="text-sm text-muted-foreground">Data iklan kos premium akan muncul di sini.</p>
+            <div className="text-center">
+              <p className="text-lg font-display font-bold text-foreground">Belum ada iklan premium</p>
+              <p className="text-sm">Data fitur boost/premium akan muncul di sini jika ada pengguna yang mempromosikan iklannya.</p>
             </div>
           </div>
         )}

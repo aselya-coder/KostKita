@@ -81,8 +81,8 @@ export default function MyMarketplaceItems() {
       <BackButton to="/dashboard" className="mb-0" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Marketplace Saya</h1>
-          <p className="text-muted-foreground text-xs md:text-sm">Kelola barang yang Anda jual di marketplace.</p>
+          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Iklan Barang Saya</h1>
+          <p className="text-muted-foreground text-xs md:text-sm">Kelola daftar iklan barang yang Anda jual.</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
           <Link to="/dashboard/sell-item">
@@ -142,11 +142,12 @@ export default function MyMarketplaceItems() {
                       <td className="px-4 md:px-6 py-4">
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider",
+                          item.expires_at && new Date(item.expires_at) < new Date() ? "bg-red-50 text-red-600" :
                           item.status === "active" ? "bg-emerald-50 text-emerald-600" : 
                           item.status === "sold" ? "bg-blue-50 text-blue-600" : 
                           "bg-red-50 text-red-600"
                         )}>
-                          {item.status || "Active"}
+                          {item.expires_at && new Date(item.expires_at) < new Date() ? "expired" : (item.status || "Active")}
                         </span>
                       </td>
                       <td className="px-4 md:px-6 py-4 text-right">

@@ -197,19 +197,19 @@ CREATE POLICY "Owners view own inquiries" ON public.inquiries FOR SELECT USING (
 DO $$
 DECLARE
     first_user_id UUID;
-BEGIN
+BEGINQ  
     SELECT id INTO first_user_id FROM public.profiles LIMIT 1;
 
     IF first_user_id IS NOT NULL THEN
-        -- Insert Sample Kos (Total 6)
+        -- Insert Sample Kos (Total 6) dengan minimal 2 gambar
         INSERT INTO public.kos_listings (owner_id, title, location, price, type, images, amenities, rating, available_rooms)
         VALUES 
-        (first_user_id, 'Kos Harmoni Residence', 'Jl. Margonda Raya, Depok', 1500000, 'campur', ARRAY['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'], ARRAY['WiFi', 'AC', 'Parkir'], 4.8, 3),
-        (first_user_id, 'Kos Putri Melati', 'Jl. Kaliurang, Yogyakarta', 900000, 'putri', ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2'], ARRAY['WiFi', 'Kamar Mandi Dalam'], 4.5, 2),
-        (first_user_id, 'Kos Eksekutif Sudirman', 'Jl. Sudirman No. 45, Bandung', 2200000, 'campur', ARRAY['https://images.unsplash.com/photo-1493809842364-78817add7ffb'], ARRAY['WiFi', 'AC', 'Parkir', 'Laundry', 'CCTV'], 4.9, 1),
-        (first_user_id, 'Kos Murah Jatinangor', 'Jl. Raya Jatinangor, Sumedang', 650000, 'putra', ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb'], ARRAY['Kamar Mandi Dalam', 'Parkir Motor'], 4.0, 5),
-        (first_user_id, 'Kos Modern Tembalang', 'Jl. Prof. Sudarto, Semarang', 1200000, 'campur', ARRAY['https://images.unsplash.com/photo-1540518614846-7eded433c457'], ARRAY['WiFi', 'AC', 'Kamar Mandi Dalam', 'Laundry'], 4.6, 4),
-        (first_user_id, 'Kos Premium Gejayan', 'Jl. Gejayan, Yogyakarta', 1800000, 'campur', ARRAY['https://images.unsplash.com/photo-1615529328331-f8917597711f'], ARRAY['WiFi', 'AC', 'Parkir', 'Rooftop'], 4.7, 1);
+        (first_user_id, 'Kos Harmoni Residence', 'Jl. Margonda Raya, Depok', 1500000, 'campur', ARRAY['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267', 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c'], ARRAY['WiFi', 'AC', 'Parkir'], 4.8, 3),
+        (first_user_id, 'Kos Putri Melati', 'Jl. Kaliurang, Yogyakarta', 900000, 'putri', ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2', 'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd'], ARRAY['WiFi', 'Kamar Mandi Dalam'], 4.5, 2),
+        (first_user_id, 'Kos Eksekutif Sudirman', 'Jl. Sudirman No. 45, Bandung', 2200000, 'campur', ARRAY['https://images.unsplash.com/photo-1493809842364-78817add7ffb', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688'], ARRAY['WiFi', 'AC', 'Parkir', 'Laundry', 'CCTV'], 4.9, 1),
+        (first_user_id, 'Kos Murah Jatinangor', 'Jl. Raya Jatinangor, Sumedang', 650000, 'putra', ARRAY['https://images.unsplash.com/photo-1554995207-c18c203602cb', 'https://images.unsplash.com/photo-1505691938895-1758d7feb511'], ARRAY['Kamar Mandi Dalam', 'Parkir Motor'], 4.0, 5),
+        (first_user_id, 'Kos Modern Tembalang', 'Jl. Prof. Sudarto, Semarang', 1200000, 'campur', ARRAY['https://images.unsplash.com/photo-1540518614846-7eded433c457', 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a'], ARRAY['WiFi', 'AC', 'Kamar Mandi Dalam', 'Laundry'], 4.6, 4),
+        (first_user_id, 'Kos Premium Gejayan', 'Jl. Gejayan, Yogyakarta', 1800000, 'campur', ARRAY['https://images.unsplash.com/photo-1615529328331-f8917597711f', 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af'], ARRAY['WiFi', 'AC', 'Parkir', 'Rooftop'], 4.7, 1);
 
         -- Insert Sample Marketplace Items (Total 6)
         INSERT INTO public.marketplace_items (seller_id, title, price, category, condition, location, image)

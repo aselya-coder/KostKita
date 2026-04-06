@@ -81,11 +81,16 @@ const ItemDetail = () => {
   let sanitizedPhone = rawPhone.replace(/\D/g, '');
   if (sanitizedPhone.startsWith('0')) {
     sanitizedPhone = '62' + sanitizedPhone.slice(1);
+  } else if (sanitizedPhone.startsWith('8')) {
+    sanitizedPhone = '62' + sanitizedPhone;
   }
   
-  const waLink = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(
-    `Hi ${item.sellerName}, saya tertarik dengan ${item.title} di KosKita. Apakah masih tersedia?`
-  )}`;
+  const hasPhone = sanitizedPhone.length >= 10;
+  const waLink = hasPhone 
+    ? `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(
+        `Hi ${item.sellerName}, saya tertarik dengan ${item.title} di KosKita. Apakah masih tersedia?`
+      )}`
+    : "#";
 
   return (
     <div className="container py-8 pb-24 md:pb-8">
@@ -161,34 +166,38 @@ const ItemDetail = () => {
 
           <a
             href={waLink}
-            target="_blank"
+            target={hasPhone ? "_blank" : "_self"}
             rel="noopener noreferrer"
-            className={`hidden md:flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-colors bg-primary text-primary-foreground hover:bg-primary/90 shadow-md active:scale-95 ${
-              !item.sellerPhone ? 'opacity-80' : ''
+            onClick={(e) => !hasPhone && e.preventDefault()}
+            className={`hidden md:flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-all shadow-md active:scale-95 ${
+              !hasPhone 
+                ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
             }`}
           >
             <MessageCircle className="w-4 h-4" />
-            Tanya Penjual via WhatsApp
+            {hasPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
           </a>
         </div>
       </div>
 
-      {/* Mobile CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-foreground/5 md:hidden z-40">
         <div className="flex items-center justify-between">
           <span className="text-lg text-price text-foreground">{formatPrice(item.price)}</span>
           <a
             href={waLink}
-            target="_blank"
+            target={hasPhone ? "_blank" : "_self"}
             rel="noopener noreferrer"
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-colors ${
-              !item.sellerPhone ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-primary text-primary-foreground'
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
+              !hasPhone 
+                ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
             }`}
-            onClick={(e) => !item.sellerPhone && e.preventDefault()}
-            aria-disabled={!item.sellerPhone}
+            onClick={(e) => !hasPhone && e.preventDefault()}
+            aria-disabled={!hasPhone}
           >
             <MessageCircle className="w-4 h-4" />
-            {item.sellerPhone ? "Chat" : "Nomor tidak ada"}
+            {hasPhone ? "Chat" : "Nomor tidak ada"}
           </a>
         </div>
       </div>

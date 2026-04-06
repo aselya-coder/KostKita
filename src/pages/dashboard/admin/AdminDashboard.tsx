@@ -252,7 +252,7 @@ const AdminDashboard = () => {
               <table className="w-full text-xs md:text-sm text-left">
                 <thead className="bg-secondary/50 text-muted-foreground uppercase text-[9px] md:text-[10px] font-bold tracking-wider">
                   <tr>
-                    <th className="px-3 md:px-4 py-3">User ID</th>
+                    <th className="px-3 md:px-4 py-3">User</th>
                     <th className="px-3 md:px-4 py-3">Total Koin</th>
                     <th className="px-3 md:px-4 py-3 text-right">Total Rupiah</th>
                   </tr>
@@ -260,7 +260,12 @@ const AdminDashboard = () => {
                 <tbody className="divide-y border-border">
                   {topupUsers.map((r, i) => (
                     <tr key={r.userId} className="hover:bg-secondary/20 transition-colors group">
-                      <td className="px-3 md:px-4 py-3 md:py-4 font-medium text-foreground truncate max-w-[100px] md:max-w-[120px]">{r.userId}</td>
+                      <td className="px-3 md:px-4 py-3 md:py-4">
+                        <Link to={`/admin/users?search=${r.userId}`} className="flex flex-col hover:text-primary transition-colors">
+                          <span className="font-bold text-foreground truncate max-w-[120px] md:max-w-[150px]">{r.name || 'Unknown User'}</span>
+                          <span className="text-[10px] text-muted-foreground truncate max-w-[120px] md:max-w-[150px]">{r.email || r.userId}</span>
+                        </Link>
+                      </td>
                       <td className="px-3 md:px-4 py-3 md:py-4">{r.totalCoins} Koin</td>
                       <td className="px-3 md:px-4 py-3 md:py-4 text-right font-bold text-primary whitespace-nowrap">
                         {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(r.totalAmount)}
@@ -286,24 +291,24 @@ const AdminDashboard = () => {
               <p className="font-bold text-xs md:text-sm">Users</p>
               <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider">Manage Accounts</p>
             </Link>
-            <Link to="/admin/kos" className="p-3 md:p-4 rounded-xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 transition-all group">
-              <Building2 className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 mb-2" />
-              <p className="font-bold text-xs md:text-sm">Kos</p>
-              <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider">Verify Listings</p>
+            <Link to="/admin/kos" className="p-3 md:p-4 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-all group">
+              <Building2 className="w-5 h-5 md:w-6 md:h-6 text-primary mb-2" />
+              <p className="font-bold text-xs md:text-sm">Iklan Kos</p>
+              <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider">Semua Listing Kos</p>
             </Link>
             <Link to="/admin/marketplace" className="p-3 md:p-4 rounded-xl bg-blue-50 border border-blue-100 hover:border-blue-300 transition-all group">
               <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 text-blue-600 mb-2" />
-              <p className="font-bold text-xs md:text-sm">Market</p>
-              <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider">Moderation</p>
+              <p className="font-bold text-xs md:text-sm">Iklan Barang</p>
+              <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider">Semua Barang Market</p>
             </Link>
-            <Link to="/admin/advertisements" className="p-3 md:p-4 rounded-xl bg-orange-50 border border-orange-100 hover:border-orange-300 transition-all group">
-              <Zap className="w-5 h-5 md:w-6 md:h-6 text-orange-600 mb-2" />
-              <p className="font-bold text-xs md:text-sm">Iklan</p>
-              <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider">Manage Ads</p>
+            <Link to="/admin/topup-users" className="p-3 md:p-4 rounded-xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 transition-all group">
+              <Coins className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 mb-2" />
+              <p className="font-bold text-xs md:text-sm">Topup Users</p>
+              <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider">Laporan Top Up</p>
             </Link>
             <Link to="/admin/coin-packages" className="p-3 md:p-4 rounded-xl bg-amber-50 border border-amber-100 hover:border-amber-300 transition-all group">
               <Coins className="w-5 h-5 md:w-6 md:h-6 text-amber-600 mb-2" />
-              <p className="font-bold text-xs md:text-sm">Coins</p>
+              <p className="font-bold text-xs md:text-sm">Coin Packages</p>
               <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider">Price Settings</p>
             </Link>
           </div>

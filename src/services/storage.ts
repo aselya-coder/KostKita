@@ -16,9 +16,21 @@ export const uploadFile = async (
   file: File
 ): Promise<{ url: string | null; error: any }> => {
   try {
+    // Sanitize path: Remove non-ASCII characters and special characters that Supabase Storage dislikes
+    // This fixes "Invalid key" errors when filenames contain spaces, emojis, or non-English characters
+    const sanitizedPath = path
+      .split('/')
+      .map(part => 
+        part
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove accents
+          .replace(/[^a-zA-Z0-9._-]/g, '_') // Replace any other non-alphanumeric with underscore
+      )
+      .join('/');
+
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(path, file, {
+      .upload(sanitizedPath, file, {
         cacheControl: '3600',
         upsert: true,
       });

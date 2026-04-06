@@ -3,53 +3,59 @@ import { type User, type MarketplaceItem, mockMarketplaceItems } from '@/data/mo
 import { logUserActivity } from '@/services/activity';
 
 export const getMarketplaceItems = async (category?: string, sellerId?: string): Promise<MarketplaceItem[]> => {
-  let query = supabase
-    .from('marketplace_items')
-    .select(`
-      *,
-      profiles (
-        name,
-        phone
-      )
-    `)
-    .eq('status', 'active')
-    .gt('expires_at', new Date().toISOString());
+  try {
+    let query = supabase
+      .from('marketplace_items')
+      .select('*')
+      .eq('status', 'active')
+      .gt('expires_at', new Date().toISOString());
 
-  if (category && category !== 'Semua') {
-    query = query.ilike('category', category);
-  }
+    if (category && category !== 'Semua') {
+      query = query.ilike('category', category);
+    }
 
-  if (sellerId) {
-    query = query.eq('seller_id', sellerId);
-  }
+    if (sellerId) {
+      query = query.eq('seller_id', sellerId);
+    }
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) {
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      if (!sellerId) return mockMarketplaceItems.filter(i => i.status !== 'pending');
+      return [];
+    }
+
+    // Get unique seller IDs
+    const sellerIds = [...new Set(data.map(i => i.seller_id))];
+
+    // Fetch profiles
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, name, phone')
+      .in('id', sellerIds);
+
+    const profileMap: Record<string, any> = {};
+    profiles?.forEach(p => { profileMap[p.id] = p; });
+
+    return data.map((i: any) => ({
+      id: i.id,
+      sellerId: i.seller_id,
+      title: i.title,
+      price: i.price,
+      image: i.image || '',
+      category: i.category || 'Lainnya',
+      condition: i.condition || 'Bekas',
+      sellerPhone: profileMap[i.seller_id]?.phone || '',
+      sellerName: profileMap[i.seller_id]?.name || 'Penjual',
+      location: i.location || '',
+      description: i.description || '',
+      createdAt: i.created_at,
+    }));
+  } catch (error) {
     console.error('Error fetching marketplace items:', error);
     return [];
   }
-
-  // FALLBACK: If database is empty and it's a public search, show mock data
-  if (!sellerId && (!data || data.length === 0)) {
-    return mockMarketplaceItems.filter(i => i.status !== 'pending');
-  }
-
-  return (data || []).map((i: any) => ({
-    id: i.id,
-    sellerId: i.seller_id,
-    title: i.title,
-    price: i.price,
-    image: i.image || '',
-    category: i.category || 'Lainnya',
-    condition: i.condition || 'Bekas',
-    sellerPhone: i.profiles?.phone || '',
-    sellerName: i.profiles?.name || 'Penjual',
-    location: i.location || '',
-    description: i.description || '',
-    createdAt: i.created_at,
-    status: i.status
-  })) as MarketplaceItem[];
 };
 
 export const getItemById = async (id: string): Promise<MarketplaceItem | null> => {
@@ -84,7 +90,8 @@ export const getItemById = async (id: string): Promise<MarketplaceItem | null> =
     location: i.location || '',
     description: i.description || '',
     createdAt: i.created_at,
-    status: i.status
+    status: i.status,
+    expiryDate: i.expires_at
   } as MarketplaceItem;
 };
 

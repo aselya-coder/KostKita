@@ -22,7 +22,7 @@ export default function Reports() {
         .from('reports')
         .select(`
           *,
-          profiles:reporter_id ( name )
+          profiles!reporter_id ( name )
         `)
         .order('created_at', { ascending: false });
       

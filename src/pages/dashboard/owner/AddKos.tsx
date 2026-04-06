@@ -181,8 +181,8 @@ export default function AddKosPage() {
         status: 'approved'
       };
 
-      // Call the service with duration hardcoded to 30 days
-      const result = await createKosListing(listingData, 30);
+      // Call the service with selected duration
+      const result = await createKosListing(listingData, parseInt(formData.durationDays));
       
       if (!result.success) {
         throw new Error(result.error);
@@ -226,8 +226,8 @@ export default function AddKosPage() {
       <BackButton to="/dashboard" />
       
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">Tambah Kos Baru</h1>
-        <p className="text-sm text-muted-foreground">Lengkapi data kos Anda untuk mulai mendapatkan penyewa.</p>
+        <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">Pasang Iklan Kos Baru</h1>
+        <p className="text-sm text-muted-foreground">Lengkapi data iklan kos Anda untuk mulai mendapatkan penyewa.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-card rounded-2xl md:rounded-3xl border border-border p-5 md:p-8 space-y-6 md:space-y-8 shadow-sm">
@@ -391,7 +391,7 @@ export default function AddKosPage() {
             <p className="text-[10px] text-muted-foreground mt-1 italic">
               {hasFreeQuota 
                 ? "* Upload pertama GRATIS (30 hari)." 
-                : `* Iklan berikutnya: 1 koin/hari. Saldo Anda: ${userCoins} Koin.`
+                : `* Iklan berikutnya: 1 koin/hari (1 Koin = Rp 10.000). Saldo Anda: ${userCoins} Koin.`
               }
             </p>
 
