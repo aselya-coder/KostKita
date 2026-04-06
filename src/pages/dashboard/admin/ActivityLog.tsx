@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getUserActivities, deleteActivity } from '@/services/marketplace';
+import { getUserActivities, deleteActivity } from '@/services/activity';
 import { Loader2, ShieldAlert, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';

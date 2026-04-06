@@ -45,7 +45,7 @@ export default function EditKosPage() {
   useEffect(() => {
     if (!kosId) {
       toast.error("ID Kos tidak ditemukan.");
-      navigate('/owner-dashboard/my-kos');
+      navigate('/dashboard/my-kos');
       return;
     }
 
@@ -70,7 +70,7 @@ export default function EditKosPage() {
           setRules(data.rules || []);
         } else {
           toast.error("Data kos tidak ditemukan.");
-          navigate('/owner-dashboard/my-kos');
+          navigate('/dashboard/my-kos');
         }
       } catch (error) {
         toast.error("Gagal mengambil data kos.");
@@ -179,7 +179,7 @@ export default function EditKosPage() {
       await updateKosListing(kosId, user.id, updatedData);
       
       toast.success('Data kos berhasil diperbarui!');
-      navigate('/owner-dashboard/my-kos');
+      navigate('/dashboard/my-kos');
 
     } catch (error) {
       const err = error as Error;
@@ -200,7 +200,7 @@ export default function EditKosPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
-      <BackButton to="/owner-dashboard/my-kos" />
+      <BackButton to="/dashboard/my-kos" />
       
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-display font-bold text-foreground">Edit Informasi Kos</h1>

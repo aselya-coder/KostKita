@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { logUserActivity } from "@/services/marketplace";
+import { logUserActivity } from "@/services/activity";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 

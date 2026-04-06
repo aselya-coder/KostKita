@@ -179,7 +179,7 @@ export default function PaymentCheckout() {
 
   useEffect(() => {
     if (phase !== "success" || !user) return;
-    getWalletBalance(user.id, user.role === "admin" ? "ADMIN" : "USER")
+    getWalletBalance(user.id)
       .then(setBalance)
       .catch(() => {});
   }, [phase, user]);

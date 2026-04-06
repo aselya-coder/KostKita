@@ -181,8 +181,8 @@ export default function AddKosPage() {
         status: 'approved'
       };
 
-      // Call the service with duration
-      const result = await createKosListing(listingData, parseInt(formData.durationDays));
+      // Call the service with duration hardcoded to 30 days
+      const result = await createKosListing(listingData, 30);
       
       if (!result.success) {
         throw new Error(result.error);
@@ -191,8 +191,8 @@ export default function AddKosPage() {
 
 
 
-      toast.success('Kos berhasil dipublikasikan!');
-      navigate('/owner-dashboard/my-kos');
+      toast.success('Iklan kos berhasil dipublikasikan selama 30 hari!');
+      navigate('/dashboard/my-kos');
 
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Terjadi kesalahan sistem. Silakan coba lagi.';

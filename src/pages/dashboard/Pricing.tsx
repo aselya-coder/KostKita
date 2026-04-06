@@ -29,8 +29,7 @@ const toBackendRole = (role?: string): "USER" | "ADMIN" =>
   role === "admin" ? "ADMIN" : "USER";
 
 const toBasePath = (role?: string) => {
-  if (role === "owner") return "/owner-dashboard";
-  if (role === "admin") return "/admin-dashboard";
+  if (role === "admin") return "/admin";
   return "/dashboard";
 };
 

@@ -49,8 +49,8 @@ export function DashboardRouter() {
 
   return (
     <Routes>
-      {/* Unified User Routes (Student/Owner/User) */}
-      {(role === "user" || role === "student" || role === "owner") && (
+      {/* Unified User Routes for All Registered Users */}
+      {role !== "admin" && (
         <>
           <Route index element={<UserOverview />} />
           <Route path="my-kos" element={<MyBoardingHouses />} />
@@ -68,13 +68,12 @@ export function DashboardRouter() {
           <Route path="topup" element={<TopUpPage />} />
           <Route path="topup/checkout" element={<PaymentCheckout />} />
           <Route path="transactions" element={<TransactionsPage />} />
-          <Route path="system-settings" element={<SystemSettings />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </>
       )}
 
-      {/* Admin Routes - Common routes under /dashboard, others redirect to /admin */}
+      {/* Admin Routes */}
       {role === "admin" && (
         <>
           <Route index element={<Navigate to="/admin" replace />} />

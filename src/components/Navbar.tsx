@@ -15,13 +15,7 @@ export function Navbar() {
   const location = useLocation();
   const { user } = useAuth();
 
-  const getDashboardLink = () => {
-    if (!user) return "/login";
-    if (user.role === "admin") return "/admin";
-    return "/dashboard";
-  };
-
-  const dashboardLink = getDashboardLink();
+  const dashboardLink = user?.role === "admin" ? "/admin" : "/dashboard";
 
   return (
     <>
@@ -45,44 +39,71 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  location.pathname === link.to
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link
+              to="/"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === "/"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              Beranda
+            </Link>
+            <Link
+              to="/search"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === "/search"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              Cari Kos
+            </Link>
+            <Link
+              to="/marketplace"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === "/marketplace"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              Marketplace
+            </Link>
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
-            {user?.role === "admin" && (
-              <Link
-                to="/admin"
-                className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                title="Admin Panel"
-              >
-                <ShieldCheck className="w-5 h-5" />
-              </Link>
+            {user ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/dashboard/favorites"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                >
+                  <Heart className="w-5 h-5" />
+                </Link>
+                <Link
+                  to={dashboardLink}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  Dashboard
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Masuk
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  Daftar
+                </Link>
+              </div>
             )}
-            <Link
-              to={user ? "/dashboard/favorites" : "/login"}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            >
-              <Heart className="w-5 h-5" />
-            </Link>
-            <Link
-              to={dashboardLink}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              <User className="w-4 h-4" />
-              {user ? (user.role === "admin" ? "Admin" : "Dashboard") : "Masuk"}
-            </Link>
           </div>
 
           <button
@@ -104,38 +125,68 @@ export function Navbar() {
             className="fixed inset-x-0 top-16 z-40 bg-background border-b border-border md:hidden"
           >
             <nav className="container py-4 flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                    location.pathname === link.to
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  <link.icon className="w-4 h-4" />
-                  {link.label}
-                </Link>
-              ))}
-              <hr className="my-2 border-border" />
               <Link
-                to={user ? "/dashboard/favorites" : "/login"}
+                to="/"
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary"
               >
-                <Heart className="w-4 h-4" />
-                Favorit
+                <Home className="w-4 h-4" />
+                Beranda
               </Link>
               <Link
-                to={dashboardLink}
+                to="/search"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium mt-2"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary"
               >
-                <User className="w-4 h-4" />
-                {user ? (user.role === "admin" ? "Admin Panel" : "Dashboard") : "Masuk ke Akun"}
+                <Search className="w-4 h-4" />
+                Cari Kos
               </Link>
+              <Link
+                to="/marketplace"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Marketplace
+              </Link>
+              <hr className="my-2 border-border" />
+              {user ? (
+                <>
+                  <Link
+                    to="/dashboard/favorites"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary"
+                  >
+                    <Heart className="w-4 h-4" />
+                    Favorit
+                  </Link>
+                  <Link
+                    to={dashboardLink}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium mt-2"
+                  >
+                    <User className="w-4 h-4" />
+                    Dashboard
+                  </Link>
+                </>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center py-3 rounded-lg bg-secondary text-foreground text-sm font-medium"
+                  >
+                    Masuk
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium"
+                  >
+                    Daftar
+                  </Link>
+                </div>
+              )}
             </nav>
           </motion.div>
         )}

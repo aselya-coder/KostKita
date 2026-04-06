@@ -116,7 +116,7 @@ const Index = () => {
       <section className="bg-surface py-16">
         <div className="container">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display font-bold text-2xl text-foreground">Barang Bekas Mahasiswa</h2>
+            <h2 className="font-display font-bold text-2xl text-foreground">Barang Bekas</h2>
             <Link
               to="/marketplace"
               className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"

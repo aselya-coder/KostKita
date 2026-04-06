@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/BackButton";
 import { supabase } from "@/lib/supabase";
-import { logUserActivity } from "@/services/marketplace";
+import { logUserActivity } from "@/services/activity";
 import { toast } from "sonner";
 
 export default function MyMarketplaceItems() {
@@ -64,32 +64,30 @@ export default function MyMarketplaceItems() {
         .eq('id', id);
       
       if (error) {
-        toast.error("Failed to delete item");
+        toast.error("Gagal menghapus barang");
       } else {
         // Log activity
         if (user) {
           await logUserActivity(user.id, 'Menghapus barang marketplace', itemTitle);
         }
         setMyItems(prev => prev.filter(item => item.id !== id));
-        toast.success("Item deleted");
+        toast.success("Barang dihapus");
       }
     }
   };
 
-  const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
-
   return (
     <div className="space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
-      <BackButton to={basePath} className="mb-0" />
+      <BackButton to="/dashboard" className="mb-0" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">My Marketplace Items</h1>
-          <p className="text-muted-foreground text-xs md:text-sm">Manage your items for sale in the marketplace.</p>
+          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Marketplace Saya</h1>
+          <p className="text-muted-foreground text-xs md:text-sm">Kelola barang yang Anda jual di marketplace.</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
-          <Link to={user?.role === "owner" ? "/owner-dashboard/sell-item" : "/dashboard/sell-item"}>
+          <Link to="/dashboard/sell-item">
             <Plus className="w-4 h-4 mr-2" />
-            Sell New Item
+            Jual Barang Baru
           </Link>
         </Button>
       </div>
@@ -101,12 +99,12 @@ export default function MyMarketplaceItems() {
               <table className="w-full text-xs md:text-sm text-left">
                 <thead className="bg-secondary/50 text-muted-foreground uppercase text-[9px] md:text-[10px] font-bold tracking-wider">
                   <tr>
-                    <th className="px-4 md:px-6 py-4">Item</th>
-                    <th className="px-4 md:px-6 py-4">Category</th>
-                    <th className="px-4 md:px-6 py-4">Price</th>
-                    <th className="px-4 md:px-6 py-4">Condition</th>
+                    <th className="px-4 md:px-6 py-4">Barang</th>
+                    <th className="px-4 md:px-6 py-4">Kategori</th>
+                    <th className="px-4 md:px-6 py-4">Harga</th>
+                    <th className="px-4 md:px-6 py-4">Kondisi</th>
                     <th className="px-4 md:px-6 py-4">Status</th>
-                    <th className="px-4 md:px-6 py-4 text-right">Actions</th>
+                    <th className="px-4 md:px-6 py-4 text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y border-border text-foreground">
@@ -159,7 +157,7 @@ export default function MyMarketplaceItems() {
                             </Link>
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
-                            <Link to={`${basePath}/edit-item/${item.id}`}>
+                            <Link to={`/dashboard/edit-item/${item.id}`}>
                               <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                             </Link>
                           </Button>
@@ -186,14 +184,14 @@ export default function MyMarketplaceItems() {
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <ShoppingBag className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-lg font-display font-bold mb-2">No items found</h3>
+          <h3 className="text-lg font-display font-bold mb-2">Belum ada barang</h3>
           <p className="text-muted-foreground max-w-sm mx-auto mb-8">
-            You haven't listed any items for sale yet. Turn your unused stuff into cash!
+            Anda belum memasang barang untuk dijual. Ayo mulai hasilkan uang dari barang tidak terpakai!
           </p>
           <Button asChild>
-            <Link to={user?.role === "owner" ? "/owner-dashboard/sell-item" : "/dashboard/sell-item"}>
+            <Link to="/dashboard/sell-item">
               <Plus className="w-4 h-4 mr-2" />
-              Sell Your First Item
+              Jual Barang Pertama Anda
             </Link>
           </Button>
         </div>

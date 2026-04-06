@@ -1,59 +1,63 @@
+import { supabase } from '@/lib/supabase';
 import { type Wallet, type Transaction } from "@/data/mockData";
-
-const BACKEND_URL = 'http://localhost:3000/api'; 
-
-type RoleHeader = 'USER' | 'ADMIN';
-
-type BackendCoinLog = {
-  id: string;
-  userId: string;
-  type: 'credit' | 'debit';
-  amount: number;
-  description: string;
-  createdAt: string;
-};
 
 export const getWalletData = async (userId: string): Promise<Wallet | null> => {
   const balance = await getWalletBalance(userId);
   return { userId, balance, totalEarnings: 0 };
 };
 
-export const getWalletBalance = async (userId: string, role: RoleHeader = 'USER'): Promise<number> => {
-  const res = await fetch(`${BACKEND_URL}/wallet/balance/${userId}`, {
-    headers: {
-      'x-user-id': userId,
-      'x-user-role': role,
-    },
-  });
-  const result = await res.json();
-  if (!res.ok) {
-    throw new Error(result.message || 'Gagal mengambil saldo wallet');
+export const getWalletBalance = async (userId: string): Promise<number> => {
+  try {
+    const { data, error } = await supabase
+      .from('wallets')
+      .select('balance')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // Wallet doesn't exist, create it (fallback if trigger failed)
+        const { data: newWallet, error: createError } = await supabase
+          .from('wallets')
+          .insert({ user_id: userId, balance: 0 })
+          .select('balance')
+          .single();
+        
+        if (createError) throw createError;
+        return newWallet.balance;
+      }
+      throw error;
+    }
+    return data.balance;
+  } catch (error) {
+    console.error('Error fetching wallet balance:', error);
+    return 0;
   }
-  return result.data?.balance ?? 0;
 };
 
-export const getTransactions = async (userId: string, role: RoleHeader = 'USER'): Promise<Transaction[]> => {
-  const res = await fetch(`${BACKEND_URL}/wallet/logs/${userId}`, {
-    headers: {
-      'x-user-id': userId,
-      'x-user-role': role,
-    },
-  });
-  const result = await res.json();
-  if (!res.ok) {
-    throw new Error(result.message || 'Gagal mengambil log koin');
+export const getTransactions = async (userId: string): Promise<Transaction[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('coin_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const mapped: Transaction[] = (data || []).map(log => ({
+      id: log.id,
+      userId: log.user_id,
+      type: log.type === 'credit' ? 'topup' : 'ad_payment',
+      amount: 0, // In coins
+      coins: log.amount,
+      status: 'paid',
+      description: log.description,
+      createdAt: log.created_at,
+    }));
+    return mapped;
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    return [];
   }
-  const logs: BackendCoinLog[] = result.data || [];
-  // Map Coin Logs to Transaction-like entries for UI consumption
-  const mapped: Transaction[] = logs.map(log => ({
-    id: log.id,
-    userId: log.userId,
-    type: log.type === 'credit' ? 'topup' : 'ad_payment',
-    amount: 0,
-    coins: log.amount,
-    status: 'paid',
-    description: log.description,
-    createdAt: log.createdAt,
-  }));
-  return mapped;
 };

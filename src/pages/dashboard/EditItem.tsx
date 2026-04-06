@@ -6,7 +6,7 @@ import { BackButton } from "@/components/BackButton";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { uploadFile } from "@/services/storage";
-import { logUserActivity } from "@/services/marketplace";
+import { updateMarketplaceItem, getItemById } from "@/services/marketplace";
 import { toast as sonnerToast } from "sonner";
 import { type MarketplaceItem } from "@/data/mockData";
 
@@ -40,13 +40,8 @@ export default function EditItem() {
       if (!id) return;
       setIsFetching(true);
       try {
-        const { data, error } = await supabase
-          .from('marketplace_items')
-          .select('*')
-          .eq('id', id)
-          .single();
+        const data = await getItemById(id);
         
-        if (error) throw error;
         if (data) {
           setItem(data);
           setFormData({
@@ -58,6 +53,8 @@ export default function EditItem() {
             description: data.description || "",
           });
           setExistingImageUrl(data.image);
+        } else {
+          throw new Error("Data barang tidak ditemukan.");
         }
       } catch (error) {
         console.error("Error fetching item:", error);
@@ -128,41 +125,28 @@ export default function EditItem() {
 
       const priceClean = parseInt(formData.price.replace(/\D/g, ''));
       
-      const { error: updateError } = await supabase
-        .from('marketplace_items')
-        .update({
-          title: formData.title,
-          price: priceClean,
-          category: formData.category,
-          condition: formData.condition,
-          location: formData.location,
-          description: formData.description,
-          image: imageUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id);
+      const result = await updateMarketplaceItem(id, user.id, {
+        title: formData.title,
+        price: priceClean,
+        category: formData.category,
+        condition: formData.condition,
+        location: formData.location,
+        description: formData.description,
+        image: imageUrl || undefined,
+      });
 
-      if (updateError) throw updateError;
-
-      // Log activity
-      await logUserActivity(
-        user.id,
-        'Memperbarui barang marketplace',
-        formData.title,
-        `/item/${id}`
-      );
+      if (!result.success) {
+        throw new Error((result.error as any)?.message || 'Terjadi kesalahan saat memperbarui barang.');
+      }
 
       sonnerToast.success('Barang berhasil diperbarui!');
-      const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
-      setTimeout(() => navigate(`${basePath}/my-items`), 1500);
+      setTimeout(() => navigate("/dashboard/my-items"), 1500);
     } catch (error: any) {
       sonnerToast.error(error.message || 'Gagal memperbarui barang.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
 
   if (isFetching) {
     return (
@@ -175,7 +159,7 @@ export default function EditItem() {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div className="flex items-center gap-4">
-        <BackButton to={`${basePath}/my-items`} className="mb-0" />
+        <BackButton to="/dashboard/my-items" className="mb-0" />
         <h1 className="text-2xl font-display font-bold text-foreground">Edit Item</h1>
       </div>
 

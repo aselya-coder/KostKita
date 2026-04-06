@@ -1,29 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { type User, type MarketplaceItem } from '@/data/mockData';
-
-// Raw database record types
-type MarketplaceDbRecord = {
-  id: string;
-  seller_id: string;
-  title: string;
-  price: number;
-  image: string;
-  category: string;
-  condition: string;
-  location: string;
-  description: string;
-  created_at: string;
-  status: string;
-};
-
-type ProfileRecord = {
-  name: string;
-  phone: string;
-};
-
-type ItemWithSellerRecord = MarketplaceDbRecord & {
-  profiles: ProfileRecord | null;
-};
+import { type User, type MarketplaceItem, mockMarketplaceItems } from '@/data/mockData';
+import { logUserActivity } from '@/services/activity';
 
 export const getMarketplaceItems = async (category?: string, sellerId?: string): Promise<MarketplaceItem[]> => {
   let query = supabase
@@ -35,7 +12,8 @@ export const getMarketplaceItems = async (category?: string, sellerId?: string):
         phone
       )
     `)
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .gt('expires_at', new Date().toISOString());
 
   if (category && category !== 'Semua') {
     query = query.ilike('category', category);
@@ -52,176 +30,142 @@ export const getMarketplaceItems = async (category?: string, sellerId?: string):
     return [];
   }
 
-  return (data || []).map((item: any) => ({
-    id: item.id,
-    sellerId: item.seller_id,
-    title: item.title,
-    price: item.price,
-    image: item.image,
-    category: item.category,
-    condition: item.condition,
-    sellerPhone: item.profiles?.phone || '',
-    sellerName: item.profiles?.name || 'Penjual',
-    location: item.location,
-    description: item.description,
-    createdAt: item.created_at,
-    status: item.status
+  // FALLBACK: If database is empty and it's a public search, show mock data
+  if (!sellerId && (!data || data.length === 0)) {
+    return mockMarketplaceItems.filter(i => i.status !== 'pending');
+  }
+
+  return (data || []).map((i: any) => ({
+    id: i.id,
+    sellerId: i.seller_id,
+    title: i.title,
+    price: i.price,
+    image: i.image || '',
+    category: i.category || 'Lainnya',
+    condition: i.condition || 'Bekas',
+    sellerPhone: i.profiles?.phone || '',
+    sellerName: i.profiles?.name || 'Penjual',
+    location: i.location || '',
+    description: i.description || '',
+    createdAt: i.created_at,
+    status: i.status
   })) as MarketplaceItem[];
 };
 
 export const getItemById = async (id: string): Promise<MarketplaceItem | null> => {
-  console.log(`Fetching item with ID: ${id}`);
   const { data, error } = await supabase
     .from('marketplace_items')
-    .select(
-      `
+    .select(`
       *,
-      profiles ( name, phone )
-    `
-    )
+      profiles (
+        name,
+        phone
+      )
+    `)
     .eq('id', id)
-    .single<ItemWithSellerRecord>();
+    .single();
 
   if (error) {
-    console.error(`Supabase error fetching item with id ${id}:`, error);
+    console.error(`Error fetching item with id ${id}:`, error);
     return null;
   }
 
-  if (!data) {
-    console.warn(`No data found for item with id ${id}`);
-    return null;
-  }
-
-  const item = data;
-
+  const i: any = data;
   return {
-    id: item.id,
-    sellerId: item.seller_id,
-    title: item.title,
-    price: item.price,
-    image: item.image,
-    category: item.category,
-    condition: item.condition,
-    sellerPhone: item.profiles?.phone || '', 
-    sellerName: item.profiles?.name || 'Penjual',
-    location: item.location,
-    description: item.description,
-    createdAt: item.created_at,
-    status: item.status,
+    id: i.id,
+    sellerId: i.seller_id,
+    title: i.title,
+    price: i.price,
+    image: i.image || '',
+    category: i.category || 'Lainnya',
+    condition: i.condition || 'Bekas',
+    sellerPhone: i.profiles?.phone || '',
+    sellerName: i.profiles?.name || 'Penjual',
+    location: i.location || '',
+    description: i.description || '',
+    createdAt: i.created_at,
+    status: i.status
   } as MarketplaceItem;
 };
 
-export const updateUserProfile = async (userId: string, updates: { name?: string; phone?: string; location?: string; about?: string; }) => {
-  // Supabase expects snake_case column names. Map camelCase to snake_case.
-  const profileUpdate: { [key: string]: string | undefined } = {
-    name: updates.name,
-    phone: updates.phone,
-    location: updates.location,
-    about: updates.about,
+export const updateMarketplaceItem = async (id: string, userId: string, itemData: Partial<MarketplaceItem>) => {
+  const dbData: any = {
+    title: itemData.title,
+    price: itemData.price,
+    category: itemData.category,
+    condition: itemData.condition,
+    location: itemData.location,
+    description: itemData.description,
+    image: itemData.image,
+    updated_at: new Date().toISOString(),
   };
 
-  // Remove properties that are undefined, so we only update what's provided.
-  Object.keys(profileUpdate).forEach(key => {
-    if (profileUpdate[key] === undefined) {
-      delete profileUpdate[key];
-    }
-  });
-
-  const { error } = await supabase
-    .from('profiles')
-    .update(profileUpdate)
-    .eq('id', userId);
-
-  if (error) {
-    console.error('Error updating profile:', error);
-    throw error;
-  }
-
-  // Log the activity after a successful update
-  await logUserActivity(userId, 'Memperbarui profil');
-};
-
-/**
- * Fetches all user profiles from the database for the admin panel.
- * NOTE: This function retrieves data from the public 'profiles' table.
- * For security reasons, it does not include sensitive data like email, which is stored separately.
- * @returns A promise that resolves to an array of partial User objects.
- */
-export const getAllUsers = async (): Promise<Partial<User>[]> => {
   const { data, error } = await supabase
-    .from('profiles')
-    .select('id, name, role, avatar, phone, location, about');
+    .from('marketplace_items')
+    .update(dbData)
+    .eq('id', id)
+    .eq('seller_id', userId)
+    .select()
+    .single();
 
   if (error) {
-    console.error('Error fetching all users:', error);
-    throw error;
+    console.error('Error updating marketplace item:', error);
+    return { success: false, error };
   }
 
-  return data || [];
+  // Log activity
+  await logUserActivity(
+    userId,
+    'Memperbarui barang marketplace',
+    itemData.title,
+    `/item/${id}`
+  );
+
+  return { success: true, data };
 };
 
-/**
- * Deletes a user activity by ID.
- * Only intended for admin use.
- * @param activityId The ID of the activity to delete.
- */
-export const deleteActivity = async (activityId: string) => {
+export const deleteMarketplaceItem = async (id: string, userId: string) => {
   const { error } = await supabase
-    .from('user_activities')
+    .from('marketplace_items')
     .delete()
-    .eq('id', activityId);
+    .eq('id', id)
+    .eq('seller_id', userId);
 
   if (error) {
-    console.error('Error deleting activity:', error);
-    throw error;
+    console.error('Error deleting marketplace item:', error);
+    return { success: false, error };
   }
+
+  // Log activity
+  await logUserActivity(
+    userId,
+    'Menghapus barang marketplace'
+  );
+
+  return { success: true };
 };
 
-/**
- * Logs a user activity to the user_activities table.
- * @param userId The ID of the user performing the action.
- * @param action A short description of the action (e.g., 'Membuat kos baru').
- * @param description Optional details about the item being acted upon (e.g., the name of the kos).
- * @param target_url Optional URL to the item.
- */
-export const logUserActivity = async (
-  userId: string,
-  action: string,
-  description?: string,
-  target_url?: string
-) => {
-  const { error } = await supabase.from('user_activities').insert([
-    {
-      user_id: userId,
-      action,
-      description,
-      target_url,
-    },
-  ]);
-
-  if (error) {
-    console.error('Error logging user activity:', error);
-    // We don't throw an error here because logging is a background task
-    // and shouldn't block the main user action.
-  }
-};
-
-// --- ADMIN & LOGGING FUNCTIONS ---
-
-export const getUserActivities = async () => {
+export const markItemAsSold = async (id: string, userId: string) => {
   const { data, error } = await supabase
-    .from('user_activities')
-    .select(`
-      *,
-      profiles ( name, avatar )
-    `)
-    .order('created_at', { ascending: false })
-    .limit(100);
+    .from('marketplace_items')
+    .update({ status: 'sold' })
+    .eq('id', id)
+    .eq('seller_id', userId)
+    .select()
+    .single();
 
   if (error) {
-    console.error('Error fetching user activities:', error);
-    throw error;
+    console.error('Error marking item as sold:', error);
+    return { success: false, error };
   }
 
-  return data || [];
+  // Log activity
+  await logUserActivity(
+    userId,
+    'Menandai barang sebagai terjual',
+    data.title,
+    `/item/${data.id}`
+  );
+
+  return { success: true };
 };

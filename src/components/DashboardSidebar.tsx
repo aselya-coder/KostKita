@@ -39,33 +39,25 @@ export function DashboardSidebar() {
   const getSidebarItems = (): SidebarItem[] => {
     const role = user?.role;
 
-    const unifiedUserItems: SidebarItem[] = [
-      { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
-      { title: "My Boarding Houses", href: "/dashboard/my-kos", icon: Building2 },
-      { title: "Add Boarding House", href: "/dashboard/add-kos", icon: PlusCircle },
-      { title: "My Marketplace", href: "/dashboard/my-items", icon: ShoppingBag },
-      { title: "Sell Item", href: "/dashboard/sell-item", icon: PlusCircle },
-      { title: "Favorites", href: "/dashboard/favorites", icon: Heart },
-      { title: "Profile", href: "/dashboard/profile", icon: User },
-      { title: "Settings", href: "/dashboard/settings", icon: SettingsIcon },
-    ];
-
-    switch (role) {
-      case "admin":
-        // Admins should usually use the /admin layout, but if they hit /dashboard,
-        // we can show them some basic items or just the overview.
-        return [
-          { title: "Admin Panel", href: "/admin", icon: ShieldAlert },
-          { title: "Profile", href: "/dashboard/profile", icon: User },
-          { title: "Settings", href: "/dashboard/settings", icon: SettingsIcon },
-        ];
-      case "user":
-      case "owner":
-      case "student":
-        return unifiedUserItems;
-      default:
-        return [];
+    if (role === "admin") {
+      return [
+        { title: "Admin Panel", href: "/admin", icon: ShieldAlert },
+        { title: "Profile", href: "/dashboard/profile", icon: User },
+        { title: "Settings", href: "/dashboard/settings", icon: SettingsIcon },
+      ];
     }
+
+    return [
+      { title: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
+      { title: "Kos Saya", href: "/dashboard/my-kos", icon: Building2 },
+      { title: "Tambah Kos", href: "/dashboard/add-kos", icon: PlusCircle },
+      { title: "Marketplace Saya", href: "/dashboard/my-items", icon: ShoppingBag },
+      { title: "Jual Barang", href: "/dashboard/sell-item", icon: PlusCircle },
+      { title: "Top Up Koin", href: "/dashboard/topup", icon: Coins },
+      { title: "Favorit", href: "/dashboard/favorites", icon: Heart },
+      { title: "Profil", href: "/dashboard/profile", icon: User },
+      { title: "Pengaturan", href: "/dashboard/settings", icon: SettingsIcon },
+    ];
   };
 
   if (!user) {

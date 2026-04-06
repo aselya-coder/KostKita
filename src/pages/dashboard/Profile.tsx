@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BackButton } from "@/components/BackButton";
 import { uploadFile } from "@/services/storage";
-import { updateUserProfile } from "@/services/marketplace";
+import { updateUserProfile } from "@/services/profile";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -22,16 +22,6 @@ export default function Profile() {
   const [phone, setPhone] = useState(user?.phone || "");
   const [location, setLocation] = useState(user?.location || "");
   const [about, setAbout] = useState(user?.about || "");
-
-  // Sync local state with user object from context
-  useEffect(() => {
-    if (user) {
-      setName(user.name || "");
-      setPhone(user.phone || "");
-      setLocation(user.location || "");
-      setAbout(user.about || "");
-    }
-  }, [user]);
 
   // Sync local state with user object from context
   useEffect(() => {
@@ -68,21 +58,12 @@ export default function Profile() {
       }
 
       if (url) {
-        // Update profile in database
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ avatar: url })
-          .eq('id', user.id);
-
-        if (updateError) {
-          toast.error("Failed to update profile");
-        } else {
-          toast.success("Avatar updated successfully!");
-          // The AuthContext should ideally handle the user state update, 
-          // but for now, we might need to refresh or the user will see it on next load
-          // In a real app, you'd update the context user object.
+        try {
+          await updateUserProfile(user.id, { avatar_url: url });
           await fetchUserProfile(); // Re-fetch user profile to update context
           toast.success("Avatar updated successfully!");
+        } catch (updateError) {
+          toast.error("Failed to update profile");
         }
       }
       setIsUploading(false);
@@ -104,7 +85,7 @@ export default function Profile() {
     }
   };
 
-  const basePath = user.role === "admin" ? "/admin-dashboard" : user.role === "owner" ? "/owner-dashboard" : "/dashboard";
+  const basePath = user.role === "admin" ? "/admin" : "/dashboard";
 
   const handleQrisChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!user) return;

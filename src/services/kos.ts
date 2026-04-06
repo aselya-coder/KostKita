@@ -1,29 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { type KosListing } from '@/data/mockData'; // We'll reuse the type for now
-
-// Type for database records
-type KosDbRecord = {
-  id: string;
-  owner_id: string;
-  title: string;
-  location: string;
-  price: number;
-  images: string[];
-  amenities: string[];
-  rating: number;
-  is_premium: boolean;
-  description: string;
-  rules: string[];
-  type: string;
-  available_rooms: number;
-  status: string;
-  profiles?: {
-    name: string;
-    phone: string;
-  };
-};
-import { logUserActivity } from '@/services/marketplace';
-import { notifyAdmins } from './notifications';
+import { type KosListing, mockKosListings } from '@/data/mockData';
+import { logUserActivity } from '@/services/activity';
 
 export const getKosListings = async (ownerId?: string): Promise<KosListing[]> => {
   let query = supabase
@@ -36,12 +13,11 @@ export const getKosListings = async (ownerId?: string): Promise<KosListing[]> =>
       )
     `);
 
-  // If no ownerId provided, only show approved listings (public view)
-  // If ownerId provided, show all listings for that owner (including pending)
   if (ownerId) {
     query = query.eq('owner_id', ownerId);
   } else {
-    query = query.eq('status', 'approved');
+    const now = new Date().toISOString();
+    query = query.eq('status', 'approved').gt('expires_at', now);
   }
 
   const { data, error } = await query;
@@ -51,8 +27,11 @@ export const getKosListings = async (ownerId?: string): Promise<KosListing[]> =>
     return [];
   }
 
-  // Map database fields to interface
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // FALLBACK: If database is empty and it's a public search, show mock data
+  if (!ownerId && (!data || data.length === 0)) {
+    return mockKosListings.filter(k => k.status !== 'pending');
+  }
+
   return (data || []).map((k: any) => ({
     id: k.id,
     ownerId: k.owner_id,
@@ -91,7 +70,7 @@ export const getKosById = async (id: string): Promise<KosListing | null> => {
     return null;
   }
 
-  const k: KosDbRecord = data as KosDbRecord;
+  const k: any = data;
   return {
     id: k.id,
     ownerId: k.owner_id,
@@ -103,7 +82,7 @@ export const getKosById = async (id: string): Promise<KosListing | null> => {
     rating: k.rating || 0,
     isPremium: k.is_premium || false,
     ownerName: k.profiles?.name || 'Pemilik Kos',
-    ownerPhone: k.profiles?.phone || '', 
+    ownerPhone: k.profiles?.phone || '',
     description: k.description || '',
     rules: k.rules || [],
     type: k.type,
@@ -113,6 +92,9 @@ export const getKosById = async (id: string): Promise<KosListing | null> => {
 };
 
 export const addKosListing = async (userId: string, kosData: Partial<KosListing>) => {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+
   const dbData = {
     owner_id: userId,
     title: kosData.title,
@@ -125,106 +107,82 @@ export const addKosListing = async (userId: string, kosData: Partial<KosListing>
     type: kosData.type,
     available_rooms: kosData.availableRooms,
     rating: kosData.rating,
-    status: 'approved', // Listings from the form are now approved by default
+    status: 'approved',
+    expires_at: expiresAt.toISOString(),
   };
 
   const { data, error } = await supabase
     .from('kos_listings')
-    .insert([dbData]) // Wrap in array for insert
+    .insert([dbData])
     .select()
     .single();
 
   if (error) {
     console.error('Error adding kos listing:', error);
-    throw new Error(error.message);
+    return { success: false, error };
   }
 
-  // Log activity
-  if (data) {
-    await logUserActivity(
-      userId,
-      'Memasang kos baru',
-      data.title,
-      `/kos/${data.id}`
-    );
+  await logUserActivity(
+    userId,
+    'Memasang kos baru',
+    kosData.title,
+    `/kos/${data.id}`
+  );
 
-    // Notify admins
-    await notifyAdmins(
-      'Listing Kos Baru',
-      `Kos baru '${data.title}' telah ditambahkan dan menunggu verifikasi.`,
-      `/admin-dashboard/kos`
-    );
-  }
-
-  return data;
+  return { success: true, data };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const updateKosListing = async (id: string, userId: string, updates: Partial<any>) => {
-  // Map to snake_case for Supabase
-  const dbUpdates = {
-    title: updates.title,
-    location: updates.location,
-    price: updates.price,
-    type: updates.type,
-    description: updates.description,
-    available_rooms: updates.availableRooms,
-    images: updates.images,
-    amenities: updates.amenities,
-    rules: updates.rules,
-    rating: updates.rating,
-  };
+export const updateKosListing = async (id: string, userId: string, kosData: Partial<KosListing>) => {
+  const dbData: any = {};
+  if (kosData.title !== undefined) dbData.title = kosData.title;
+  if (kosData.location !== undefined) dbData.location = kosData.location;
+  if (kosData.price !== undefined) dbData.price = kosData.price;
+  if (kosData.images !== undefined) dbData.images = kosData.images;
+  if (kosData.amenities !== undefined) dbData.amenities = kosData.amenities;
+  if (kosData.description !== undefined) dbData.description = kosData.description;
+  if (kosData.rules !== undefined) dbData.rules = kosData.rules;
+  if (kosData.type !== undefined) dbData.type = kosData.type;
+  if (kosData.availableRooms !== undefined) dbData.available_rooms = kosData.availableRooms;
+  if (kosData.rating !== undefined) dbData.rating = kosData.rating;
 
   const { data, error } = await supabase
     .from('kos_listings')
-    .update(dbUpdates)
+    .update(dbData)
     .eq('id', id)
+    .eq('owner_id', userId)
     .select()
     .single();
 
   if (error) {
     console.error('Error updating kos listing:', error);
-    throw new Error(error.message);
+    return { success: false, error };
   }
 
-  // Log activity
-  if (data) {
-    await logUserActivity(
-      userId,
-      'Memperbarui data kos',
-      data.title,
-      `/kos/${data.id}`
-    );
-  }
+  await logUserActivity(
+    userId,
+    'Memperbarui informasi kos',
+    kosData.title || 'Kos',
+    `/kos/${id}`
+  );
 
-  return data;
+  return { success: true, data };
 };
 
 export const deleteKosListing = async (id: string, userId: string) => {
-  // First, get the kos title for the log
-  const kosToDelete = await getKosById(id);
-  if (!kosToDelete) {
-    // Or handle this case gracefully
-    throw new Error("Kos not found, cannot delete.");
-  }
-  const kosTitle = kosToDelete.title;
-
   const { error } = await supabase
     .from('kos_listings')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('owner_id', userId);
 
   if (error) {
     console.error('Error deleting kos listing:', error);
     return { success: false, error };
   }
 
-  // Log activity
   await logUserActivity(
     userId,
-    'Menghapus kos',
-    kosTitle
-    // No target_url as it's deleted
+    'Menghapus kos'
   );
 
   return { success: true };

@@ -25,10 +25,11 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="font-display font-semibold text-sm mb-4 text-foreground">Pemilik Kos</h4>
+            <h4 className="font-display font-semibold text-sm mb-4 text-foreground">Layanan</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/owner" className="hover:text-foreground transition-colors">Pasang Iklan</Link></li>
-              <li><Link to="/owner" className="hover:text-foreground transition-colors">Dashboard</Link></li>
+              <li><Link to="/dashboard/add-kos" className="hover:text-foreground transition-colors">Pasang Iklan Kos</Link></li>
+              <li><Link to="/dashboard/sell-item" className="hover:text-foreground transition-colors">Jual Barang Bekas</Link></li>
+              <li><Link to="/dashboard/topup" className="hover:text-foreground transition-colors">Top Up Koin</Link></li>
             </ul>
           </div>
           <div>

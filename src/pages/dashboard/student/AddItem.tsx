@@ -146,7 +146,7 @@ export default function AddItemPage() {
       
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">Jual Barang</h1>
-        <p className="text-sm text-muted-foreground">Punya barang tidak terpakai? Jual ke sesama mahasiswa di sini.</p>
+        <p className="text-sm text-muted-foreground">Punya barang tidak terpakai? Jual di marketplace KosKita sekarang.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-card rounded-2xl md:rounded-3xl border border-border p-5 md:p-8 space-y-6 md:space-y-8 shadow-sm">

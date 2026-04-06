@@ -3,7 +3,7 @@ import { type User } from "@/data/mockData";
 import { supabase } from "@/lib/supabase";
 import { AuthError, User as SupabaseUser } from "@supabase/supabase-js";
 import { AuthContext, type AuthContextType } from "./AuthContextType";
-import { logUserActivity } from "@/services/marketplace";
+import { logUserActivity } from "@/services/activity";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: supabaseUser.id,
       email: supabaseUser.email || "",
       name: supabaseUser.user_metadata?.name || "User",
-      role: supabaseUser.user_metadata?.role || "student",
+      role: supabaseUser.user_metadata?.role || "user",
       phone: supabaseUser.user_metadata?.phone || "",
       avatar: supabaseUser.user_metadata?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${supabaseUser.id}`,
       location: supabaseUser.user_metadata?.location || "",
