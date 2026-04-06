@@ -164,13 +164,6 @@ const AdminDashboard = () => {
           to="/admin/kos"
         />
         <StatsCard 
-          title="Iklan Premium" 
-          value={isLoading ? '...' : stats.totalActiveAds} 
-          icon={Zap} 
-          trend={{ value: 12.0, isUp: true }}
-          to="/admin/advertisements"
-        />
-        <StatsCard 
           title="Iklan Aktif" 
           value={isLoading ? '...' : stats.totalItems} 
           icon={ShoppingBag} 
