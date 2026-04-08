@@ -13,7 +13,9 @@ import {
   Coins,
   ArrowUpRight,
   Flame,
-  LayoutDashboard
+  LayoutDashboard,
+  Zap,
+  Loader2
 } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
@@ -42,7 +44,35 @@ export default function AdminOverview() {
   });
   const [activities, setActivities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRunningMaintenance, setIsRunningMaintenance] = useState(false);
   
+  const handleRunMaintenance = async () => {
+    setIsRunningMaintenance(true);
+    try {
+      // Manual trigger to handle expired listings using RPC if available, 
+      // or manual update as fallback
+      const { data, error } = await supabase.rpc('handle_expired_listings');
+      
+      if (error) {
+        // Fallback: manual update if RPC doesn't exist yet
+        const now = new Date().toISOString();
+        const [kosRes, itemRes] = await Promise.all([
+          supabase.from('kos_listings').update({ status: 'expired' }).lt('expires_at', now).neq('status', 'expired'),
+          supabase.from('marketplace_items').update({ status: 'expired' }).lt('expires_at', now).neq('status', 'expired')
+        ]);
+        
+        if (kosRes.error || itemRes.error) throw new Error("Gagal menjalankan pemeliharaan manual.");
+      }
+      
+      toast.success("Pemeliharaan sistem selesai. Iklan kedaluwarsa telah dinonaktifkan.");
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsRunningMaintenance(false);
+    }
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -120,10 +150,19 @@ export default function AdminOverview() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button asChild variant="outline" className="rounded-xl border-border shadow-sm" size="lg">
-              <Link to="/admin-dashboard/profile">
-                Edit Profile
-              </Link>
+            <Button 
+              onClick={handleRunMaintenance} 
+              disabled={isRunningMaintenance}
+              variant="outline" 
+              className="rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary shadow-sm" 
+              size="lg"
+            >
+              {isRunningMaintenance ? (
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              ) : (
+                <Zap className="w-5 h-5 mr-2" />
+              )}
+              Maintenance
             </Button>
             <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-95" size="lg">
               <Link to="/admin-dashboard/system-settings">

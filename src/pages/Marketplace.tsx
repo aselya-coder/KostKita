@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, X, Plus } from "lucide-react";
+import { Search, X, Plus, ShoppingBag } from "lucide-react";
 import { MarketplaceCard } from "@/components/MarketplaceCard";
 import { getMarketplaceItems } from "@/services/marketplace";
 import { type MarketplaceItem } from "@/data/mockData";
@@ -115,24 +115,40 @@ const Marketplace = () => {
       </p>
 
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-card rounded-2xl p-3 space-y-2 animate-pulse">
-              <div className="h-32 bg-secondary rounded-xl"></div>
-              <div className="h-4 w-3/4 bg-secondary rounded-md"></div>
-              <div className="h-5 w-1/2 bg-secondary rounded-md"></div>
+            <div key={i} className="bg-card rounded-2xl p-4 space-y-4 animate-pulse border border-border">
+              <div className="aspect-square w-full bg-secondary rounded-xl"></div>
+              <div className="space-y-2">
+                <div className="h-4 w-3/4 bg-secondary rounded-md"></div>
+                <div className="h-6 w-1/2 bg-secondary rounded-md"></div>
+                <div className="h-3 w-1/3 bg-secondary rounded-md"></div>
+              </div>
             </div>
           ))}
         </div>
       ) : filteredItems.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {filteredItems.map((item) => (
             <MarketplaceCard key={item.id} item={item} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-20">
-          <p className="text-muted-foreground">Tidak ada barang yang cocok.</p>
+        <div className="text-center py-24 bg-card rounded-3xl border border-dashed border-border">
+          <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <ShoppingBag className="w-8 h-8 text-muted-foreground/40" />
+          </div>
+          <h3 className="text-lg font-display font-bold text-foreground">Barang Tidak Ditemukan</h3>
+          <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+            Coba gunakan kata kunci lain atau ganti kategori pencarian Anda.
+          </p>
+          <Button 
+            variant="outline" 
+            onClick={() => { setQuery(""); setCategory("Semua"); }}
+            className="mt-6 rounded-xl border-primary/20 text-primary hover:bg-primary/5"
+          >
+            Reset Pencarian
+          </Button>
         </div>
       )}
     </div>

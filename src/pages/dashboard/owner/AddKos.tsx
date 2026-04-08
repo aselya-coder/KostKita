@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { X, Plus, Loader2, MapPin, Zap, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { QuotaAlertModal } from '@/components/QuotaAlertModal';
+import { getProfile } from '@/services/profile';
 
 export default function AddKosPage() {
   const { user } = useAuth();
@@ -150,6 +151,14 @@ export default function AddKosPage() {
     setIsLoading(true);
 
     try {
+      // 0. Verify Phone Number in Profile
+      const profile = await getProfile(user.id);
+      if (!profile?.phone || profile.phone.trim() === '') {
+        toast.error('Mohon lengkapi nomor WhatsApp di profil Anda sebelum memasang iklan agar penyewa dapat menghubungi Anda.');
+        setTimeout(() => navigate('/dashboard/profile'), 2000);
+        return;
+      }
+
       // 1. Upload Images
       const { urls, errors } = await uploadMultipleFiles('kos-images', user.id, images);
       

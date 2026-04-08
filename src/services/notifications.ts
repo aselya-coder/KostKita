@@ -27,6 +27,25 @@ export const markNotificationAsRead = async (id: string) => {
   return { success: true };
 };
 
+export const createNotification = async (userId: string, title: string, message: string, type: string = 'system', link?: string) => {
+  try {
+    const { error } = await supabase.from('notifications').insert([{
+      user_id: userId,
+      title,
+      message,
+      type,
+      link,
+      is_read: false,
+      created_at: new Date().toISOString()
+    }]);
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    return { success: false, error };
+  }
+};
+
 export const notifyAdmins = async (title: string, message: string, link: string) => {
   try {
     // 1. Get all admin user IDs

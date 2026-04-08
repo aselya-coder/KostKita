@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, MapPin, MessageCircle, Tag, User, Heart } from "lucide-react";
+import { ArrowLeft, MapPin, MessageCircle, Tag, User, Heart, Flag, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type MarketplaceItem, formatPrice } from "@/data/mockData";
 import { getItemById } from "@/services/marketplace";
@@ -8,8 +8,8 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { ReportModal } from "@/components/ReportModal";
-import { Flag } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { createNotification } from "@/services/notifications";
 
 const ItemDetail = () => {
   const { id } = useParams();
@@ -92,6 +92,24 @@ const ItemDetail = () => {
       )}`
     : "#";
 
+  const handleInquiry = async () => {
+    if (!user || !item) return;
+    
+    // Notify the seller
+    await createNotification(
+      item.sellerId,
+      "Seseorang tertarik dengan barang Anda!",
+      `${user.name} tertarik dengan "${item.title}". Mereka mungkin akan menghubungi Anda via WhatsApp.`,
+      "marketplace",
+      `/dashboard/my-items`
+    );
+    
+    // Redirect to WhatsApp
+    if (hasPhone) {
+      window.open(waLink, '_blank');
+    }
+  };
+
   return (
     <div className="container py-8 pb-24 md:pb-8">
       <div className="flex items-center justify-between mb-6">
@@ -164,41 +182,38 @@ const ItemDetail = () => {
             <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
           </div>
 
-          <a
-            href={waLink}
-            target={hasPhone ? "_blank" : "_self"}
-            rel="noopener noreferrer"
-            onClick={(e) => !hasPhone && e.preventDefault()}
+          <button
+            onClick={handleInquiry}
+            disabled={!hasPhone || (user && user.id === item.sellerId)}
             className={`hidden md:flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-all shadow-md active:scale-95 ${
-              !hasPhone 
+              !hasPhone || (user && user.id === item.sellerId)
                 ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
                 : 'bg-primary text-primary-foreground hover:bg-primary/90'
             }`}
           >
             <MessageCircle className="w-4 h-4" />
-            {hasPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
-          </a>
+            {user && user.id === item.sellerId 
+              ? "Ini barang Anda sendiri" 
+              : hasPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
+          </button>
         </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-foreground/5 md:hidden z-40">
         <div className="flex items-center justify-between">
           <span className="text-lg text-price text-foreground">{formatPrice(item.price)}</span>
-          <a
-            href={waLink}
-            target={hasPhone ? "_blank" : "_self"}
-            rel="noopener noreferrer"
+          <button
+            onClick={handleInquiry}
+            disabled={!hasPhone || (user && user.id === item.sellerId)}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
-              !hasPhone 
+              !hasPhone || (user && user.id === item.sellerId)
                 ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
                 : 'bg-primary text-primary-foreground hover:bg-primary/90'
             }`}
-            onClick={(e) => !hasPhone && e.preventDefault()}
-            aria-disabled={!hasPhone}
           >
             <MessageCircle className="w-4 h-4" />
-            {hasPhone ? "Chat" : "Nomor tidak ada"}
-          </a>
+            {hasPhone ? "Chat" : "Nomor"}
+          </button>
         </div>
       </div>
     </div>

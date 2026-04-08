@@ -1,67 +1,91 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BackButton } from "@/components/BackButton";
 import { 
   Shield, 
-  Globe, 
-  Database, 
   Save,
   RefreshCw,
   Coins,
   CreditCard,
-  DollarSign
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { getSystemConfigs, updateMultipleConfigs } from "@/services/settings";
+
+interface ConfigItem {
+  id: string;
+  label: string;
+  type: string;
+  description: string;
+  options?: string[];
+}
 
 export default function SystemSettings() {
   const { user } = useAuth();
-  const [isSaving, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [configs, setConfigs] = useState<Record<string, string>>({});
 
-  const handleSave = () => {
-    setIsLoading(true);
-    setTimeout(() => {
+  useEffect(() => {
+    const loadConfigs = async () => {
+      setIsLoading(true);
+      const data = await getSystemConfigs();
+      setConfigs(data);
       setIsLoading(false);
+    };
+    loadConfigs();
+  }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const result = await updateMultipleConfigs(configs);
+    if (result.success) {
       toast.success("Konfigurasi sistem berhasil diperbarui.");
-    }, 1500);
+    } else {
+      toast.error("Gagal memperbarui konfigurasi.");
+    }
+    setIsSaving(false);
   };
 
-  const monetizationSections = [
+  const updateConfig = (key: string, value: string) => {
+    setConfigs(prev => ({ ...prev, [key]: value }));
+  };
+
+  const monetizationSections: { title: string; icon: any; items: ConfigItem[] }[] = [
     {
       title: "Monetisasi & Koin",
       icon: Coins,
       items: [
-        { label: "Harga per Koin (IDR)", type: "number", value: "10000", description: "Harga dasar 1 koin dalam Rupiah." },
-        { label: "Biaya Iklan per Hari (Koin)", type: "number", value: "1", description: "Jumlah koin yang didebet setiap hari untuk iklan aktif." },
-        { label: "Durasi Iklan Gratis (Hari)", type: "number", value: "30", description: "Lama waktu iklan pertama gratis untuk user baru." },
+        { id: 'coin_price', label: "Harga per Koin (IDR)", type: "number", description: "Harga dasar 1 koin dalam Rupiah." },
+        { id: 'ad_cost_per_day', label: "Biaya Iklan per Hari (Koin)", type: "number", description: "Jumlah koin yang didebet setiap hari untuk iklan aktif." },
+        { id: 'free_ad_duration', label: "Durasi Iklan Gratis (Hari)", type: "number", description: "Lama waktu iklan pertama gratis untuk user baru." },
       ]
     },
     {
       title: "Biaya Layanan (Admin Fee)",
       icon: CreditCard,
       items: [
-        { label: "Tipe Biaya Admin", type: "select", options: ["Flat", "Persentase"], value: "Flat", description: "Cara menghitung biaya admin pada top up." },
-        { label: "Nilai Biaya Admin", type: "number", value: "2500", description: "Nilai flat (Rp) atau persentase (%) biaya admin." },
-        { label: "Minimal Top Up (Koin)", type: "number", value: "5", description: "Batas minimum pembelian koin per transaksi." },
-        { label: "Maksimal Top Up (Koin)", type: "number", value: "100", description: "Batas maksimum pembelian koin per transaksi." },
+        { id: 'admin_fee_type', label: "Tipe Biaya Admin", type: "select", options: ["Flat", "Persentase"], description: "Cara menghitung biaya admin pada top up." },
+        { id: 'admin_fee_value', label: "Nilai Biaya Admin", type: "number", description: "Nilai flat (Rp) atau persentase (%) biaya admin." },
+        { id: 'min_topup', label: "Minimal Top Up (Koin)", type: "number", description: "Batas minimum pembelian koin per transaksi." },
+        { id: 'max_topup', label: "Maksimal Top Up (Koin)", type: "number", description: "Batas maksimum pembelian koin per transaksi." },
       ]
     }
   ];
 
-  const platformSections = [
+  const platformSections: { title: string; icon: any; items: ConfigItem[] }[] = [
     {
       title: "Moderasi & Keamanan",
       icon: Shield,
       items: [
-        { label: "Auto-Approve Iklan", type: "switch", value: false, description: "Setujui iklan baru secara otomatis tanpa review manual." },
-        { label: "Sistem Laporan User", type: "switch", value: true, description: "Izinkan user melaporkan konten atau akun mencurigakan." },
+        { id: 'auto_approve_ads', label: "Auto-Approve Iklan", type: "switch", description: "Setujui iklan baru secara otomatis tanpa review manual." },
+        { id: 'user_reports_enabled', label: "Sistem Laporan User", type: "switch", description: "Izinkan user melaporkan konten atau akun mencurigakan." },
       ]
     }
   ];
-
 
   const getBackPath = () => {
     if (!user) return "/";
@@ -70,6 +94,15 @@ export default function SystemSettings() {
     return "/dashboard";
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground font-medium">Memuat konfigurasi...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       <BackButton to={getBackPath()} className="mb-0" />
@@ -77,7 +110,7 @@ export default function SystemSettings() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">System Settings</h1>
-          <p className="text-muted-foreground text-sm">Global platform configuration and maintenance tools.</p>
+          <p className="text-muted-foreground text-sm">Konfigurasi global platform dan pemeliharaan sistem.</p>
         </div>
         <Button 
           onClick={handleSave} 
@@ -89,7 +122,7 @@ export default function SystemSettings() {
           ) : (
             <Save className="w-4 h-4 mr-2" />
           )}
-          Save Changes
+          Simpan Perubahan
         </Button>
       </div>
 
@@ -111,16 +144,24 @@ export default function SystemSettings() {
                   </div>
                   <div className="flex-shrink-0 w-full sm:w-auto min-w-[120px]">
                     {item.type === "switch" ? (
-                      <Switch checked={item.value as boolean} />
+                      <Switch 
+                        checked={configs[item.id] === 'true'} 
+                        onCheckedChange={(checked) => updateConfig(item.id, checked ? 'true' : 'false')}
+                      />
                     ) : item.type === "number" ? (
                       <Input 
                         type="number" 
-                        defaultValue={item.value as string} 
+                        value={configs[item.id] || ''} 
+                        onChange={(e) => updateConfig(item.id, e.target.value)}
                         className="bg-surface text-right font-medium" 
                       />
                     ) : (
-                      <select className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
-                        {item.options?.map(opt => <option key={opt}>{opt}</option>)}
+                      <select 
+                        value={configs[item.id] || ''}
+                        onChange={(e) => updateConfig(item.id, e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        {item.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
                     )}
                   </div>

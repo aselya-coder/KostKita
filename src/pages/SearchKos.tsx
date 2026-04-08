@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, Building2 } from "lucide-react";
 import { KosCard } from "@/components/KosCard";
 import { getKosListings } from "@/services/kos";
 import { type KosListing } from "@/data/mockData";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
 
 const priceRanges = [
   { label: "Semua", min: 0, max: Infinity },
@@ -165,11 +166,16 @@ const SearchKos = () => {
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-card rounded-2xl p-4 space-y-3 animate-pulse">
-              <div className="h-48 bg-secondary rounded-xl"></div>
-              <div className="h-5 w-3/4 bg-secondary rounded-md"></div>
-              <div className="h-4 w-1/2 bg-secondary rounded-md"></div>
-              <div className="h-6 w-1/3 bg-secondary rounded-md"></div>
+            <div key={i} className="bg-card rounded-2xl p-4 space-y-4 animate-pulse border border-border">
+              <div className="aspect-[16/10] w-full bg-secondary rounded-xl"></div>
+              <div className="space-y-2">
+                <div className="h-6 w-3/4 bg-secondary rounded-md"></div>
+                <div className="h-4 w-1/2 bg-secondary rounded-md"></div>
+                <div className="pt-2 flex justify-between items-center">
+                  <div className="h-8 w-1/3 bg-secondary rounded-md"></div>
+                  <div className="h-8 w-8 bg-secondary rounded-full"></div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -180,10 +186,21 @@ const SearchKos = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20">
-          <p className="text-muted-foreground">
-            No kos matches these exact filters. Try expanding your search area or adjusting the price.
+        <div className="text-center py-24 bg-card rounded-3xl border border-dashed border-border">
+          <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <Building2 className="w-8 h-8 text-muted-foreground/40" />
+          </div>
+          <h3 className="text-lg font-display font-bold text-foreground">Kos Tidak Ditemukan</h3>
+          <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+            Coba gunakan kata kunci lain atau sesuaikan filter pencarian Anda.
           </p>
+          <Button 
+            variant="outline" 
+            onClick={() => { setQuery(""); setPriceIdx(0); setSelectedAmenities([]); }}
+            className="mt-6 rounded-xl border-primary/20 text-primary hover:bg-primary/5"
+          >
+            Reset Filter
+          </Button>
         </div>
       )}
     </div>

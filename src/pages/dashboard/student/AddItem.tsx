@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Camera, X, Plus, Loader2, ShoppingBag, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getProfile } from '@/services/profile';
 
 export default function AddItemPage() {
   const { user } = useAuth();
@@ -76,16 +77,12 @@ export default function AddItemPage() {
     try {
       console.log('Starting item submission for user:', user.id);
 
-      // 0. Verify profile exists (needed for RLS)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileError || !profile) {
-        console.error('Profile check failed (Item):', profileError);
-        throw new Error('Profil tidak ditemukan. Harap lengkapi profil Anda.');
+      // 0. Verify Phone Number in Profile
+      const profileData = await getProfile(user.id);
+      if (!profileData?.phone || profileData.phone.trim() === '') {
+        toast.error('Mohon lengkapi nomor WhatsApp di profil Anda sebelum memasang iklan agar pembeli dapat menghubungi Anda.');
+        setTimeout(() => navigate('/dashboard/profile'), 2000);
+        return;
       }
 
       // 1. Upload Image to Supabase Storage
