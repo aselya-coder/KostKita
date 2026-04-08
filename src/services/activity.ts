@@ -47,7 +47,7 @@ export const getUserActivities = async (userId?: string) => {
     // Fetch profiles
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name, avatar')
+      .select('id, name, avatar_url')
       .in('id', userIds);
 
     if (profileError) {
@@ -56,7 +56,10 @@ export const getUserActivities = async (userId?: string) => {
 
     const profileMap: Record<string, any> = {};
     profiles?.forEach(p => {
-      profileMap[p.id] = p;
+      profileMap[p.id] = {
+        ...p,
+        avatar: p.avatar_url // Map avatar_url to avatar for frontend compatibility
+      };
     });
 
     // Merge data

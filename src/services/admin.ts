@@ -135,10 +135,10 @@ export const getAllAdminTransactions = async (userId: string, userRole: 'ADMIN')
     // 3. Get unique package IDs from transactions
     const packageIds = [...new Set((transactions || []).map(t => t.coin_package_id || t.pricing_plan_id).filter(Boolean))];
 
-    // 4. Fetch packages to get admin_fee
+    // 4. Fetch packages
     const { data: packages, error: pkgError } = await supabase
       .from('coin_packages')
-      .select('id, name, admin_fee')
+      .select('id, name') // Remove admin_fee if missing in DB
       .in('id', packageIds);
 
     const packageMap: Record<string, any> = {};
@@ -148,7 +148,7 @@ export const getAllAdminTransactions = async (userId: string, userRole: 'ADMIN')
     const mappedTransactions: AdminTransaction[] = (transactions || []).map((tx: any) => {
       const pkgId = tx.coin_package_id || tx.pricing_plan_id;
       const pkg = packageMap[pkgId];
-      const adminFee = pkg?.admin_fee || 0;
+      const adminFee = 2500; // Use static fee if missing in DB
       return {
         ...tx,
         userId: tx.user_id,
@@ -213,11 +213,16 @@ export const getAllAdminCoinLogs = async (userId: string, userRole: 'ADMIN'): Pr
     // Fetch profiles
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name')
+      .select('id, name, avatar_url')
       .in('id', userIds);
 
     const profileMap: Record<string, any> = {};
-    profiles?.forEach(p => { profileMap[p.id] = p; });
+    profiles?.forEach(p => { 
+      profileMap[p.id] = {
+        ...p,
+        avatar: p.avatar_url // Map avatar_url to avatar for consistency
+      }; 
+    });
 
     return logs.map((log: any) => ({
       ...log,

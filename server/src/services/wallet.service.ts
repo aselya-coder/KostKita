@@ -1,5 +1,4 @@
 import { WalletRepository } from '../repositories/wallet.repository.js';
-import { CoinLogType } from '@prisma/client';
 
 export class WalletService {
   private walletRepository: WalletRepository;

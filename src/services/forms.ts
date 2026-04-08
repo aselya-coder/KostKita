@@ -3,8 +3,9 @@ import { type KosListing, type MarketplaceItem } from '@/data/mockData';
 import { logUserActivity } from './activity';
 
 // KOS LISTINGS
-export const createKosListing = async (listing: any, durationDays: number = 30) => {
+export const createKosListing = async (listing: any) => {
   try {
+    const durationDays = 30; // Enforce 30 days duration
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
@@ -12,7 +13,7 @@ export const createKosListing = async (listing: any, durationDays: number = 30) 
       .from('kos_listings')
       .insert([{
         ...listing,
-        status: 'approved',
+        status: 'approved', // Automatic approved
         expires_at: expiresAt.toISOString()
       }])
       .select()
@@ -38,8 +39,9 @@ export const createKosListing = async (listing: any, durationDays: number = 30) 
 };
 
 // MARKETPLACE ITEMS
-export const createMarketplaceItem = async (item: any, durationDays: number = 30) => {
+export const createMarketplaceItem = async (item: any) => {
   try {
+    const durationDays = 30; // Enforce 30 days duration
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
@@ -47,7 +49,7 @@ export const createMarketplaceItem = async (item: any, durationDays: number = 30
       .from('marketplace_items')
       .insert([{
         ...item,
-        status: 'active',
+        status: 'active', // Automatic active
         expires_at: expiresAt.toISOString()
       }])
       .select()

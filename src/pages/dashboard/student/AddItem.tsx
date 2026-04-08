@@ -123,7 +123,7 @@ export default function AddItemPage() {
       if (result.success) {
         setUploadProgress(100);
         setLoadingStatus('Berhasil!');
-        toast.success('Barang berhasil dipublikasikan!');
+        toast.success('Iklan barang berhasil dipublikasikan selama 30 hari!');
         setTimeout(() => navigate('/dashboard/my-items'), 1500);
       } else {
         console.error('Database insertion error (Item):', result.error);

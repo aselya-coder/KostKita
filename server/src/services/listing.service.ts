@@ -1,7 +1,9 @@
 import prisma from '../config/prisma.js';
 import { ListingRepository } from '../repositories/listing.repository.js';
 import { WalletRepository } from '../repositories/wallet.repository.js';
-import { ListingStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+
+export type ListingStatus = 'active' | 'expired' | 'archived';
 
 export class ListingService {
   private listingRepository: ListingRepository;

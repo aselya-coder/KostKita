@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { logUserActivity } from './activity';
 
 export type CoinPackage = {
   id: string;
@@ -20,11 +21,11 @@ export type TopupTransaction = {
 };
 
 export const FALLBACK_COIN_PACKAGES: CoinPackage[] = [
-  { id: '00000000-0000-0000-0000-000000000001', name: 'Paket 1 Koin', coinAmount: 1, price: 10000, isActive: true, adminFee: 2500 },
-  { id: '00000000-0000-0000-0000-000000000005', name: 'Paket 5 Koin', coinAmount: 5, price: 50000, isActive: true, adminFee: 2500 },
-  { id: '00000000-0000-0000-0000-000000000010', name: 'Paket 10 Koin', coinAmount: 10, price: 100000, isActive: true, adminFee: 2500 },
-  { id: '00000000-0000-0000-0000-000000000050', name: 'Paket 50 Koin', coinAmount: 50, price: 500000, isActive: true, adminFee: 2500 },
-  { id: '00000000-0000-0000-0000-000000000100', name: 'Paket 100 Koin', coinAmount: 100, price: 1000000, isActive: true, adminFee: 2500 },
+  { id: '82c2b3bc-34e9-4b34-87d9-f03d26d3fbd0', name: 'Paket 1 Koin', coinAmount: 1, price: 10000, isActive: true, adminFee: 2500 },
+  { id: 'c139f6df-4543-4838-8432-0ecd7e105b18', name: 'Paket 5 Koin', coinAmount: 5, price: 50000, isActive: true, adminFee: 2500 },
+  { id: 'da7bab2b-2fcc-4fee-8c4b-03f41c13e964', name: 'Paket 10 Koin', coinAmount: 10, price: 100000, isActive: true, adminFee: 2500 },
+  { id: '7cd70982-f012-4737-b3db-39d632cc96b2', name: 'Paket 50 Koin', coinAmount: 50, price: 500000, isActive: true, adminFee: 2500 },
+  { id: 'ed7b94f3-a599-4b63-972f-19caaacf1309', name: 'Paket 100 Koin', coinAmount: 100, price: 1000000, isActive: true, adminFee: 2500 },
 ];
 
 // ==========================================
@@ -90,53 +91,49 @@ export const createTopupRequest = async (userId: string, packageId: string, role
       }
     }
 
-    if (!selectedPackage) {
-      selectedPackage = FALLBACK_COIN_PACKAGES.find(p => p.id === packageId) || FALLBACK_COIN_PACKAGES[0];
+    // If package not found in DB, throw an error.
+    // Transactions must always reference a real package in the database.
+    if (!foundInDb || !selectedPackage) {
+        throw new Error("Paket koin tidak ditemukan di database. Pastikan tabel 'coin_packages' sudah terisi dengan ID yang sesuai.");
     }
 
     if (!isUserUuid) {
       throw new Error("Invalid User ID format (UUID expected)");
     }
 
-    const { data, error } = await supabase
+    const transaction = await supabase
       .from('transactions')
       .insert([{
         user_id: userId,
         amount: selectedPackage.price,
-        pricing_plan_id: foundInDb ? packageId : null,
+        pricing_plan_id: selectedPackage.id, // Always use the ID from the found package
         status: 'pending',
         payment_provider: 'simulated',
-        external_id: `ext-${Math.random().toString(36).substr(2, 9)}`
       }])
       .select()
-      .maybeSingle();
+      .single();
 
-    if (error || !data) throw error || new Error("Gagal membuat transaksi");
+    if (transaction.error) throw transaction.error;
+
+    // Log activity
+    await logUserActivity(
+      userId,
+      'Membuat permintaan Top Up Koin',
+      `${selectedPackage.coinAmount} Koin (Rp ${selectedPackage.price.toLocaleString('id-ID')})`,
+      `/dashboard/topup/checkout?trx=${transaction.data.id}`
+    );
+
+    // Return app checkout URL for local/dev flow (avoid unreachable mock domain)
+    const appBase = process.env.APP_BASE_URL || 'http://localhost:8080';
+    const paymentUrl = `${appBase}/dashboard/topup/checkout?trx=${transaction.data.id}`;
 
     return {
-      transaction: {
-        id: data.id,
-        userId: data.user_id,
-        amount: data.amount,
-        status: data.status,
-        createdAt: data.created_at
-      },
-      paymentUrl: `/dashboard/topup/checkout?trx=${data.id}`
+      transaction: transaction.data,
+      paymentUrl,
     };
   } catch (error: any) {
-    console.warn('Supabase Error (createTopupRequest), simulating success:', error.message);
-    const selectedPackage = FALLBACK_COIN_PACKAGES.find(p => p.id === packageId) || FALLBACK_COIN_PACKAGES[0];
-    return {
-      transaction: {
-        id: `trx-${Math.random().toString(36).substr(2, 9)}`,
-        userId,
-        coinPackageId: packageId,
-        amount: selectedPackage.price,
-        coinAmount: selectedPackage.coinAmount,
-        status: 'pending',
-      },
-      paymentUrl: `/dashboard/topup/checkout?trx=trx-${Math.random().toString(36).substr(2, 9)}`
-    };
+    console.error('Supabase Error (createTopupRequest):', error.message);
+    throw new Error(error.message || "Gagal membuat transaksi topup.");
   }
 };
 

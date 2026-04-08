@@ -56,8 +56,6 @@ export const getUserDashboardStats = async (userId: string) => {
 
 export const getAdminDashboardStats = async () => {
   try {
-    console.log('--- DEBUG: Fetching Admin Stats ---');
-    
     const [
       { count: totalUsers },
       { count: totalKos },
@@ -71,27 +69,25 @@ export const getAdminDashboardStats = async () => {
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('kos_listings').select('id', { count: 'exact', head: true }),
       supabase.from('marketplace_items').select('id', { count: 'exact', head: true }),
-      supabase.from('kos_listings').select('id', { count: 'exact', head: true }).eq('is_premium', true).eq('status', 'approved'),
+      supabase.from('kos_listings').select('id', { count: 'exact', head: true }).eq('is_premium', true).eq('status', 'approved').gt('expires_at', new Date().toISOString()),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString()),
-      supabase.from('transactions').select('*').or('status.eq.success,status.eq.paid'),
+      supabase.from('transactions').select('*'), // Filter success in JS to avoid 400
       supabase.from('coin_logs').select('*'),
-      supabase.from('coin_packages').select('id, admin_fee, price, coin_amount')
+      supabase.from('coin_packages').select('id, price, coin_amount') // Remove admin_fee if missing
     ]);
 
-    console.log(`DEBUG Stats: Users=${totalUsers}, Kos=${totalKos}, Items=${totalItems}`);
-
-    const txList = transactionsRes.data || [];
+    // Filter success in JS
+    const txList = (transactionsRes.data || []).filter((tx: any) => 
+      ['success', 'paid', 'completed'].includes(String(tx.status || '').toLowerCase())
+    );
     const logsList = coinLogsRes.data || [];
     const pkgsList = coinPackagesRes.data || [];
-
-    console.log(`DEBUG Data: Transactions=${txList.length}, Logs=${logsList.length}, Packages=${pkgsList.length}`);
 
     // --- REVENUE CALCULATION ---
     const topUpRevenueOfficial = txList.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
     const adminFeeRevenueOfficial = txList.reduce((sum, tx) => {
-      const pkgId = tx.pricing_plan_id || tx.coin_package_id;
-      const pkg = pkgsList.find(p => p.id === pkgId);
-      return sum + Number(pkg?.admin_fee || 0);
+      // Use static 2500 fee since admin_fee might not exist in coin_packages table
+      return sum + 2500;
     }, 0);
 
     const creditsFromLogs = logsList.filter(l => ['credit', 'topup'].includes(String(l.type).toLowerCase()));
@@ -110,8 +106,6 @@ export const getAdminDashboardStats = async () => {
     const adminFeeRevenue = adminFeeRevenueOfficial + estimatedMissingAdminFeeRevenue;
     const totalRevenue = topUpRevenue + adminFeeRevenue;
     
-    console.log(`DEBUG Revenue: Total=${totalRevenue}, Topup=${topUpRevenue}, Fee=${adminFeeRevenue}`);
-
     const coinsSold = totalCoinsFromLogs;
     const coinsUsed = logsList.filter(l => ['debit', 'ad_payment'].includes(String(l.type).toLowerCase())).reduce((sum, l) => sum + Number(l.amount || 0), 0);
 
@@ -138,8 +132,8 @@ export const getAdminDashboardStats = async () => {
       const topupTotal = topupTx + (missingCoinsDaily * 10000);
       
       const feeTx = dailyTx.reduce((sum, tx) => {
-        const pkg = pkgsList.find(p => p.id === (tx.pricing_plan_id || tx.coin_package_id));
-        return sum + (pkg?.admin_fee || 2500);
+        // Use static 2500 fee since admin_fee might not exist in coin_packages table
+        return sum + 2500;
       }, 0);
       const feeEstimated = Math.max(0, dailyLogs.length - dailyTx.length) * 2500;
       const feeTotal = feeTx + feeEstimated;
@@ -196,24 +190,19 @@ export const getAdminDashboardStats = async () => {
 
 export const getTopupUsersReport = async () => {
   try {
-    console.log('--- DEBUG: Fetching Topup Report ---');
-    
-    // 1. Fetch ALL transactions without filter first to see if table exists and has data
+    // 1. Fetch ALL transactions
     const { data: allTx, error: txError } = await supabase
       .from('transactions')
       .select('*');
 
     if (txError) {
-      console.error('DEBUG: Transactions Fetch Error:', txError);
-    } else {
-      console.log(`DEBUG: Found ${allTx?.length || 0} total transactions in table`);
+      console.error('Transactions Fetch Error:', txError);
     }
 
     // Filter successful ones in JS
     const successfulTx = (allTx || []).filter(t => 
-      ['success', 'paid', 'completed'].includes(String(t.status).toLowerCase())
+      ['success', 'paid', 'completed'].includes(String(t.status || '').toLowerCase())
     );
-    console.log(`DEBUG: Found ${successfulTx.length} successful transactions`);
 
     // 2. Fetch ALL coin logs
     const { data: allLogs, error: logError } = await supabase
@@ -221,71 +210,52 @@ export const getTopupUsersReport = async () => {
       .select('*');
 
     if (logError) {
-      console.error('DEBUG: Coin Logs Fetch Error:', logError);
-    } else {
-      console.log(`DEBUG: Found ${allLogs?.length || 0} total coin logs in table`);
+      console.error('Coin Logs Fetch Error:', logError);
     }
 
     const creditLogs = (allLogs || []).filter(l => 
-      ['credit', 'topup', 'top up'].includes(String(l.type).toLowerCase())
+      ['credit', 'topup', 'top up'].includes(String(l.type || '').toLowerCase())
     );
-    console.log(`DEBUG: Found ${creditLogs.length} credit logs (topups)`);
 
     // 3. Fetch coin packages
     const { data: coinPackages } = await supabase
       .from('coin_packages')
       .select('*');
-    console.log(`DEBUG: Found ${coinPackages?.length || 0} coin packages`);
 
     // 4. Get unique user IDs
     const userIds = [...new Set([
       ...successfulTx.map(t => t.user_id),
       ...creditLogs.map(l => l.user_id)
     ])];
-    console.log(`DEBUG: Unique users with topups: ${userIds.length}`, userIds);
 
     if (userIds.length === 0) {
-      console.log('DEBUG: No users found, returning empty array');
       return [];
     }
 
-    // 5. Fetch ALL profiles (more robust than .in() filter if some users don't have records)
+    // 5. Fetch ALL profiles (more robust, fetch only existing columns)
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name, email, phone, avatar, avatar_url');
+      .select('id, name, avatar_url');
 
     if (profileError) {
-      console.error('DEBUG: Profiles Fetch Error:', profileError);
+      console.error('Profiles Fetch Error:', profileError);
     }
-    console.log(`DEBUG: Total profiles found: ${profiles?.length || 0}`);
 
     const profileMap: Record<string, any> = {};
     profiles?.forEach(p => { 
       profileMap[p.id] = p; 
     });
 
-    const map: Record<string, { userId: string; name: string; email: string; phone: string; avatar: string; totalAmount: number; totalCoins: number; count: number; lastAt: string }> = {};
+    const map: Record<string, { userId: string; name: string; avatar: string; totalAmount: number; totalCoins: number; count: number; lastAt: string }> = {};
     
     const initUser = (uid: string) => {
       if (!map[uid]) {
         const profile = profileMap[uid];
         
-        // If name is missing or "Unknown User", try to use email prefix as "nama akun"
-        let displayName = profile?.name;
-        if (!displayName || displayName === 'Unknown User' || displayName === 'User') {
-          if (profile?.email) {
-            displayName = profile.email.split('@')[0]; // syila@gmail.com -> syila
-          } else {
-            displayName = `User-${uid.slice(0, 4)}`;
-          }
-        }
-
         map[uid] = {
           userId: uid, 
-          name: displayName,
-          email: profile?.email || '-',
-          phone: profile?.phone || '-',
-          avatar: profile?.avatar || profile?.avatar_url || '',
+          name: profile?.name || `User-${uid.slice(0, 4)}`,
+          avatar: profile?.avatar_url || '',
           totalAmount: 0, 
           totalCoins: 0, 
           count: 0, 
@@ -354,10 +324,9 @@ export const getTopupUsersReport = async () => {
       .filter(u => u.totalCoins > 0)
       .sort((a, b) => b.totalCoins - a.totalCoins);
     
-    console.log(`DEBUG: Returning ${result.length} user rows for report`);
     return result;
   } catch (error) {
-    console.error('DEBUG: Critical Error in getTopupUsersReport:', error);
+    console.error('Critical Error in getTopupUsersReport:', error);
     return [];
   }
 };

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ArrowRight, Camera, MapPin, X, Loader2, Zap } from "lucide-react";
+import { Plus, ArrowRight, Camera, MapPin, X, Loader2, Zap, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +12,7 @@ import { notifyAdmins } from '@/services/notifications';
 import { toast as sonnerToast } from "sonner";
 import { QuotaAlertModal } from "@/components/QuotaAlertModal";
 import { getUserDashboardStats } from '@/services/dashboard';
-import { getWalletBalance } from '@/services/wallet';
+import { getWalletBalance, deductWalletBalance } from '@/services/wallet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SellItem() {
@@ -36,7 +36,6 @@ export default function SellItem() {
     condition: "baru",
     location: "",
     description: "",
-    durationDays: "30", // Default duration
   });
 
   const categories = ["Buku", "Elektronik", "Furnitur", "Kendaraan", "Lainnya"];
@@ -149,13 +148,21 @@ export default function SellItem() {
         throw new Error('Harga tidak valid. Harap masukkan angka.');
       }
 
+      // 3. Deduct coins if not free
+      if (!hasFreeQuota) {
+        const deducted = await deductWalletBalance(user.id, 30, `Pasang iklan barang: ${formData.title} (30 hari)`);
+        if (!deducted) {
+          throw new Error('Gagal memotong saldo koin. Silakan top up koin Anda.');
+        }
+      }
+
       const result = await createMarketplaceItem({
         ...formData,
         seller_id: user.id,
         price: priceClean,
         image: url || '',
         status: 'active', // Automatically approve the item
-      }, parseInt(formData.durationDays));
+      });
 
 
       if (result.success) {
@@ -349,32 +356,19 @@ export default function SellItem() {
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
           <div className="space-y-2">
             <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
-              Durasi Iklan
+              Status Iklan
               <Zap className="w-3 h-3 fill-current" />
             </label>
-            <Select 
-              onValueChange={(v) => setFormData(p => ({ ...p, durationDays: v }))} 
-              defaultValue={hasFreeQuota ? "30" : "3"}
-            >
-              <SelectTrigger className="rounded-xl border-primary/50 bg-primary/5">
-                <SelectValue placeholder="Pilih Durasi" />
-              </SelectTrigger>
-              <SelectContent>
-                {hasFreeQuota ? (
-                  <SelectItem value="30">30 Hari (GRATIS - Iklan Pertama)</SelectItem>
-                ) : (
-                  <>
-                    <SelectItem value="3">3 Hari (3 Koin)</SelectItem>
-                    <SelectItem value="7">7 Hari (7 Koin)</SelectItem>
-                    <SelectItem value="30">30 Hari (30 Koin)</SelectItem>
-                  </>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="p-3 rounded-xl border border-primary/50 bg-primary/5 text-xs font-medium text-primary">
+              <p className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                Otomatis Aktif selama 30 Hari
+              </p>
+            </div>
             <p className="text-[10px] text-muted-foreground mt-1 italic">
               {hasFreeQuota 
                 ? "* Upload pertama GRATIS (30 hari)." 
-                : `* Iklan berikutnya: 1 koin/hari (1 Koin = Rp 10.000). Saldo Anda: ${userCoins} Koin.`
+                : `* Iklan berikutnya: Potong 30 koin dari saldo. Saldo Anda: ${userCoins} Koin.`
               }
             </p>
           </div>

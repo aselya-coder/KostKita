@@ -62,6 +62,38 @@ export const getTransactions = async (userId: string): Promise<Transaction[]> =>
   }
 };
 
+export const deductWalletBalance = async (userId: string, amount: number, description: string): Promise<boolean> => {
+  try {
+    const currentBalance = await getWalletBalance(userId);
+    if (currentBalance < amount) return false;
+
+    const newBalance = currentBalance - amount;
+
+    const { error } = await supabase
+      .from('wallets')
+      .update({ 
+        balance: newBalance,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    // Log the transaction
+    await supabase.from('coin_logs').insert({
+      user_id: userId,
+      type: 'debit',
+      amount: amount,
+      description: description
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error deducting wallet balance:', error);
+    return false;
+  }
+};
+
 export const addWalletBalance = async (userId: string, amount: number): Promise<boolean> => {
   try {
     const currentBalance = await getWalletBalance(userId);

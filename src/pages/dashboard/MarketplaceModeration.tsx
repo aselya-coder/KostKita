@@ -83,7 +83,7 @@ export default function MarketplaceModeration() {
 
     const { error } = await supabase
       .from('marketplace_items')
-      .update({ listing_status: 'expired' })
+      .update({ status: 'expired' })
       .eq('id', id);
     
     if (error) {
@@ -215,10 +215,10 @@ export default function MarketplaceModeration() {
                         <td className="px-4 md:px-6 py-4">
                           <span className={cn(
                             "px-2.5 py-1 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider border",
-                            item.listing_status === "active" && !isExpired ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                            (item.status === "active" || !item.status) && !isExpired ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
                             "bg-slate-100 text-slate-600 border-slate-200"
                           )}>
-                            {item.listing_status || "active"}
+                            {(item.status === "active" || !item.status) ? (isExpired ? "expired" : "active") : item.status}
                           </span>
                         </td>
                         <td className="px-4 md:px-6 py-4 text-right">
@@ -237,7 +237,7 @@ export default function MarketplaceModeration() {
                               <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-border">
                                 <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Moderasi</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                {item.listing_status === "active" && (
+                                {(item.status === "active" || !item.status) && (
                                   <DropdownMenuItem onClick={() => deactivateItem(item.id)}>
                                     <PowerOff className="w-4 h-4 mr-2" />
                                     Nonaktifkan Iklan

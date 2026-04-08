@@ -4,11 +4,12 @@ import { logUserActivity } from '@/services/activity';
 
 export const getMarketplaceItems = async (category?: string, sellerId?: string): Promise<MarketplaceItem[]> => {
   try {
+    const now = new Date().toISOString();
     let query = supabase
       .from('marketplace_items')
       .select('*')
       .eq('status', 'active')
-      .gt('expires_at', new Date().toISOString());
+      .or(`expires_at.gt.${now},expires_at.is.null`); // Allow null for legacy data
 
     if (category && category !== 'Semua') {
       query = query.ilike('category', category);
@@ -22,7 +23,11 @@ export const getMarketplaceItems = async (category?: string, sellerId?: string):
 
     if (error) throw error;
     if (!data || data.length === 0) {
-      if (!sellerId) return mockMarketplaceItems.filter(i => i.status !== 'pending');
+      // Only show mock data if NO sellerId is provided and NO real data exists in the table at all
+      if (!sellerId) {
+        const { count } = await supabase.from('marketplace_items').select('*', { count: 'exact', head: true });
+        if (count === 0) return mockMarketplaceItems.filter(i => i.status !== 'pending');
+      }
       return [];
     }
 

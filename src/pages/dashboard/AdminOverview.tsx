@@ -40,7 +40,7 @@ export default function AdminOverview() {
     coinsUsed: 0,
     totalActiveAds: 0
   });
-  const [pendingListings, setPendingListings] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const fetchData = async () => {
@@ -49,32 +49,18 @@ export default function AdminOverview() {
       const statsData = await getAdminDashboardStats();
       setStats(statsData);
 
-      // Fetch real pending listings from both tables
-      const [kosRes, itemsRes] = await Promise.all([
-        supabase.from('kos_listings').select('id, title, location, profiles(name), created_at').eq('status', 'pending'),
-        supabase.from('marketplace_items').select('id, title, location, profiles(name), created_at').eq('status', 'pending')
-      ]);
+      // Fetch recent activities
+      const { data: activityData, error: activityError } = await supabase
+        .from('activities')
+        .select(`
+          *,
+          profiles:user_id (name, avatar)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-      const formattedPending = [
-        ...(kosRes.data || []).map((k: any) => ({ 
-          id: k.id, 
-          name: k.title, 
-          location: k.location,
-          user: k.profiles?.name || 'Unknown', 
-          type: 'Kos', 
-          date: k.created_at 
-        })),
-        ...(itemsRes.data || []).map((i: any) => ({ 
-          id: i.id, 
-          name: i.title, 
-          location: i.location,
-          user: i.profiles?.name || 'Unknown', 
-          type: 'Item', 
-          date: i.created_at 
-        }))
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-      setPendingListings(formattedPending);
+      if (activityError) throw activityError;
+      setActivities(activityData || []);
     } catch (error) {
       console.error("Error fetching admin data:", error);
     } finally {
@@ -85,46 +71,15 @@ export default function AdminOverview() {
   useEffect(() => {
     fetchData();
 
-    // Realtime for pending listings
-    const kosChannel = supabase.channel('admin-kos-pending')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings' }, () => fetchData())
-      .subscribe();
-    
-    const itemsChannel = supabase.channel('admin-items-pending')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_items' }, () => fetchData())
+    // Realtime for activities
+    const activityChannel = supabase.channel('admin-activities')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () => fetchData())
       .subscribe();
 
     return () => {
-      supabase.removeChannel(kosChannel);
-      supabase.removeChannel(itemsChannel);
+      supabase.removeChannel(activityChannel);
     };
   }, []);
-
-  const handleApprove = async (id: string, type: string) => {
-    const table = type === 'Kos' ? 'kos_listings' : 'marketplace_items';
-    const { error } = await supabase.from(table).update({ status: type === 'Kos' ? 'approved' : 'active' }).eq('id', id);
-    
-    if (error) {
-      toast.error(`Gagal menyetujui ${type}`);
-    } else {
-      toast.success(`${type} disetujui!`);
-      fetchData();
-    }
-  };
-
-  const handleReject = async (id: string, type: string) => {
-    if (confirm(`Hapus/Tolak ${type} ini?`)) {
-      const table = type === 'Kos' ? 'kos_listings' : 'marketplace_items';
-      const { error } = await supabase.from(table).delete().eq('id', id);
-      
-      if (error) {
-        toast.error(`Gagal menghapus ${type}`);
-      } else {
-        toast.success(`${type} berhasil dihapus!`);
-        fetchData();
-      }
-    }
-  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -248,75 +203,47 @@ export default function AdminOverview() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="p-6 border-b border-border">
-            <h3 className="font-display font-semibold text-foreground">Recent Listings for Approval</h3>
+          <div className="p-6 border-b border-border flex items-center justify-between">
+            <h3 className="font-display font-semibold text-foreground">Aktivitas Pengguna Terbaru</h3>
+            <Button asChild variant="ghost" size="sm" className="text-primary text-xs font-bold uppercase">
+              <Link to="/admin-dashboard/activity-log">
+                Lihat Semua
+              </Link>
+            </Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-secondary/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider">
                 <tr>
-                  <th className="px-6 py-3">Iklan Kos / Barang</th>
-                  <th className="px-6 py-3">Pemilik / Penjual</th>
-                  <th className="px-6 py-3">Tipe</th>
-                  <th className="px-6 py-3">Tanggal</th>
-                  <th className="px-6 py-3 text-right">Aksi</th>
+                  <th className="px-6 py-3">Pengguna</th>
+                  <th className="px-6 py-3">Aktivitas</th>
+                  <th className="px-6 py-3">Target</th>
+                  <th className="px-6 py-3">Waktu</th>
                 </tr>
               </thead>
               <tbody className="divide-y border-border">
-                {pendingListings.map((item, i) => (
+                {activities.map((item, i) => (
                   <tr key={i} className="hover:bg-secondary/30 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-foreground">{item.name}</span>
-                        {item.location && (
-                          <a 
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-                          >
-                            <MapPin className="w-2.5 h-2.5" />
-                            {item.location}
-                          </a>
-                        )}
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={item.profiles?.avatar} />
+                          <AvatarFallback>{item.profiles?.name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-foreground">{item.profiles?.name || 'User'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-muted-foreground">{item.user}</td>
+                    <td className="px-6 py-4 text-muted-foreground capitalize">{item.activity}</td>
                     <td className="px-6 py-4">
-                      <span className={cn(
-                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                        item.type === "Kos" ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
-                      )}>
-                        {item.type}
-                      </span>
+                      <span className="text-foreground font-medium">{item.target_name || '-'}</span>
                     </td>
-                    <td className="px-6 py-4 text-muted-foreground">{formatDate(item.date)}</td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-primary hover:text-primary hover:bg-primary/10"
-                        onClick={() => handleApprove(item.id, item.type)}
-                      >
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleReject(item.id, item.type)}
-                      >
-                        <XCircle className="w-4 h-4 mr-1" />
-                        Reject
-                      </Button>
-                    </td>
+                    <td className="px-6 py-4 text-muted-foreground">{formatDate(item.created_at)}</td>
                   </tr>
                 ))}
-                {pendingListings.length === 0 && (
+                {activities.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
-                      Tidak ada iklan baru yang menunggu persetujuan.
+                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                      Belum ada aktivitas terbaru.
                     </td>
                   </tr>
                 )}

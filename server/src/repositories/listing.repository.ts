@@ -1,5 +1,4 @@
 import prisma from '../config/prisma.js';
-import { ListingStatus } from '@prisma/client';
 
 export class ListingRepository {
   async countByUserId(userId: string) {

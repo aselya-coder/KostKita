@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
-import { TransactionStatus } from '@prisma/client';
+
+export type TransactionStatus = 'pending' | 'success' | 'failed';
 
 export class TransactionRepository {
   async createTransaction(data: {

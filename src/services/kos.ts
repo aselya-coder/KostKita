@@ -12,14 +12,20 @@ export const getKosListings = async (ownerId?: string): Promise<KosListing[]> =>
       query = query.eq('owner_id', ownerId);
     } else {
       const now = new Date().toISOString();
-      query = query.eq('status', 'approved').gt('expires_at', now);
+      query = query
+        .eq('status', 'approved')
+        .or(`expires_at.gt.${now},expires_at.is.null`); // Allow null for legacy data
     }
 
     const { data, error } = await query;
 
     if (error) throw error;
     if (!data || data.length === 0) {
-      if (!ownerId) return mockKosListings.filter(k => k.status !== 'pending');
+      // Only show mock data if NO ownerId is provided and NO real data exists in the table at all
+      if (!ownerId) {
+        const { count } = await supabase.from('kos_listings').select('*', { count: 'exact', head: true });
+        if (count === 0) return mockKosListings.filter(k => k.status !== 'pending');
+      }
       return [];
     }
 

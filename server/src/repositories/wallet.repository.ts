@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
-import { CoinLogType } from '@prisma/client';
+
+export type CoinLogType = 'credit' | 'debit';
 
 export class WalletRepository {
   async findByUserId(userId: string) {
