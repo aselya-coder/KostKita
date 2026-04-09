@@ -15,6 +15,8 @@ import {
   MessageSquare,
   Settings as SettingsIcon,
   Coins,
+  CalendarCheck,
+  MessageCircle,
   type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -49,6 +51,8 @@ export function DashboardSidebar() {
 
     return [
       { title: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
+      { title: "Pemesanan", href: "/dashboard/bookings", icon: CalendarCheck },
+      { title: "Chat", href: "/dashboard/chat", icon: MessageCircle },
       { title: "Kos Saya", href: "/dashboard/my-kos", icon: Building2 },
       { title: "Tambah Kos", href: "/dashboard/add-kos", icon: PlusCircle },
       { title: "Marketplace Saya", href: "/dashboard/my-items", icon: ShoppingBag },

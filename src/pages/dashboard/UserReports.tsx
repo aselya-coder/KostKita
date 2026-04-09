@@ -78,7 +78,13 @@ export default function UserReports() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      // Small timeout to allow the WebSocket to establish before closing
+      setTimeout(() => {
+        if (channel) {
+          channel.unsubscribe();
+          supabase.removeChannel(channel);
+        }
+      }, 300);
     };
   }, [user]);
 
@@ -98,7 +104,7 @@ export default function UserReports() {
     }
   };
 
-  const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
+  const basePath = "/dashboard";
 
   return (
     <div className="space-y-8 pb-12">

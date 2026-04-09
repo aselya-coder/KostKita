@@ -7,9 +7,16 @@ export const updateUserProfile = async (userId: string, data: {
   about?: string;
   avatar?: string;
 }) => {
+  // Map 'avatar' to 'avatar_url' for Supabase
+  const updateData: any = { ...data };
+  if (updateData.avatar) {
+    updateData.avatar_url = updateData.avatar;
+    delete updateData.avatar;
+  }
+
   const { error } = await supabase
     .from('profiles')
-    .update(data)
+    .update(updateData)
     .eq('id', userId);
 
   if (error) {

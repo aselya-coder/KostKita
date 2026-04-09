@@ -226,7 +226,7 @@ export const mockNotifications: Notification[] = [
     time: "10 menit yang lalu",
     isRead: false,
     type: "inquiry",
-    link: "/owner-dashboard/inquiries",
+    link: "/dashboard/inquiries",
   },
   {
     id: "n2",
@@ -236,7 +236,7 @@ export const mockNotifications: Notification[] = [
     time: "2 jam yang lalu",
     isRead: true,
     type: "sale",
-    link: "/owner-dashboard/my-items",
+    link: "/dashboard/my-items",
   },
   {
     id: "n3",
@@ -266,7 +266,7 @@ export const mockNotifications: Notification[] = [
     time: "30 menit yang lalu",
     isRead: false,
     type: "system",
-    link: "/admin-dashboard/reports",
+    link: "/admin/reports",
   },
 ];
 

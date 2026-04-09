@@ -37,7 +37,13 @@ export default function MyBoardingHouses() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      // Small timeout to allow the WebSocket to establish before closing
+      setTimeout(() => {
+        if (channel) {
+          channel.unsubscribe();
+          supabase.removeChannel(channel);
+        }
+      }, 300);
     };
   }, [user]);
 

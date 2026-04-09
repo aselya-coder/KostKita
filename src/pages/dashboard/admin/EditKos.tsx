@@ -21,7 +21,7 @@ const EditKos = () => {
   useEffect(() => {
     if (!id) {
       toast.error("ID Kos tidak ditemukan.");
-      navigate("/admin-dashboard/kos");
+      navigate("/admin/kos");
       return;
     }
 
@@ -33,7 +33,7 @@ const EditKos = () => {
           setKos(data);
         } else {
           toast.error("Kos tidak ditemukan.");
-          navigate("/admin-dashboard/kos");
+          navigate("/admin/kos");
         }
       } catch (error) {
         console.error("Gagal mengambil data kos:", error);
@@ -60,7 +60,7 @@ const EditKos = () => {
       // Perbaikan: Menambahkan user.id sebagai argumen ketiga
       await updateKosListing(id, user.id, kos);
       toast.success("Data kos berhasil diperbarui!");
-      navigate(`/kos/${id}`);
+      navigate("/admin/kos");
     } catch (error) {
       console.error("Gagal memperbarui kos:", error);
       toast.error("Gagal memperbarui data kos.");

@@ -1,4 +1,4 @@
-import { Bell, Menu, Search, User, LogOut, Settings as SettingsIcon, UserCircle, MessageCircle, ShoppingBag, Info, Heart, Home } from "lucide-react";
+import { Bell, Menu, Search, User, LogOut, Settings as SettingsIcon, UserCircle, MessageCircle, ShoppingBag, Info, Heart, Home, MessageSquare } from "lucide-react";
 import { type User as UserType, type Notification } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { 
@@ -14,6 +14,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { getUnreadMessagesCount } from "@/services/chat";
+import { supabase } from "@/lib/supabase";
 
 interface DashboardHeaderProps {
   onMobileMenuOpen?: () => void;
@@ -23,6 +26,37 @@ export function DashboardHeader({ onMobileMenuOpen }: DashboardHeaderProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuth(); // Get user from context
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchUnreadCount = async () => {
+      const count = await getUnreadMessagesCount(user.id);
+      setUnreadChatCount(count);
+    };
+
+    fetchUnreadCount();
+
+    // Subscribe to new messages
+    const channel = supabase
+      .channel('header-unread-chat')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'messages' 
+      }, () => {
+        fetchUnreadCount();
+      })
+      .subscribe();
+
+    return () => {
+      setTimeout(() => {
+        channel.unsubscribe();
+        supabase.removeChannel(channel);
+      }, 300);
+    };
+  }, [user]);
   
   const getDashboardPath = (path: string) => {
     // With unified /dashboard, role-based prefix is no longer needed here
@@ -88,6 +122,17 @@ export function DashboardHeader({ onMobileMenuOpen }: DashboardHeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" className="relative" asChild>
+          <Link to="/dashboard/chat">
+            <MessageSquare className="w-5 h-5 text-muted-foreground" />
+            {unreadChatCount > 0 && (
+              <span className="absolute top-2 right-2 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground rounded-full flex items-center justify-center ring-2 ring-background">
+                {unreadChatCount}
+              </span>
+            )}
+          </Link>
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">

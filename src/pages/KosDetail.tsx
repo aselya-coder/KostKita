@@ -6,8 +6,9 @@ import {
   MessageCircle,
   Star,
   Users,
+  Flag,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { getKosById } from "@/services/kos";
 import { type KosListing, formatPrice } from "@/data/mockData";
@@ -18,10 +19,18 @@ import { getAmenityIcon } from "@/utils/amenityIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { ReportModal } from "@/components/ReportModal";
 import { AdvertiseKosModal } from "@/components/AdvertiseKosModal";
-import { Flag, MessageCircle, Send } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { createNotification } from "@/services/notifications";
-
+import { createBooking } from "@/services/booking";
+import { getOrCreateConversation, sendMessage } from "@/services/chat";
+import { toast } from "sonner";
+import { 
+  Calendar,
+  ChevronDown,
+  Loader2,
+  Info,
+  Clock,
+} from "lucide-react";
 
 const KosDetail = () => {
   const { id } = useParams();
@@ -32,6 +41,12 @@ const KosDetail = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isAdvertiseModalOpen, setIsAdvertiseModalOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites('kos');
+  
+  // Booking state
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [bookingDate, setBookingDate] = useState("");
+  const [duration, setDuration] = useState(1);
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
 
   useEffect(() => {
     const fetchKos = async () => {
@@ -67,7 +82,13 @@ const KosDetail = () => {
         .subscribe();
 
       return () => {
-        supabase.removeChannel(channel);
+        // Small timeout to allow the WebSocket to establish before closing
+        setTimeout(() => {
+          if (channel) {
+            channel.unsubscribe();
+            supabase.removeChannel(channel);
+          }
+        }, 300);
       };
     }
   }, [id]);
@@ -118,12 +139,82 @@ const KosDetail = () => {
       "inquiry",
       `/dashboard/inquiries`
     );
+
+    if (user.id !== kos.ownerId) {
+      // Bridge to internal chat
+      try {
+        await getOrCreateConversation(user.id, kos.ownerId);
+      } catch (err) {
+        console.error("Error bridging to internal chat:", err);
+      }
+    }
     
     // Redirect to WhatsApp
     if (hasPhone) {
       window.open(waLink, '_blank');
     }
   };
+
+  const handleBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !kos) {
+      toast.error("Anda harus login untuk memesan kos.");
+      navigate("/login");
+      return;
+    }
+
+    if (!bookingDate) {
+      toast.error("Pilih tanggal masuk terlebih dahulu.");
+      return;
+    }
+
+    setIsSubmittingBooking(true);
+    try {
+      const result = await createBooking({
+        kosId: kos.id,
+        userId: user.id,
+        ownerId: kos.ownerId,
+        checkInDate: bookingDate,
+        durationMonths: duration,
+        totalPrice: kos.price * duration,
+        message: `Pemesanan baru untuk ${kos.title} dari ${user.name}`
+      });
+
+      if (result.success) {
+        await createNotification(
+          kos.ownerId,
+          "Pemesanan Kos Baru!",
+          `${user.name} telah mengirim permintaan pemesanan untuk "${kos.title}".`,
+          "booking",
+          `/dashboard/bookings`
+        );
+        if (user.id !== kos.ownerId) {
+          try {
+            const conv = await getOrCreateConversation(user.id, kos.ownerId);
+            if (conv.success) {
+              const bookingMsg = `Halo ${kos.ownerName}, saya telah mengajukan booking untuk "${kos.title}" di KosKita.\nTanggal masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}\nDurasi: ${duration} bulan\nTotal: ${formatPrice(kos.price * duration)}`;
+              await sendMessage(conv.data.id, user.id, bookingMsg);
+            }
+          } catch {}
+        }
+        toast.success("Permintaan pemesanan berhasil dikirim!");
+        setIsBookingModalOpen(false);
+        if (hasPhone) {
+          const waText = `Halo ${kos.ownerName}, saya telah mengajukan booking untuk "${kos.title}" di KosKita. Tanggal masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}, Durasi: ${duration} bulan, Total: ${formatPrice(kos.price * duration)}.`;
+          const waUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(waText)}`;
+          window.open(waUrl, '_blank');
+        }
+      } else {
+        throw new Error("Failed to create booking");
+      }
+    } catch (error) {
+      toast.error("Gagal mengirim permintaan pemesanan. Silakan coba lagi.");
+    } finally {
+      setIsSubmittingBooking(false);
+    }
+  };
+
+  
 
   return (
     <>
@@ -273,7 +364,7 @@ const KosDetail = () => {
                 <button
                   onClick={handleInquiry}
                   disabled={!hasPhone || (user && user.id === kos.ownerId)}
-                  className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-sm transition-all shadow-md active:scale-95 ${
+                  className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-sm transition-all shadow-md active:scale-95 mb-3 ${
                     !hasPhone || (user && user.id === kos.ownerId)
                       ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
                       : 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -284,6 +375,20 @@ const KosDetail = () => {
                     ? "Ini kos Anda sendiri" 
                     : hasPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
                 </button>
+
+                <button
+                  onClick={() => setIsBookingModalOpen(true)}
+                  disabled={(user && user.id === kos.ownerId) || kos.availableRooms <= 0}
+                  className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-sm transition-all shadow-md active:scale-95 ${
+                    (user && user.id === kos.ownerId) || kos.availableRooms <= 0
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                      : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  {kos.availableRooms <= 0 ? "Kamar Penuh" : "Booking Kamar"}
+                </button>
+
                 <p className="text-xs text-muted-foreground text-center">
                   Terhubung langsung dengan Pemilik Kos
                 </p>
@@ -292,6 +397,109 @@ const KosDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      <AnimatePresence>
+        {isBookingModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-card w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-border"
+            >
+              <div className="p-6 border-b border-border flex items-center justify-between bg-primary/5">
+                <h3 className="text-xl font-bold font-display">Booking Kamar</h3>
+                <button 
+                  onClick={() => setIsBookingModalOpen(false)}
+                  className="p-2 hover:bg-background rounded-full transition-colors"
+                >
+                  <ChevronDown className="w-6 h-6 rotate-180" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleBooking} className="p-6 space-y-6">
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-secondary/50 border border-border">
+                  <img src={kos.images[0]} alt={kos.title} className="w-16 h-16 rounded-xl object-cover" />
+                  <div>
+                    <h4 className="font-bold text-foreground line-clamp-1">{kos.title}</h4>
+                    <p className="text-sm text-muted-foreground">{formatPrice(kos.price)} / bulan</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      Tanggal Mulai Sewa
+                    </label>
+                    <input 
+                      type="date"
+                      required
+                      min={new Date().toISOString().split('T')[0]}
+                      value={bookingDate}
+                      onChange={(e) => setBookingDate(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-primary" />
+                      Durasi Sewa (Bulan)
+                    </label>
+                    <div className="flex items-center gap-4">
+                      {[1, 3, 6, 12].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setDuration(m)}
+                          className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-all ${
+                            duration === m 
+                              ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                              : 'bg-surface border-border text-muted-foreground hover:border-primary/50'
+                          }`}
+                        >
+                          {m} Bln
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-2">
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Harga Sewa x {duration} Bulan</span>
+                    <span>{formatPrice(kos.price * duration)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold text-foreground pt-2 border-t border-primary/10">
+                    <span>Total Estimasi</span>
+                    <span className="text-primary">{formatPrice(kos.price * duration)}</span>
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  disabled={isSubmittingBooking}
+                  className="w-full py-6 rounded-2xl font-bold text-lg bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-600/20"
+                >
+                  {isSubmittingBooking ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    "Konfirmasi Booking Sekarang"
+                  )}
+                </Button>
+                
+                <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1">
+                  <Info className="w-3 h-3" />
+                  Pembayaran akan dilakukan setelah pemilik menyetujui permintaan Anda.
+                </p>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {kos && (
         <AdvertiseKosModal
           isOpen={isAdvertiseModalOpen}

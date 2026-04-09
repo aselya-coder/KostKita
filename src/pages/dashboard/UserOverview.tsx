@@ -1,10 +1,10 @@
-import { Building2, Users, MessageCircle, BarChart3, Trash2, Eye, Plus, ShoppingBag, Wallet, Heart, Clock } from "lucide-react";
+import { Building2, MessageCircle, Trash2, Eye, Plus, ShoppingBag, Heart, Calendar, MessageSquare } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { WalletCard } from "@/components/WalletCard";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
-import { getOwnerDashboardStats, getStudentDashboardStats, getUserDashboardStats } from "@/services/dashboard";
+import { getUserDashboardStats } from "@/services/dashboard";
 import { getKosListings, deleteKosListing } from "@/services/kos";
 import { getInquiries } from "@/services/inquiries";
 import { getMarketplaceItems } from "@/services/marketplace";
@@ -22,11 +22,13 @@ export default function UserOverview() {
     propertiesCount: 0, 
     inquiriesCount: 0,
     myListingsCount: 0, 
-    favoritesCount: 0 
+    favoritesCount: 0,
+    bookingsCount: 0,
+    ownerBookingsCount: 0,
+    unreadMessagesCount: 0
   });
   const [myKos, setMyKos] = useState<KosListing[]>([]);
   const [myItems, setMyItems] = useState<MarketplaceItem[]>([]);
-  const [ownerInquiries, setOwnerInquiries] = useState<Inquiry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [wallet, setWallet] = useState<WalletType | null>(null);
 
@@ -42,7 +44,6 @@ export default function UserOverview() {
       ]);
       setStats(uStats);
       setMyKos(kosData);
-      setOwnerInquiries(inquiriesData.slice(0, 5));
       setMyItems(itemsData);
       setWallet(walletData);
     } catch (error) {
@@ -68,26 +69,34 @@ export default function UserOverview() {
     if (user) {
       fetchData();
 
-      // REALTIME: Listen for changes in kos_listings and inquiries
-      const kosChannel = supabase
-        .channel('user-kos-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings', filter: `owner_id=eq.${user.id}` }, () => fetchData())
-        .subscribe();
-
-      const inquiryChannel = supabase
-        .channel('user-inquiry-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'inquiries', filter: `owner_id=eq.${user.id}` }, () => fetchData())
-        .subscribe();
-
-      const marketplaceChannel = supabase
-        .channel('user-marketplace-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_items', filter: `seller_id=eq.${user.id}` }, () => fetchData())
+      // REALTIME: Listen for changes in kos_listings, inquiries, and marketplace items using a single channel
+      const channel = supabase
+        .channel('user-dashboard-changes')
+        .on(
+          'postgres_changes', 
+          { event: '*', schema: 'public', table: 'kos_listings', filter: `owner_id=eq.${user.id}` }, 
+          () => fetchData()
+        )
+        .on(
+          'postgres_changes', 
+          { event: '*', schema: 'public', table: 'inquiries', filter: `owner_id=eq.${user.id}` }, 
+          () => fetchData()
+        )
+        .on(
+          'postgres_changes', 
+          { event: '*', schema: 'public', table: 'marketplace_items', filter: `seller_id=eq.${user.id}` }, 
+          () => fetchData()
+        )
         .subscribe();
 
       return () => {
-        supabase.removeChannel(kosChannel);
-        supabase.removeChannel(inquiryChannel);
-        supabase.removeChannel(marketplaceChannel);
+        // Increase timeout to 200ms to allow the WebSocket to establish before closing
+        setTimeout(() => {
+          if (channel) {
+            channel.unsubscribe();
+            supabase.removeChannel(channel);
+          }
+        }, 300);
       };
     }
   }, [user]);
@@ -156,33 +165,45 @@ export default function UserOverview() {
           />
         </div>
         
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <StatsCard 
-            title="Iklan Kos Saya" 
+            title="Pesan Chat" 
+            value={isLoading ? '...' : stats.unreadMessagesCount} 
+            icon={MessageCircle} 
+            description="Pesan belum dibaca"
+            to="/dashboard/chat"
+            trend={stats.unreadMessagesCount > 0 ? { value: stats.unreadMessagesCount, isUp: true } : undefined}
+          />
+          <StatsCard 
+            title="Pemesanan" 
+            value={isLoading ? '...' : (user?.role === 'owner' ? stats.ownerBookingsCount : stats.bookingsCount)} 
+            icon={Calendar} 
+            description={user?.role === 'owner' ? "Pemesanan masuk" : "Pemesanan saya"}
+            to="/dashboard/bookings"
+          />
+          <StatsCard 
+            title="Iklan Kos" 
             value={isLoading ? '...' : stats.propertiesCount} 
             icon={Building2} 
-            description="Total iklan kos terdaftar"
+            description="Total iklan kos"
             to="/dashboard/my-kos"
           />
           <StatsCard 
-            title="Pertanyaan (Inquiries)" 
+            title="Inquiries" 
             value={isLoading ? '...' : stats.inquiriesCount} 
-            icon={MessageCircle} 
-            trend={{ value: 0, isUp: true }}
+            icon={MessageSquare} 
             to="/dashboard/inquiries"
           />
           <StatsCard 
-            title="Iklan Barang Saya" 
+            title="Barang Saya" 
             value={isLoading ? '...' : stats.myListingsCount} 
             icon={ShoppingBag} 
-            description="Iklan marketplace aktif"
             to="/dashboard/my-items"
           />
           <StatsCard 
             title="Favorit" 
             value={isLoading ? '...' : stats.favoritesCount} 
             icon={Heart} 
-            description="Kos yang disimpan"
             to="/dashboard/favorites"
           />
         </div>

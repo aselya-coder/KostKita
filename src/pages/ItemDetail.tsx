@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, MessageCircle, Tag, User, Heart, Flag, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type MarketplaceItem, formatPrice } from "@/data/mockData";
@@ -10,14 +10,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { ReportModal } from "@/components/ReportModal";
 import { supabase } from "@/lib/supabase";
 import { createNotification } from "@/services/notifications";
+import { getOrCreateConversation, sendMessage } from "@/services/chat";
+import { toast } from "sonner";
 
 const ItemDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [item, setItem] = useState<MarketplaceItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites('item');
+
+  
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -52,7 +57,13 @@ const ItemDetail = () => {
         .subscribe();
 
       return () => {
-        supabase.removeChannel(channel);
+        // Small timeout to allow the WebSocket to establish before closing
+        setTimeout(() => {
+          if (channel) {
+            channel.unsubscribe();
+            supabase.removeChannel(channel);
+          }
+        }, 300);
       };
     }
   }, [id]);
@@ -103,6 +114,19 @@ const ItemDetail = () => {
       "marketplace",
       `/dashboard/my-items`
     );
+
+    if (user.id !== item.sellerId) {
+      // START internal chat first to bridge the two
+      try {
+        const result = await getOrCreateConversation(user.id, item.sellerId);
+        if (result.success) {
+          // Send a message to internal chat to log the interest
+          await sendMessage(result.data.id, user.id, `Halo, saya baru saja menghubungi Anda melalui WhatsApp mengenai barang "${item.title}".`);
+        }
+      } catch (err) {
+        console.error("Error bridging to internal chat:", err);
+      }
+    }
     
     // Redirect to WhatsApp
     if (hasPhone) {
@@ -182,38 +206,45 @@ const ItemDetail = () => {
             <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
           </div>
 
-          <button
-            onClick={handleInquiry}
-            disabled={!hasPhone || (user && user.id === item.sellerId)}
-            className={`hidden md:flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-all shadow-md active:scale-95 ${
-              !hasPhone || (user && user.id === item.sellerId)
-                ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
-                : 'bg-primary text-primary-foreground hover:bg-primary/90'
-            }`}
-          >
-            <MessageCircle className="w-4 h-4" />
-            {user && user.id === item.sellerId 
-              ? "Ini barang Anda sendiri" 
-              : hasPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleInquiry}
+              disabled={!hasPhone || (user && user.id === item.sellerId)}
+              className={`hidden md:flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-all shadow-md active:scale-95 ${
+                !hasPhone || (user && user.id === item.sellerId)
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              }`}
+            >
+              <MessageCircle className="w-4 h-4" />
+              {user && user.id === item.sellerId 
+                ? "Ini barang Anda sendiri" 
+                : hasPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-foreground/5 md:hidden z-40">
-        <div className="flex items-center justify-between">
-          <span className="text-lg text-price text-foreground">{formatPrice(item.price)}</span>
-          <button
-            onClick={handleInquiry}
-            disabled={!hasPhone || (user && user.id === item.sellerId)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
-              !hasPhone || (user && user.id === item.sellerId)
-                ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
-                : 'bg-primary text-primary-foreground hover:bg-primary/90'
-            }`}
-          >
-            <MessageCircle className="w-4 h-4" />
-            {hasPhone ? "Chat" : "Nomor"}
-          </button>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Harga</p>
+            <p className="text-lg text-price text-foreground truncate">{formatPrice(item.price)}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleInquiry}
+              disabled={!hasPhone || (user && user.id === item.sellerId)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
+                !hasPhone || (user && user.id === item.sellerId)
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              }`}
+            >
+              <MessageCircle className="w-4 h-4" />
+              {hasPhone ? "Chat via WhatsApp" : "Nomor"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

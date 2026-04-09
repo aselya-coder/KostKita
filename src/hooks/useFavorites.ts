@@ -31,8 +31,14 @@ export function useFavorites(type: 'kos' | 'item') {
         .subscribe();
 
       return () => {
-        supabase.removeChannel(channel);
-      };
+      // Small timeout to allow the WebSocket to establish before closing
+      setTimeout(() => {
+        if (channel) {
+          channel.unsubscribe();
+          supabase.removeChannel(channel);
+        }
+      }, 300);
+    };
     }
   }, [fetchFavorites, user]);
 

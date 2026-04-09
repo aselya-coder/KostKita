@@ -9,16 +9,29 @@ export const getStudentDashboardStats = async (userId: string) => {
 
   const { data: favorites, error: favoritesError } = await supabase
     .from('favorites')
-    .select('id', { count: 'exact' })
+    .select('id', { count: 'exact', head: true })
     .eq('user_id', userId);
 
-  if (myListingsError || favoritesError) {
-    console.error('Error fetching student stats:', myListingsError || favoritesError);
+  const { data: bookings, error: bookingsError } = await supabase
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
+
+  const { count: unreadMessages, error: chatError } = await supabase
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .neq('sender_id', userId)
+    .eq('is_read', false);
+
+  if (myListingsError || favoritesError || bookingsError || chatError) {
+    console.error('Error fetching student stats:', myListingsError || favoritesError || bookingsError || chatError);
   }
 
   return {
     myListingsCount: myListings?.length || 0,
     favoritesCount: favorites?.length || 0,
+    bookingsCount: bookings?.length || 0,
+    unreadMessagesCount: unreadMessages || 0,
   };
 };
 
@@ -33,13 +46,26 @@ export const getOwnerDashboardStats = async (userId: string) => {
     .select('id', { count: 'exact' })
     .eq('owner_id', userId);
 
-  if (propertiesError || inquiriesError) {
-    console.error('Error fetching owner stats:', propertiesError || inquiriesError);
+  const { data: bookings, error: bookingsError } = await supabase
+    .from('bookings')
+    .select('id', { count: 'exact' })
+    .eq('owner_id', userId);
+
+  const { count: unreadMessages, error: chatError } = await supabase
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .neq('sender_id', userId)
+    .eq('is_read', false);
+
+  if (propertiesError || inquiriesError || bookingsError || chatError) {
+    console.error('Error fetching owner stats:', propertiesError || inquiriesError || bookingsError || chatError);
   }
 
   return {
     propertiesCount: properties?.length || 0,
     inquiriesCount: inquiries?.length || 0,
+    ownerBookingsCount: bookings?.length || 0,
+    unreadMessagesCount: unreadMessages || 0,
   };
 };
 

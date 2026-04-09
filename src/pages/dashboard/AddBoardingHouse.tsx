@@ -150,7 +150,7 @@ export default function AddBoardingHouse() {
         setUploadProgress(100);
         setLoadingStatus('Berhasil!');
         sonnerToast.success('Kos berhasil didaftarkan! Menunggu persetujuan admin.');
-        setTimeout(() => navigate('/owner-dashboard/my-kos'), 1500);
+        setTimeout(() => navigate('/dashboard/my-kos'), 1500);
       } else {
         console.error('Database insertion error:', result.error);
         throw new Error(result.error || 'Gagal menyimpan data ke database.');
@@ -168,7 +168,7 @@ export default function AddBoardingHouse() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="flex items-center gap-4">
-        <BackButton to="/owner-dashboard/my-kos" className="mb-0" />
+        <BackButton to="/dashboard/my-kos" className="mb-0" />
         <h1 className="text-2xl font-display font-bold text-foreground">Add New Boarding House</h1>
       </div>
 
@@ -359,7 +359,7 @@ export default function AddBoardingHouse() {
             type="button" 
             variant="outline" 
             className="flex-1 py-6 rounded-xl border-border"
-            onClick={() => navigate("/owner-dashboard/my-kos")}
+            onClick={() => navigate("/dashboard/my-kos")}
           >
             Cancel
           </Button>

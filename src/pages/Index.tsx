@@ -47,18 +47,21 @@ const Index = () => {
     fetchKos();
     fetchMarketplace();
 
-    // REALTIME: Listen for changes
-    const kosChannel = supabase.channel('home-kos-changes')
+    // REALTIME: Listen for changes using a single channel
+    const channel = supabase.channel('home-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings' }, () => fetchKos())
-      .subscribe();
-
-    const marketplaceChannel = supabase.channel('home-marketplace-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_items' }, () => fetchMarketplace())
       .subscribe();
 
     return () => {
-      supabase.removeChannel(kosChannel);
-      supabase.removeChannel(marketplaceChannel);
+      // Small timeout to allow the WebSocket to establish before closing
+      // This helps avoid the "WebSocket is closed before the connection is established" error
+      setTimeout(() => {
+          if (channel) {
+            channel.unsubscribe();
+            supabase.removeChannel(channel);
+          }
+        }, 300);
     };
   }, []);
 

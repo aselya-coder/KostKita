@@ -1,11 +1,24 @@
-import { Bell, Lock, Shield, Eye, Smartphone, Globe } from "lucide-react";
+import { Bell, Lock, Shield, Eye, Smartphone, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { BackButton } from "@/components/BackButton";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function Settings() {
   const { user } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = () => {
+    setIsSaving(true);
+    // Simulate saving as most of these settings are placeholders for now
+    setTimeout(() => {
+      setIsSaving(false);
+      toast.success("Settings updated successfully!");
+    }, 800);
+  };
+
   const settingsSections = [
     {
       title: "Security",
@@ -25,7 +38,7 @@ export default function Settings() {
     }
   ];
 
-  const basePath = user?.role === "admin" ? "/admin-dashboard" : user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
+  const basePath = user?.role === "admin" ? "/admin" : "/dashboard";
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -79,7 +92,14 @@ export default function Settings() {
           <Button variant="destructive" className="flex-1 py-6 rounded-xl font-bold">
             Deactivate Account
           </Button>
-          <Button className="flex-1 bg-primary hover:bg-primary/90 py-6 rounded-xl font-bold shadow-lg shadow-primary/20">
+          <Button 
+            disabled={isSaving}
+            onClick={handleSave}
+            className="flex-1 bg-primary hover:bg-primary/90 py-6 rounded-xl font-bold shadow-lg shadow-primary/20"
+          >
+            {isSaving ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : null}
             Save All Changes
           </Button>
         </div>

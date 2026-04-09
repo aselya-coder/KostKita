@@ -10,15 +10,15 @@ const Owner = () => {
 
   const handleDashboardClick = () => {
     if (user?.role === "owner") {
-      navigate("/owner-dashboard");
+      navigate("/dashboard");
     } else {
-      navigate("/login");
+      navigate("/register?role=owner");
     }
   };
 
   const handleAddKosClick = () => {
     if (user?.role === "owner") {
-      navigate("/owner-dashboard/add-kos");
+      navigate("/dashboard/add-kos");
     } else {
       navigate("/login");
     }

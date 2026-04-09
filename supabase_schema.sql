@@ -163,6 +163,98 @@ CREATE TABLE public.reports (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 8. SYSTEM CONFIGS
+CREATE TABLE public.system_configs (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  description TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+INSERT INTO public.system_configs (key, value, description) VALUES
+('coin_price', '10000', 'Harga koin per unit'),
+('ad_cost_per_day', '1', 'Biaya koin per hari iklan'),
+('free_ad_duration', '30', 'Durasi iklan gratis'),
+('admin_fee_value', '2500', 'Biaya admin flat');
+
+-- 9. TRANSACTIONS
+CREATE TABLE public.transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  amount NUMERIC NOT NULL,
+  coin_amount INT NOT NULL,
+  status TEXT DEFAULT 'pending',
+  payment_method TEXT,
+  pricing_plan_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ==========================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- 10. COIN PACKAGES
+CREATE TABLE public.coin_packages (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  price NUMERIC NOT NULL,
+  coin_amount INT NOT NULL,
+  description TEXT,
+  is_active BOOLEAN DEFAULT true,
+  is_premium BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+INSERT INTO public.coin_packages (id, name, price, coin_amount, description, is_premium) VALUES
+('basic', 'Basic', 10000, 10, '10 Koin untuk iklan standar', false),
+('standard', 'Standard', 45000, 50, '50 Koin + Bonus 5 Koin', false),
+('premium', 'Premium', 85000, 100, '100 Koin + Status Premium', true);
+
+-- 11. NOTIFICATIONS
+CREATE TABLE public.notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL,
+  link TEXT,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 12. BOOKINGS
+CREATE TABLE public.bookings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  kos_id UUID NOT NULL REFERENCES public.kos_listings(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  owner_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  check_in_date DATE NOT NULL,
+  duration_months INT NOT NULL DEFAULT 1,
+  total_price NUMERIC NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending', -- pending, approved, rejected, cancelled, completed
+  message TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 13. CHAT SYSTEM
+CREATE TABLE public.conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  participant_one UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  participant_two UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  last_message TEXT,
+  last_message_at TIMESTAMPTZ DEFAULT now(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(participant_one, participant_two)
+);
+
+CREATE TABLE public.messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id UUID NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- ==========================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ==========================================
@@ -172,13 +264,42 @@ ALTER TABLE public.kos_listings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketplace_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coin_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.coin_packages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.system_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 -- Policies
 CREATE POLICY "Public profiles viewable by everyone" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Users update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Kos viewable by everyone" ON public.kos_listings FOR SELECT USING (true);
+CREATE POLICY "Owners manage own kos" ON public.kos_listings FOR ALL USING (auth.uid() = owner_id);
+CREATE POLICY "Marketplace viewable by everyone" ON public.marketplace_items FOR SELECT USING (true);
+CREATE POLICY "Sellers manage own items" ON public.marketplace_items FOR ALL USING (auth.uid() = seller_id);
+CREATE POLICY "Users view own wallet" ON public.wallets FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users view own coin logs" ON public.coin_logs FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Packages viewable by everyone" ON public.coin_packages FOR SELECT USING (true);
+CREATE POLICY "Users view own notifications" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Owners view own inquiries" ON public.inquiries FOR SELECT USING (auth.uid() = owner_id);
+CREATE POLICY "Users manage own favorites" ON public.favorites FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "System configs viewable by everyone" ON public.system_configs FOR SELECT USING (true);
+CREATE POLICY "Users view own transactions" ON public.transactions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users view own bookings" ON public.bookings FOR SELECT USING (auth.uid() = user_id OR auth.uid() = owner_id);
+CREATE POLICY "Users create own bookings" ON public.bookings FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Owners update own bookings" ON public.bookings FOR UPDATE USING (auth.uid() = owner_id OR auth.uid() = user_id);
+CREATE POLICY "Users view own conversations" ON public.conversations FOR SELECT USING (auth.uid() = participant_one OR auth.uid() = participant_two);
+CREATE POLICY "Users manage own conversations" ON public.conversations FOR ALL USING (auth.uid() = participant_one OR auth.uid() = participant_two);
+CREATE POLICY "Users view own messages" ON public.messages FOR SELECT USING (EXISTS (SELECT 1 FROM public.conversations WHERE id = messages.conversation_id AND (participant_one = auth.uid() OR participant_two = auth.uid())));
+CREATE POLICY "Users create own messages" ON public.messages FOR INSERT WITH CHECK (sender_id = auth.uid());
+
+-- Admin Policies (Simplified for setup)
+CREATE POLICY "Admins manage everything" ON public.profiles FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+-- Note: In a real app, you'd add more specific admin policies for each table.
 CREATE POLICY "Users update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "View active kos" ON public.kos_listings FOR SELECT USING (status = 'approved' AND (expires_at > now() OR owner_id = auth.uid()));
 CREATE POLICY "Owners manage own kos" ON public.kos_listings FOR ALL USING (auth.uid() = owner_id);
@@ -189,6 +310,7 @@ CREATE POLICY "Users view own coin logs" ON public.coin_logs FOR SELECT USING (a
 CREATE POLICY "Users manage own favorites" ON public.favorites FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users view own activities" ON public.user_activities FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Owners view own inquiries" ON public.inquiries FOR SELECT USING (auth.uid() = owner_id);
+CREATE POLICY "Users manage bookings" ON public.bookings FOR ALL USING (auth.uid() = user_id OR auth.uid() = owner_id);
 
 -- ==========================================
 -- SEED DATA (INITIAL ITEMS)

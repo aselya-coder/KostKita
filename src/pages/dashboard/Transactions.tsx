@@ -44,7 +44,7 @@ export default function TransactionsPage() {
     });
   };
 
-  const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
+  const basePath = "/dashboard";
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 pb-12 px-4 md:px-0">

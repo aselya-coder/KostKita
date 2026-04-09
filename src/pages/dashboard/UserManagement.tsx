@@ -69,7 +69,13 @@ export default function UserManagement() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      // Small timeout to allow the WebSocket to establish before closing
+      setTimeout(() => {
+        if (channel) {
+          channel.unsubscribe();
+          supabase.removeChannel(channel);
+        }
+      }, 300);
     };
   }, []);
 
@@ -105,7 +111,7 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-8 pb-12">
-      <BackButton to="/admin-dashboard" className="mb-0" />
+      <BackButton to="/admin" className="mb-0" />
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

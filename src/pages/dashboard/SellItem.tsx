@@ -167,7 +167,7 @@ export default function SellItem() {
 
       if (result.success) {
         sonnerToast.success('Barang berhasil dipublikasikan!');
-        const basePath = user?.role === "owner" ? "/owner-dashboard" : "/dashboard";
+        const basePath = "/dashboard";
         setTimeout(() => navigate(`${basePath}/my-items`), 1500);
       } else {
         throw new Error(result.error || 'Gagal menyimpan data barang.');

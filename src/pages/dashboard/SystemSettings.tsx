@@ -89,8 +89,8 @@ export default function SystemSettings() {
 
   const getBackPath = () => {
     if (!user) return "/";
-    if (user.role === "admin") return "/admin-dashboard";
-    if (user.role === "owner") return "/owner-dashboard";
+    if (user.role === "admin") return "/admin";
+    if (user.role === "owner") return "/dashboard";
     return "/dashboard";
   };
 

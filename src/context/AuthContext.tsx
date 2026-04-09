@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     role: profile.role || prev.role,
                     phone: profile.phone || prev.phone,
                     location: profile.location || prev.location,
-                    avatar: profile.avatar || prev.avatar,
+                    avatar: profile.avatar_url || profile.avatar || prev.avatar,
                     about: profile.about || prev.about,
                   };
                 });
@@ -104,7 +104,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
       if (profileSubscription) {
-        supabase.removeChannel(profileSubscription);
+        // Small timeout to allow the WebSocket to establish before closing
+        setTimeout(() => {
+          profileSubscription.unsubscribe();
+          supabase.removeChannel(profileSubscription);
+        }, 300);
       }
     };
   }, []);
@@ -135,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: profile.role || prev.role,
             phone: profile.phone || prev.phone,
             location: profile.location || prev.location,
-            avatar: profile.avatar || prev.avatar,
+            avatar: profile.avatar_url || profile.avatar || prev.avatar,
             about: profile.about || prev.about,
           };
         });

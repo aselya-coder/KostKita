@@ -38,7 +38,13 @@ const Marketplace = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      // Small timeout to allow the WebSocket to establish before closing
+      setTimeout(() => {
+        if (channel) {
+          channel.unsubscribe();
+          supabase.removeChannel(channel);
+        }
+      }, 300);
     };
   }, [category]);
 
@@ -56,7 +62,7 @@ const Marketplace = () => {
   }, [query, items]);
 
   const canSell = user?.role === "student" || user?.role === "owner";
-  const sellPath = user?.role === "owner" ? "/owner-dashboard/sell-item" : "/dashboard/sell-item";
+  const sellPath = user?.role === "owner" ? "/dashboard/sell-item" : "/dashboard/sell-item";
 
   return (
     <div className="container py-8">

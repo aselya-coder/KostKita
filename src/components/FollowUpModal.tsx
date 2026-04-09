@@ -67,7 +67,7 @@ export const FollowUpModal: React.FC<FollowUpModalProps> = ({
         title: 'Update Laporan',
         message,
         type: 'system',
-        link: report.type === 'kos' ? '/dashboard/reports' : '/owner-dashboard/reports'
+        link: '/dashboard/reports'
       });
 
       toast.success(actionType === 'dismiss' ? "Laporan diabaikan" : "Laporan berhasil ditindaklanjuti");

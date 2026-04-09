@@ -14,6 +14,8 @@ import Settings from "@/pages/dashboard/Settings";
 import Notifications from "@/pages/dashboard/Notifications";
 import PricingPage from "@/pages/dashboard/Pricing";
 import TransactionsPage from "@/pages/dashboard/Transactions";
+import BookingsPage from "@/pages/dashboard/Bookings";
+import ChatPage from "@/pages/dashboard/Chat";
 
 
 // Owner Specific Components
@@ -53,6 +55,8 @@ export function DashboardRouter() {
       {role !== "admin" && (
         <>
           <Route index element={<UserOverview />} />
+          <Route path="bookings" element={<BookingsPage />} />
+          <Route path="chat" element={<ChatPage />} />
           <Route path="my-kos" element={<MyBoardingHouses />} />
           <Route path="add-kos" element={<AddBoardingHouse />} />
           <Route path="edit-kos/:id" element={<EditKosPage />} />

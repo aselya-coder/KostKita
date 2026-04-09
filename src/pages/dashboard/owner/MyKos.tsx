@@ -43,7 +43,13 @@ export default function MyKos() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      // Small timeout to allow the WebSocket to establish before closing
+      setTimeout(() => {
+        if (channel) {
+          channel.unsubscribe();
+          supabase.removeChannel(channel);
+        }
+      }, 300);
     };
   }, [user]);
 
@@ -61,14 +67,14 @@ export default function MyKos() {
 
   return (
     <div className="space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
-      <BackButton to="/owner-dashboard" className="mb-0" />
+      <BackButton to="/dashboard" className="mb-0" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Kos Saya</h1>
           <p className="text-muted-foreground text-xs md:text-sm">Kelola semua listing kos yang Anda miliki.</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
-          <Link to="/owner-dashboard/add-kos">
+          <Link to="/dashboard/add-kos">
             <Plus className="w-4 h-4 mr-2" />
             Tambah Kos Baru
           </Link>
@@ -130,7 +136,7 @@ export default function MyKos() {
                             </Link>
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
-                            <Link to={`/owner-dashboard/edit-kos/${kos.id}`}>
+                            <Link to={`/dashboard/edit-kos/${kos.id}`}>
                               <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                             </Link>
                           </Button>
@@ -162,7 +168,7 @@ export default function MyKos() {
             Anda belum menambahkan listing kos. Mulai sewakan properti Anda sekarang!
           </p>
           <Button asChild>
-            <Link to="/owner-dashboard/add-kos">
+            <Link to="/dashboard/add-kos">
               <Plus className="w-4 h-4 mr-2" />
               Tambah Kos Pertama Anda
             </Link>
