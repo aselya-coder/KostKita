@@ -9,14 +9,17 @@ import {
   MapPin, 
   Eye, 
   Star, 
-  ShieldCheck, 
-  Clock, 
+  ShieldCheck,
+  Plus, 
+  Loader2, 
   Building2, 
-  Trash2,
+  Clock, 
   Calendar,
   PowerOff,
+  X,
+  Trash2,
   User
-} from "lucide-react";
+} from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
@@ -51,6 +54,20 @@ export default function KosManagement() {
       toast.error("Gagal menonaktifkan kos");
     } else {
       toast.success("Kos berhasil dinonaktifkan");
+      fetchListings();
+    }
+  };
+
+  const approveListing = async (id: string) => {
+    const { error } = await supabase
+      .from('kos_listings')
+      .update({ status: 'approved' })
+      .eq('id', id);
+    
+    if (error) {
+      toast.error("Gagal menyetujui kos");
+    } else {
+      toast.success("Kos berhasil disetujui");
       fetchListings();
     }
   };
@@ -240,6 +257,16 @@ export default function KosManagement() {
                       </div>
                       
                       <div className="flex items-center gap-2 ml-auto">
+                        {kos.status === "pending" && (
+                          <Button 
+                            size="sm" 
+                            className="rounded-lg h-8 text-[10px] uppercase font-bold bg-emerald-500 hover:bg-emerald-600 text-white"
+                            onClick={() => approveListing(kos.id)}
+                          >
+                            <ShieldCheck className="w-3 h-3 mr-1.5" />
+                            Setujui Iklan
+                          </Button>
+                        )}
                         {(kos.status === "approved" || !kos.status) && (
                           <Button 
                             size="sm" 

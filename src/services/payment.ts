@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { logUserActivity } from './activity';
+import { getSystemConfigs } from './settings';
 
 export type CoinPackage = {
   id: string;
@@ -34,23 +35,26 @@ export const FALLBACK_COIN_PACKAGES: CoinPackage[] = [
 
 export const getCoinPackages = async (): Promise<CoinPackage[]> => {
   try {
-    const { data, error } = await supabase
-      .from('coin_packages')
-      .select('*')
-      .eq('is_active', true)
-      .order('price', { ascending: true });
+    const [packagesRes, configs] = await Promise.all([
+      supabase.from('coin_packages').select('*').eq('is_active', true).order('price', { ascending: true }),
+      getSystemConfigs()
+    ]);
 
-    if (error) throw error;
+    if (packagesRes.error) throw packagesRes.error;
     
-    if (!data || data.length === 0) return FALLBACK_COIN_PACKAGES;
+    const adminFee = Number(configs['admin_fee_value'] || 2500);
+    
+    if (!packagesRes.data || packagesRes.data.length === 0) {
+      return FALLBACK_COIN_PACKAGES.map(p => ({ ...p, adminFee }));
+    }
 
-    return data.map((pkg: any) => ({
+    return packagesRes.data.map((pkg: any) => ({
       id: pkg.id,
       name: pkg.name,
       coinAmount: pkg.coin_amount,
       price: pkg.price,
       isActive: pkg.is_active,
-      adminFee: pkg.admin_fee || 2500
+      adminFee: pkg.admin_fee || adminFee
     }));
   } catch (error: any) {
     console.warn('Supabase Error (getCoinPackages), using fallback data:', error.message);
@@ -72,11 +76,10 @@ export const createTopupRequest = async (userId: string, packageId: string, role
     let foundInDb = false;
     
     if (isUuid) {
-      const { data: pkg, error: pkgError } = await supabase
-        .from('coin_packages')
-        .select('*')
-        .eq('id', packageId)
-        .maybeSingle();
+      const [{ data: pkg, error: pkgError }, configs] = await Promise.all([
+        supabase.from('coin_packages').select('*').eq('id', packageId).maybeSingle(),
+        getSystemConfigs()
+      ]);
       
       if (!pkgError && pkg) {
         selectedPackage = {
@@ -85,7 +88,7 @@ export const createTopupRequest = async (userId: string, packageId: string, role
           coinAmount: pkg.coin_amount,
           price: pkg.price,
           isActive: pkg.is_active,
-          adminFee: pkg.admin_fee || 2500
+          adminFee: pkg.admin_fee || Number(configs['admin_fee_value'] || 2500)
         };
         foundInDb = true;
       }

@@ -13,7 +13,8 @@ import {
   Coins, 
   Clock,
   PowerOff,
-  Calendar
+  Calendar,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -90,6 +91,20 @@ export default function MarketplaceModeration() {
       toast.error("Gagal menonaktifkan iklan");
     } else {
       toast.success("Iklan barang dinonaktifkan");
+      fetchItems();
+    }
+  };
+
+  const approveItem = async (id: string) => {
+    const { error } = await supabase
+      .from('marketplace_items')
+      .update({ status: 'active' })
+      .eq('id', id);
+    
+    if (error) {
+      toast.error("Gagal menyetujui iklan");
+    } else {
+      toast.success("Iklan barang berhasil disetujui");
       fetchItems();
     }
   };
@@ -237,6 +252,12 @@ export default function MarketplaceModeration() {
                               <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-border">
                                 <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Moderasi</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
+                                {item.status === "pending" && (
+                                  <DropdownMenuItem onClick={() => approveItem(item.id)} className="text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50 font-bold">
+                                    <ShieldCheck className="w-4 h-4 mr-2" />
+                                    Setujui Iklan
+                                  </DropdownMenuItem>
+                                )}
                                 {(item.status === "active" || !item.status) && (
                                   <DropdownMenuItem onClick={() => deactivateItem(item.id)}>
                                     <PowerOff className="w-4 h-4 mr-2" />

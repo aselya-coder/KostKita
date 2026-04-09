@@ -1,11 +1,15 @@
 import { supabase } from '@/lib/supabase';
 import { type KosListing, type MarketplaceItem } from '@/data/mockData';
 import { logUserActivity } from './activity';
+import { getSystemConfigs } from './settings';
 
 // KOS LISTINGS
 export const createKosListing = async (listing: any) => {
   try {
-    const durationDays = 30; // Enforce 30 days duration
+    const configs = await getSystemConfigs();
+    const durationDays = parseInt(configs['free_ad_duration'] || '30');
+    const autoApprove = configs['auto_approve_ads'] === 'true';
+    
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
@@ -13,7 +17,7 @@ export const createKosListing = async (listing: any) => {
       .from('kos_listings')
       .insert([{
         ...listing,
-        status: 'approved', // Automatic approved
+        status: autoApprove ? 'approved' : 'pending',
         expires_at: expiresAt.toISOString()
       }])
       .select()
@@ -41,7 +45,10 @@ export const createKosListing = async (listing: any) => {
 // MARKETPLACE ITEMS
 export const createMarketplaceItem = async (item: any) => {
   try {
-    const durationDays = 30; // Enforce 30 days duration
+    const configs = await getSystemConfigs();
+    const durationDays = parseInt(configs['free_ad_duration'] || '30');
+    const autoApprove = configs['auto_approve_ads'] === 'true';
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
@@ -49,7 +56,7 @@ export const createMarketplaceItem = async (item: any) => {
       .from('marketplace_items')
       .insert([{
         ...item,
-        status: 'active', // Automatic active
+        status: autoApprove ? 'active' : 'pending',
         expires_at: expiresAt.toISOString()
       }])
       .select()

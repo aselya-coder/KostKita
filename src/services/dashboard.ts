@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { getSystemConfigs } from './settings';
 
 export const getStudentDashboardStats = async (userId: string) => {
   const { data: myListings, error: myListingsError } = await supabase
@@ -57,6 +58,7 @@ export const getUserDashboardStats = async (userId: string) => {
 export const getAdminDashboardStats = async () => {
   try {
     const [
+      configs,
       { count: totalUsers },
       { count: totalKos },
       { count: totalItems },
@@ -66,6 +68,7 @@ export const getAdminDashboardStats = async () => {
       coinLogsRes,
       coinPackagesRes
     ] = await Promise.all([
+      getSystemConfigs(),
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('kos_listings').select('id', { count: 'exact', head: true }),
       supabase.from('marketplace_items').select('id', { count: 'exact', head: true }),
@@ -75,6 +78,9 @@ export const getAdminDashboardStats = async () => {
       supabase.from('coin_logs').select('*'),
       supabase.from('coin_packages').select('id, price, coin_amount') // Remove admin_fee if missing
     ]);
+
+    const coinPrice = Number(configs['coin_price'] || 10000);
+    const adminFee = Number(configs['admin_fee_value'] || 2500);
 
     // Filter success in JS
     const txList = (transactionsRes.data || []).filter((tx: any) => 
@@ -86,8 +92,8 @@ export const getAdminDashboardStats = async () => {
     // --- REVENUE CALCULATION ---
     const topUpRevenueOfficial = txList.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
     const adminFeeRevenueOfficial = txList.reduce((sum, tx) => {
-      // Use static 2500 fee since admin_fee might not exist in coin_packages table
-      return sum + 2500;
+      // Use dynamic fee from settings
+      return sum + adminFee;
     }, 0);
 
     const creditsFromLogs = logsList.filter(l => ['credit', 'topup'].includes(String(l.type).toLowerCase()));
@@ -99,8 +105,8 @@ export const getAdminDashboardStats = async () => {
     }, 0);
 
     const missingCoins = Math.max(0, totalCoinsFromLogs - totalCoinsFromTx);
-    const estimatedMissingTopupRevenue = missingCoins * 10000;
-    const estimatedMissingAdminFeeRevenue = Math.max(0, creditsFromLogs.length - txList.length) * 2500;
+    const estimatedMissingTopupRevenue = missingCoins * coinPrice;
+    const estimatedMissingAdminFeeRevenue = Math.max(0, creditsFromLogs.length - txList.length) * adminFee;
 
     const topUpRevenue = topUpRevenueOfficial + estimatedMissingTopupRevenue;
     const adminFeeRevenue = adminFeeRevenueOfficial + estimatedMissingAdminFeeRevenue;
@@ -129,13 +135,12 @@ export const getAdminDashboardStats = async () => {
       }, 0);
       
       const missingCoinsDaily = Math.max(0, coinsInLogs - coinsInTx);
-      const topupTotal = topupTx + (missingCoinsDaily * 10000);
+      const topupTotal = topupTx + (missingCoinsDaily * coinPrice);
       
       const feeTx = dailyTx.reduce((sum, tx) => {
-        // Use static 2500 fee since admin_fee might not exist in coin_packages table
-        return sum + 2500;
+        return sum + adminFee;
       }, 0);
-      const feeEstimated = Math.max(0, dailyLogs.length - dailyTx.length) * 2500;
+      const feeEstimated = Math.max(0, dailyLogs.length - dailyTx.length) * adminFee;
       const feeTotal = feeTx + feeEstimated;
 
       return {

@@ -18,8 +18,9 @@ import { getAmenityIcon } from "@/utils/amenityIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { ReportModal } from "@/components/ReportModal";
 import { AdvertiseKosModal } from "@/components/AdvertiseKosModal";
-import { Flag } from "lucide-react";
+import { Flag, MessageCircle, Send } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { createNotification } from "@/services/notifications";
 
 
 const KosDetail = () => {
@@ -105,6 +106,24 @@ const KosDetail = () => {
         `Hi, saya tertarik dengan ${kos.title} di KosKita. Apakah masih tersedia?`
       )}`
     : "#";
+
+  const handleInquiry = async () => {
+    if (!user || !kos) return;
+    
+    // Notify the owner
+    await createNotification(
+      kos.ownerId,
+      "Seseorang tertarik dengan kos Anda!",
+      `${user.name} tertarik dengan "${kos.title}". Mereka mungkin akan menghubungi Anda via WhatsApp.`,
+      "inquiry",
+      `/dashboard/inquiries`
+    );
+    
+    // Redirect to WhatsApp
+    if (hasPhone) {
+      window.open(waLink, '_blank');
+    }
+  };
 
   return (
     <>
@@ -251,20 +270,20 @@ const KosDetail = () => {
                     <p className="text-xs text-muted-foreground">Pemilik Kos</p>
                   </div>
                 </div>
-                <a
-                  href={waLink}
-                  target={hasPhone ? "_blank" : "_self"}
-                  rel="noopener noreferrer"
-                  onClick={(e) => !hasPhone && e.preventDefault()}
+                <button
+                  onClick={handleInquiry}
+                  disabled={!hasPhone || (user && user.id === kos.ownerId)}
                   className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-sm transition-all shadow-md active:scale-95 ${
-                    !hasPhone 
+                    !hasPhone || (user && user.id === kos.ownerId)
                       ? 'bg-muted text-muted-foreground cursor-not-allowed grayscale' 
                       : 'bg-primary text-primary-foreground hover:bg-primary/90'
                   }`}
                 >
                   <MessageCircle className="w-4 h-4" />
-                  {hasPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
-                </a>
+                  {user && user.id === kos.ownerId 
+                    ? "Ini kos Anda sendiri" 
+                    : hasPhone ? "Chat via WhatsApp" : "Nomor tidak tersedia"}
+                </button>
                 <p className="text-xs text-muted-foreground text-center">
                   Terhubung langsung dengan Pemilik Kos
                 </p>
