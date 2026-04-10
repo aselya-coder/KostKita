@@ -82,13 +82,9 @@ const KosDetail = () => {
         .subscribe();
 
       return () => {
-        // Small timeout to allow the WebSocket to establish before closing
-        setTimeout(() => {
-          if (channel) {
-            channel.unsubscribe();
-            supabase.removeChannel(channel);
-          }
-        }, 300);
+        if (channel) {
+          supabase.removeChannel(channel);
+        }
       };
     }
   }, [id]);
@@ -200,7 +196,7 @@ const KosDetail = () => {
         toast.success("Permintaan pemesanan berhasil dikirim!");
         setIsBookingModalOpen(false);
         if (hasPhone) {
-          const waText = `Halo ${kos.ownerName}, saya telah mengajukan booking untuk "${kos.title}" di KosKita. Tanggal masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}, Durasi: ${duration} bulan, Total: ${formatPrice(kos.price * duration)}.`;
+          const waText = `Halo ${kos.ownerName},\n\nSaya ingin memesan kamar di *${kos.title}* via KosKita.\n\n*Detail Pesanan:*\n- Tanggal Masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}\n- Durasi Sewa: ${duration} Bulan\n- Total Estimasi: ${formatPrice(kos.price * duration)}\n\nMohon informasi selanjutnya. Terima kasih!`;
           const waUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(waText)}`;
           window.open(waUrl, '_blank');
         }
@@ -386,7 +382,7 @@ const KosDetail = () => {
                   }`}
                 >
                   <Calendar className="w-4 h-4" />
-                  {kos.availableRooms <= 0 ? "Kamar Penuh" : "Booking Kamar"}
+                  {kos.availableRooms <= 0 ? "Kamar Penuh" : "Booking via WhatsApp"}
                 </button>
 
                 <p className="text-xs text-muted-foreground text-center">
@@ -486,7 +482,7 @@ const KosDetail = () => {
                   {isSubmittingBooking ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    "Konfirmasi Booking Sekarang"
+                    "Konfirmasi & Lanjut ke WhatsApp"
                   )}
                 </Button>
                 

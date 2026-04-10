@@ -70,13 +70,9 @@ export default function MarketplaceModeration() {
       .subscribe();
 
     return () => {
-      // Small timeout to allow the WebSocket to establish before closing
-      setTimeout(() => {
-          if (channel) {
-            channel.unsubscribe();
-            supabase.removeChannel(channel);
-          }
-        }, 300);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 

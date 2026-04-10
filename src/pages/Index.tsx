@@ -54,14 +54,9 @@ const Index = () => {
       .subscribe();
 
     return () => {
-      // Small timeout to allow the WebSocket to establish before closing
-      // This helps avoid the "WebSocket is closed before the connection is established" error
-      setTimeout(() => {
-          if (channel) {
-            channel.unsubscribe();
-            supabase.removeChannel(channel);
-          }
-        }, 300);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 

@@ -70,10 +70,7 @@ export default function ChatPage() {
       .subscribe();
 
     return () => {
-      setTimeout(() => {
-        channel.unsubscribe();
-        supabase.removeChannel(channel);
-      }, 300);
+      supabase.removeChannel(channel);
     };
   }, [user]);
 
@@ -121,10 +118,7 @@ export default function ChatPage() {
         .subscribe();
 
       return () => {
-        setTimeout(() => {
-          channel.unsubscribe();
-          supabase.removeChannel(channel);
-        }, 300);
+        supabase.removeChannel(channel);
       };
     } else {
       setMessages([]);

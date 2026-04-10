@@ -107,13 +107,9 @@ export default function AdminOverview() {
       .subscribe();
 
     return () => {
-      // Small timeout to allow the WebSocket to establish before closing
-      setTimeout(() => {
-        if (activityChannel) {
-          activityChannel.unsubscribe();
-          supabase.removeChannel(activityChannel);
-        }
-      }, 300);
+      if (activityChannel) {
+        supabase.removeChannel(activityChannel);
+      }
     };
   }, []);
 

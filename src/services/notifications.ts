@@ -27,21 +27,30 @@ export const markNotificationAsRead = async (id: string) => {
   return { success: true };
 };
 
-export const createNotification = async (userId: string, title: string, message: string, type: string = 'system', link?: string) => {
+export const createNotification = async (userId: string | undefined, title: string, message: string, type: string = 'system', link?: string) => {
+  if (!userId) {
+    console.error('Error: Cannot create notification without userId');
+    return { success: false, error: 'Missing userId' };
+  }
+
+  const validTypes = ['inquiry', 'sale', 'system', 'favorite', 'booking', 'chat', 'marketplace'];
+  const finalType = validTypes.includes(type) ? type : 'system';
+
   try {
-    const { error } = await supabase.from('notifications').insert([{
+    const { error } = await supabase.from('notifications').insert({
       user_id: userId,
       title,
       message,
-      type,
-      link,
-      is_read: false,
-      created_at: new Date().toISOString()
-    }]);
-    if (error) throw error;
+      type: finalType,
+      link
+    });
+    if (error) {
+      console.error('Supabase error creating notification:', error);
+      throw error;
+    }
     return { success: true };
   } catch (error) {
-    console.error('Error creating notification:', error);
+    console.error('Error creating notification (detailed):', { userId, title, message, type: finalType, link, error });
     return { success: false, error };
   }
 };

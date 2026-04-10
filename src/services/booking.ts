@@ -13,6 +13,9 @@ export interface Booking {
   createdAt: string;
   kosTitle?: string;
   userName?: string;
+  userPhone?: string;
+  ownerName?: string;
+  ownerPhone?: string;
 }
 
 export const createBooking = async (bookingData: Omit<Booking, 'id' | 'createdAt' | 'status'>) => {
@@ -48,6 +51,10 @@ export const getStudentBookings = async (userId: string): Promise<Booking[]> => 
         *,
         kos_listings (
           title
+        ),
+        profiles:owner_id (
+          name,
+          phone
         )
       `)
       .eq('user_id', userId)
@@ -66,7 +73,9 @@ export const getStudentBookings = async (userId: string): Promise<Booking[]> => 
       status: b.status,
       message: b.message,
       createdAt: b.created_at,
-      kosTitle: b.kos_listings?.title || 'Properti'
+      kosTitle: b.kos_listings?.title || 'Properti',
+      ownerName: b.profiles?.name || 'Pemilik Kos',
+      ownerPhone: b.profiles?.phone || ''
     }));
   } catch (error) {
     console.error('Error fetching student bookings:', error);
@@ -84,7 +93,8 @@ export const getOwnerBookings = async (ownerId: string): Promise<Booking[]> => {
           title
         ),
         profiles:user_id (
-          name
+          name,
+          phone
         )
       `)
       .eq('owner_id', ownerId)
@@ -104,7 +114,8 @@ export const getOwnerBookings = async (ownerId: string): Promise<Booking[]> => {
       message: b.message,
       createdAt: b.created_at,
       kosTitle: b.kos_listings?.title || 'Properti',
-      userName: b.profiles?.name || 'User'
+      userName: b.profiles?.name || 'User',
+      userPhone: b.profiles?.phone || ''
     }));
   } catch (error) {
     console.error('Error fetching owner bookings:', error);

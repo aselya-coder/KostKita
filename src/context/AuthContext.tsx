@@ -104,11 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
       if (profileSubscription) {
-        // Small timeout to allow the WebSocket to establish before closing
-        setTimeout(() => {
-          profileSubscription.unsubscribe();
-          supabase.removeChannel(profileSubscription);
-        }, 300);
+        supabase.removeChannel(profileSubscription);
       }
     };
   }, []);

@@ -13,7 +13,8 @@ import {
   Loader2,
   Building2,
   User,
-  ExternalLink
+  ExternalLink,
+  MessageCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,28 @@ export default function BookingsPage() {
     } catch (error) {
       toast.error("Terjadi kesalahan");
     }
+  };
+
+  const getWhatsAppLink = (booking: Booking) => {
+    const phone = user?.role === 'owner' ? booking.userPhone : booking.ownerPhone;
+    const name = user?.role === 'owner' ? booking.userName : booking.ownerName;
+    
+    if (!phone) return null;
+
+    let sanitizedPhone = phone.replace(/\D/g, '');
+    if (sanitizedPhone.startsWith('0')) {
+      sanitizedPhone = '62' + sanitizedPhone.slice(1);
+    } else if (sanitizedPhone.startsWith('8')) {
+      sanitizedPhone = '62' + sanitizedPhone;
+    }
+
+    if (sanitizedPhone.length < 10) return null;
+
+    const message = user?.role === 'owner'
+      ? `Halo ${name}, saya pemilik kos *${booking.kosTitle}* di KosKita. Saya ingin membicarakan mengenai pesanan booking Anda.`
+      : `Halo ${name}, saya ingin menanyakan status booking saya untuk *${booking.kosTitle}* di KosKita.`;
+
+    return `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(message)}`;
   };
 
   const getStatusBadge = (status: Booking['status']) => {
@@ -141,6 +164,16 @@ export default function BookingsPage() {
                   </div>
                   
                   <div className="flex items-center gap-2 mt-2">
+                    {getWhatsAppLink(booking) && (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 rounded-lg"
+                        onClick={() => window.open(getWhatsAppLink(booking)!, '_blank')}
+                      >
+                        <MessageCircle className="w-4 h-4 mr-1.5" /> Chat WA
+                      </Button>
+                    )}
                     {user?.role === 'owner' && booking.status === 'pending' && (
                       <>
                         <Button 
