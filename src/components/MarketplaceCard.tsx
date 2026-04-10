@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { MapPin, Heart } from "lucide-react";
+import { MapPin, Heart, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { type MarketplaceItem, formatPrice } from "@/data/mockData";
 import { useFavorites } from "@/hooks/useFavorites";
+import { sanitizePhone } from "@/utils/whatsapp";
 
 interface MarketplaceCardProps {
   item: MarketplaceItem;
@@ -26,8 +27,16 @@ export function MarketplaceCard({ item }: MarketplaceCardProps) {
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             loading="lazy"
           />
-          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs font-medium text-foreground hover:bg-background transition-colors">
-            {item.category}
+          <div className="absolute top-3 left-3 flex flex-col gap-1">
+            <div className="px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs font-medium text-foreground hover:bg-background transition-colors">
+              {item.category}
+            </div>
+            {sanitizePhone(item.sellerPhone || "") && (
+              <div className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold flex items-center gap-1 shadow">
+                <MessageCircle className="w-3 h-3" />
+                WA Ready
+              </div>
+            )}
           </div>
         </div>
       </Link>

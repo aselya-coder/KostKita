@@ -12,6 +12,8 @@ import { supabase } from "@/lib/supabase";
 import { createNotification } from "@/services/notifications";
 import { getOrCreateConversation, sendMessage } from "@/services/chat";
 import { toast } from "sonner";
+import { sanitizePhone, buildWaLink } from "@/utils/whatsapp";
+import { logUserActivity } from "@/services/activity";
 
 const ItemDetail = () => {
   const { id } = useParams();
@@ -57,13 +59,9 @@ const ItemDetail = () => {
         .subscribe();
 
       return () => {
-        // Small timeout to allow the WebSocket to establish before closing
-        setTimeout(() => {
-          if (channel) {
-            channel.unsubscribe();
-            supabase.removeChannel(channel);
-          }
-        }, 300);
+        if (channel) {
+          supabase.removeChannel(channel);
+        }
       };
     }
   }, [id]);
@@ -87,20 +85,10 @@ const ItemDetail = () => {
 
   const liked = isFavorite(item.id);
 
-  // Sanitize phone number: remove non-digits and ensure international format
-  const rawPhone = item.sellerPhone || '';
-  let sanitizedPhone = rawPhone.replace(/\D/g, '');
-  if (sanitizedPhone.startsWith('0')) {
-    sanitizedPhone = '62' + sanitizedPhone.slice(1);
-  } else if (sanitizedPhone.startsWith('8')) {
-    sanitizedPhone = '62' + sanitizedPhone;
-  }
-  
-  const hasPhone = sanitizedPhone.length >= 10;
+  const sanitizedPhone = sanitizePhone(item.sellerPhone || "");
+  const hasPhone = !!sanitizedPhone;
   const waLink = hasPhone 
-    ? `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(
-        `Hi ${item.sellerName}, saya tertarik dengan ${item.title} di KosKita. Apakah masih tersedia?`
-      )}`
+    ? buildWaLink(sanitizedPhone, `Hi ${item.sellerName}, saya tertarik dengan ${item.title} di KosKita. Apakah masih tersedia?`)
     : "#";
 
   const handleInquiry = async () => {
@@ -130,6 +118,9 @@ const ItemDetail = () => {
     
     // Redirect to WhatsApp
     if (hasPhone) {
+      try {
+        await logUserActivity(user.id, 'Klik WhatsApp Marketplace', item.title, `/marketplace/${item.id}`);
+      } catch {}
       window.open(waLink, '_blank');
     }
   };
@@ -245,6 +236,13 @@ const ItemDetail = () => {
               {hasPhone ? "Chat via WhatsApp" : "Nomor"}
             </button>
           </div>
+          {!hasPhone && (
+            <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 rounded-lg p-2 mt-2">
+              {user && user.id === item.sellerId
+                ? <a href="/dashboard/profile" className="underline font-semibold">Lengkapi nomor WhatsApp Anda di Profil</a>
+                : "Nomor WhatsApp penjual belum tersedia"}
+            </p>
+          )}
         </div>
       </div>
     </div>

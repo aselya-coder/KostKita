@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import { Heart, MapPin, Star } from "lucide-react";
+import { Heart, MapPin, Star, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { type KosListing, formatPrice } from "@/data/mockData";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getAmenityIcon } from "@/utils/amenityIcons";
+import { sanitizePhone } from "@/utils/whatsapp";
 
 interface KosCardProps {
   kos: KosListing;
@@ -30,12 +31,20 @@ export function KosCard({ kos }: KosCardProps) {
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             loading="lazy"
           />
-          {kos.isPremium && (
-            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold flex items-center gap-1">
-              <Star className="w-3 h-3" />
-              Premium
-            </div>
-          )}
+          <div className="absolute top-3 left-3 flex flex-col gap-1">
+            {kos.isPremium && (
+              <div className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold flex items-center gap-1">
+                <Star className="w-3 h-3" />
+                Premium
+              </div>
+            )}
+            {sanitizePhone(kos.ownerPhone || "") && (
+              <div className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold flex items-center gap-1 shadow">
+                <MessageCircle className="w-3 h-3" />
+                WA Ready
+              </div>
+            )}
+          </div>
           {kos.images.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
               {kos.images.map((_, i) => (

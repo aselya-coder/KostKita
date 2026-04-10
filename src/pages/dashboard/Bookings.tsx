@@ -19,6 +19,8 @@ import {
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { createNotification } from "@/services/notifications";
+import { supabase } from "@/lib/supabase";
+import { sanitizePhone, buildWaLink } from "@/utils/whatsapp";
 
 export default function BookingsPage() {
   const { user } = useAuth();
@@ -42,13 +44,53 @@ export default function BookingsPage() {
 
   useEffect(() => {
     fetchBookings();
+    if (!user) return;
+    const channel = supabase
+      .channel(`bookings-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: user.role === 'owner' ? `owner_id=eq.${user.id}` : `user_id=eq.${user.id}` }, () => {
+        fetchBookings();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const handleUpdateStatus = async (booking: Booking, newStatus: Booking['status']) => {
     try {
+      if (newStatus === 'approved') {
+        const { data: availability, error: availErr } = await supabase
+          .from('kos_listings')
+          .select('available_rooms')
+          .eq('id', booking.kosId)
+          .single();
+        if (availErr || !availability || typeof availability.available_rooms !== 'number') {
+          toast.error("Gagal memeriksa ketersediaan kamar");
+          return;
+        }
+        if (availability.available_rooms <= 0) {
+          toast.error("Kamar sudah penuh. Tidak dapat menyetujui pemesanan.");
+          return;
+        }
+      }
+
       const result = await updateBookingStatus(booking.id, newStatus);
       if (result.success) {
         toast.success(`Pemesanan berhasil ${newStatus === 'approved' ? 'disetujui' : 'ditolak'}`);
+        
+        if (newStatus === 'approved') {
+          const { data, error } = await supabase
+            .from('kos_listings')
+            .select('available_rooms')
+            .eq('id', booking.kosId)
+            .single();
+          if (!error && data && typeof data.available_rooms === 'number' && data.available_rooms > 0) {
+            await supabase
+              .from('kos_listings')
+              .update({ available_rooms: data.available_rooms - 1 })
+              .eq('id', booking.kosId);
+          }
+        }
         
         // Notify the student
         await createNotification(
@@ -68,26 +110,67 @@ export default function BookingsPage() {
     }
   };
 
+  const handleCancelBooking = async (booking: Booking) => {
+    try {
+      if (!confirm("Batalkan pemesanan ini?")) return;
+      const result = await updateBookingStatus(booking.id, 'cancelled');
+      if (result.success) {
+        if (booking.status === 'approved') {
+          const { data, error } = await supabase
+            .from('kos_listings')
+            .select('available_rooms')
+            .eq('id', booking.kosId)
+            .single();
+          if (!error && data && typeof data.available_rooms === 'number') {
+            await supabase
+              .from('kos_listings')
+              .update({ available_rooms: data.available_rooms + 1 })
+              .eq('id', booking.kosId);
+          }
+        }
+        await createNotification(
+          booking.ownerId,
+          "Pemesanan Dibatalkan",
+          `Pemesanan untuk "${booking.kosTitle}" telah dibatalkan oleh pemesan.`,
+          "booking",
+          "/dashboard/bookings"
+        );
+        toast.success("Pemesanan dibatalkan");
+        fetchBookings();
+      } else {
+        toast.error("Gagal membatalkan pemesanan");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan");
+    }
+  };
+
   const getWhatsAppLink = (booking: Booking) => {
     const phone = user?.role === 'owner' ? booking.userPhone : booking.ownerPhone;
     const name = user?.role === 'owner' ? booking.userName : booking.ownerName;
     
     if (!phone) return null;
 
-    let sanitizedPhone = phone.replace(/\D/g, '');
-    if (sanitizedPhone.startsWith('0')) {
-      sanitizedPhone = '62' + sanitizedPhone.slice(1);
-    } else if (sanitizedPhone.startsWith('8')) {
-      sanitizedPhone = '62' + sanitizedPhone;
-    }
-
-    if (sanitizedPhone.length < 10) return null;
+    const p = sanitizePhone(phone);
+    if (!p) return null;
 
     const message = user?.role === 'owner'
       ? `Halo ${name}, saya pemilik kos *${booking.kosTitle}* di KosKita. Saya ingin membicarakan mengenai pesanan booking Anda.`
       : `Halo ${name}, saya ingin menanyakan status booking saya untuk *${booking.kosTitle}* di KosKita.`;
 
-    return `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(message)}`;
+    return buildWaLink(p, message);
+  };
+
+  const handleOpenWhatsApp = async (booking: Booking) => {
+    const link = getWhatsAppLink(booking);
+    if (!link || !user) return;
+    try {
+      const action = user.role === 'owner' ? 'Klik WhatsApp ke Pemesan' : 'Klik WhatsApp ke Pemilik';
+      await import('@/services/activity').then(({ logUserActivity }) => 
+        logUserActivity(user.id, action, booking.kosTitle, `/kos/${booking.kosId}`)
+      );
+    } catch {}
+    window.open(link, '_blank');
   };
 
   const getStatusBadge = (status: Booking['status']) => {
@@ -169,9 +252,19 @@ export default function BookingsPage() {
                         size="sm" 
                         variant="outline" 
                         className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 rounded-lg"
-                        onClick={() => window.open(getWhatsAppLink(booking)!, '_blank')}
+                        onClick={() => handleOpenWhatsApp(booking)}
                       >
                         <MessageCircle className="w-4 h-4 mr-1.5" /> Chat WA
+                      </Button>
+                    )}
+                    {user?.role !== 'owner' && (booking.status === 'pending' || booking.status === 'approved') && (
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 border-red-200 hover:bg-red-50 rounded-lg"
+                        onClick={() => handleCancelBooking(booking)}
+                      >
+                        <XCircle className="w-4 h-4 mr-1.5" /> Batalkan
                       </Button>
                     )}
                     {user?.role === 'owner' && booking.status === 'pending' && (

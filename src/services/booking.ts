@@ -125,6 +125,18 @@ export const getOwnerBookings = async (ownerId: string): Promise<Booking[]> => {
 
 export const updateBookingStatus = async (bookingId: string, status: Booking['status']) => {
   try {
+    if (status === 'approved') {
+      try {
+        const { error: rpcError } = await supabase.rpc('approve_booking_transactional', { p_booking_id: bookingId });
+        if (!rpcError) return { success: true };
+      } catch {}
+    }
+    if (status === 'cancelled') {
+      try {
+        const { error: rpcError } = await supabase.rpc('cancel_booking_transactional', { p_booking_id: bookingId });
+        if (!rpcError) return { success: true };
+      } catch {}
+    }
     const { error } = await supabase
       .from('bookings')
       .update({ status, updated_at: new Date().toISOString() })

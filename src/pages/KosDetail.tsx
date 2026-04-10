@@ -24,6 +24,7 @@ import { createNotification } from "@/services/notifications";
 import { createBooking } from "@/services/booking";
 import { getOrCreateConversation, sendMessage } from "@/services/chat";
 import { toast } from "sonner";
+import { logUserActivity } from "@/services/activity";
 import { 
   Calendar,
   ChevronDown,
@@ -31,6 +32,7 @@ import {
   Info,
   Clock,
 } from "lucide-react";
+import { sanitizePhone, buildWaLink } from "@/utils/whatsapp";
 
 const KosDetail = () => {
   const { id } = useParams();
@@ -108,20 +110,10 @@ const KosDetail = () => {
 
   const liked = isFavorite(kos.id);
 
-  // Sanitize phone number: remove non-digits and ensure international format
-  const rawPhone = kos.ownerPhone || '';
-  let sanitizedPhone = rawPhone.replace(/\D/g, '');
-  if (sanitizedPhone.startsWith('0')) {
-    sanitizedPhone = '62' + sanitizedPhone.slice(1);
-  } else if (sanitizedPhone.startsWith('8')) {
-    sanitizedPhone = '62' + sanitizedPhone;
-  }
-  
-  const hasPhone = sanitizedPhone.length >= 10;
+  const sanitizedPhone = sanitizePhone(kos.ownerPhone || "");
+  const hasPhone = !!sanitizedPhone;
   const waLink = hasPhone 
-    ? `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(
-        `Hi, saya tertarik dengan ${kos.title} di KosKita. Apakah masih tersedia?`
-      )}`
+    ? buildWaLink(sanitizedPhone, `Hi, saya tertarik dengan ${kos.title} di KosKita. Apakah masih tersedia?`)
     : "#";
 
   const handleInquiry = async () => {
@@ -147,6 +139,9 @@ const KosDetail = () => {
     
     // Redirect to WhatsApp
     if (hasPhone) {
+      try {
+        await logUserActivity(user.id, 'Klik WhatsApp Kos', kos.title, `/kos/${kos.id}`);
+      } catch {}
       window.open(waLink, '_blank');
     }
   };
@@ -197,7 +192,10 @@ const KosDetail = () => {
         setIsBookingModalOpen(false);
         if (hasPhone) {
           const waText = `Halo ${kos.ownerName},\n\nSaya ingin memesan kamar di *${kos.title}* via KosKita.\n\n*Detail Pesanan:*\n- Tanggal Masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}\n- Durasi Sewa: ${duration} Bulan\n- Total Estimasi: ${formatPrice(kos.price * duration)}\n\nMohon informasi selanjutnya. Terima kasih!`;
-          const waUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(waText)}`;
+          const waUrl = buildWaLink(sanitizedPhone, waText);
+          try {
+            await logUserActivity(user.id, 'Klik WhatsApp Booking', kos.title, `/kos/${kos.id}`);
+          } catch {}
           window.open(waUrl, '_blank');
         }
       } else {
@@ -388,6 +386,13 @@ const KosDetail = () => {
                 <p className="text-xs text-muted-foreground text-center">
                   Terhubung langsung dengan Pemilik Kos
                 </p>
+                {!hasPhone && (
+                  <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg p-2 text-center">
+                    {user && user.id === kos.ownerId
+                      ? <a href="/dashboard/profile" className="underline font-semibold">Lengkapi nomor WhatsApp Anda di Profil</a>
+                      : "Nomor WhatsApp pemilik belum tersedia"}
+                  </p>
+                )}
               </div>
             </div>
           </div>
