@@ -1,4 +1,4 @@
-import { Users, Building2, ShoppingBag, ShieldAlert, Settings, Coins, CreditCard, TrendingUp, Globe, Zap } from "lucide-react";
+import { Users, Building2, ShoppingBag, ShieldAlert, Settings, Coins, CreditCard, TrendingUp, Globe, Zap, Megaphone } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -99,8 +99,9 @@ const AdminDashboard = () => {
               </Link>
             </Button>
             <Button asChild variant="outline" className="rounded-xl border-border shadow-sm flex-1 md:flex-none" size="sm">
-              <Link to="/dashboard/profile">
-                Edit Profile
+              <Link to="/admin/ad-management">
+                <Megaphone className="w-4 h-4 mr-2 text-primary" />
+                Ad Settings
               </Link>
             </Button>
             <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-95 flex-1 md:flex-none" size="sm">

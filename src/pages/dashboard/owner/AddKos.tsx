@@ -15,6 +15,7 @@ import { X, Plus, Loader2, MapPin, Zap, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { QuotaAlertModal } from '@/components/QuotaAlertModal';
 import { getProfile } from '@/services/profile';
+import { getSystemConfigs } from '@/services/settings';
 
 export default function AddKosPage() {
   const { user } = useAuth();
@@ -32,6 +33,10 @@ export default function AddKosPage() {
   const [rules, setRules] = useState<string[]>([]);
   const [amenityInput, setAmenityInput] = useState('');
   const [ruleInput, setRuleInput] = useState('');
+  
+  // Masa aktif iklan dinamis dari pengaturan sistem
+  const [adDuration, setAdDuration] = useState("30");
+
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -51,7 +56,7 @@ export default function AddKosPage() {
   }, [previewUrls]);
 
   useEffect(() => {
-    const checkQuota = async () => {
+    const checkQuotaAndLoadConfig = async () => {
       if (!user) return;
       if (user.role === 'admin') {
         setIsCheckingQuota(false);
@@ -59,10 +64,15 @@ export default function AddKosPage() {
       }
 
       try {
-        const [stats, balance] = await Promise.all([
+        const [stats, balance, configs] = await Promise.all([
           getUserDashboardStats(user.id),
-          getWalletBalance(user.id)
+          getWalletBalance(user.id),
+          getSystemConfigs()
         ]);
+
+        if (configs['ad_active_duration']) {
+          setAdDuration(configs['ad_active_duration']);
+        }
 
         const totalListings = (stats as any).propertiesCount + (stats as any).myListingsCount;
         const isFirstUpload = totalListings === 0;
@@ -81,7 +91,7 @@ export default function AddKosPage() {
       }
     };
 
-    checkQuota();
+    checkQuotaAndLoadConfig();
   }, [user]);
 
 
@@ -207,7 +217,7 @@ export default function AddKosPage() {
 
 
 
-      toast.success('Iklan kos berhasil dipublikasikan selama 30 hari!');
+      toast.success(`Iklan kos berhasil dipublikasikan selama ${adDuration} hari!`);
       navigate('/dashboard/my-kos');
 
     } catch (error: unknown) {
@@ -244,6 +254,10 @@ export default function AddKosPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">Pasang Iklan Kos Baru</h1>
         <p className="text-sm text-muted-foreground">Lengkapi data iklan kos Anda untuk mulai mendapatkan penyewa.</p>
+        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-wider border border-primary/10 w-fit">
+          <CheckCircle2 className="w-3 h-3" />
+          Masa Aktif Iklan: {adDuration} Hari
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-card rounded-2xl md:rounded-3xl border border-border p-5 md:p-8 space-y-6 md:space-y-8 shadow-sm">
@@ -388,12 +402,12 @@ export default function AddKosPage() {
             <div className="p-3 rounded-xl border border-primary/50 bg-primary/5 text-xs font-medium text-primary">
               <p className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                Otomatis Aktif selama 30 Hari
+                Otomatis Aktif selama {adDuration} Hari
               </p>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1 italic">
               {hasFreeQuota 
-                ? "* Upload pertama GRATIS (30 hari)." 
+                ? `* Upload pertama GRATIS (${adDuration} hari).` 
                 : `* Iklan berikutnya: Potong 30 koin dari saldo. Saldo Anda: ${userCoins} Koin.`
               }
             </p>

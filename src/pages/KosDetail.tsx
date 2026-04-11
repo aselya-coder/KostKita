@@ -284,11 +284,6 @@ const KosDetail = () => {
             {/* Main info */}
             <div className="lg:col-span-2 space-y-4">
               <div>
-                {kos.isPremium && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold mb-3">
-                    <Star className="w-3 h-3" /> Premium
-                  </span>
-                )}
                 <h1 className="font-display font-bold text-3xl lg:text-4xl tracking-tight text-foreground">
                   {kos.title}
                 </h1>

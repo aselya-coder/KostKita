@@ -22,6 +22,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { logUserActivity } from "@/services/activity";
 import { toast } from "sonner";
+import { getSystemConfigs } from "@/services/settings";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -36,6 +37,7 @@ export default function MarketplaceModeration() {
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [adDuration, setAdDuration] = useState("30");
 
   const calculateRemainingDays = (expiresAt: string | null) => {
     if (!expiresAt) return null;
@@ -47,18 +49,27 @@ export default function MarketplaceModeration() {
 
   const fetchItems = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('marketplace_items')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching items:', error);
+    try {
+      const [itemsRes, configs] = await Promise.all([
+        supabase
+          .from('marketplace_items')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        getSystemConfigs()
+      ]);
+
+      if (itemsRes.error) throw itemsRes.error;
+      
+      setItems(itemsRes.data || []);
+      if (configs['ad_active_duration']) {
+        setAdDuration(configs['ad_active_duration']);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
       toast.error("Gagal mengambil data marketplace");
-    } else {
-      setItems(data || []);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {

@@ -7,7 +7,8 @@ import { getSystemConfigs } from './settings';
 export const createKosListing = async (listing: any) => {
   try {
     const configs = await getSystemConfigs();
-    const durationDays = parseInt(configs['free_ad_duration'] || '30');
+    // Use dynamic duration from configs (fallback to 30)
+    const durationDays = parseInt(configs['ad_active_duration'] || '30');
     const autoApprove = configs['auto_approve_ads'] === 'true';
     
     const expiresAt = new Date();
@@ -46,7 +47,8 @@ export const createKosListing = async (listing: any) => {
 export const createMarketplaceItem = async (item: any) => {
   try {
     const configs = await getSystemConfigs();
-    const durationDays = parseInt(configs['free_ad_duration'] || '30');
+    // Use dynamic duration from configs (fallback to 30)
+    const durationDays = parseInt(configs['ad_active_duration'] || '30');
     const autoApprove = configs['auto_approve_ads'] === 'true';
 
     const expiresAt = new Date();

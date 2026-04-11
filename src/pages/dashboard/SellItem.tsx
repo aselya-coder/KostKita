@@ -13,11 +13,10 @@ import { toast as sonnerToast } from "sonner";
 import { QuotaAlertModal } from "@/components/QuotaAlertModal";
 import { getUserDashboardStats } from '@/services/dashboard';
 import { getWalletBalance, deductWalletBalance } from '@/services/wallet';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getSystemConfigs } from "@/services/settings";
 
 export default function SellItem() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,11 +28,14 @@ export default function SellItem() {
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
+  // Masa aktif iklan dinamis dari pengaturan sistem
+  const [adDuration, setAdDuration] = useState("30");
+
   const [formData, setFormData] = useState({
     title: "",
     price: "",
-    category: "buku",
-    condition: "baru",
+    category: "Buku",
+    condition: "Bekas - Baik",
     location: "",
     description: "",
   });
@@ -49,18 +51,24 @@ export default function SellItem() {
   }, [previewUrl]);
 
   useEffect(() => {
-    const checkQuota = async () => {
+    const checkQuotaAndLoadConfig = async () => {
       if (!user) return;
-      if (user.role === 'admin') {
-        setIsCheckingQuota(false);
-        return;
-      }
 
       try {
-        const [stats, balance] = await Promise.all([
+        const [stats, balance, configs] = await Promise.all([
           getUserDashboardStats(user.id),
-          getWalletBalance(user.id)
+          getWalletBalance(user.id),
+          getSystemConfigs()
         ]);
+
+        if (configs['ad_active_duration']) {
+          setAdDuration(configs['ad_active_duration']);
+        }
+
+        if (user.role === 'admin') {
+          setIsCheckingQuota(false);
+          return;
+        }
 
         const totalListings = (stats as any).propertiesCount + (stats as any).myListingsCount;
         const isFirstUpload = totalListings === 0;
@@ -79,9 +87,8 @@ export default function SellItem() {
       }
     };
 
-    checkQuota();
+    checkQuotaAndLoadConfig();
   }, [user]);
-
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -124,7 +131,6 @@ export default function SellItem() {
     setIsLoading(true);
     
     try {
-      // 0. Verify profile exists (needed for RLS)
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -135,20 +141,17 @@ export default function SellItem() {
         throw new Error('Profil tidak ditemukan. Harap lengkapi profil Anda.');
       }
 
-      // 1. Upload Image to Supabase Storage
       const fileName = `${Date.now()}-${image.name.replace(/\s/g, '_')}`;
       const path = `${user.id}/${fileName}`;
-      const { url, error } = await uploadFile('item-images', path, image);
+      const { url, error: uploadErr } = await uploadFile('item-images', path, image);
 
-      if (error) throw new Error(`Gagal upload foto: ${error}`);
+      if (uploadErr) throw new Error(`Gagal upload foto: ${uploadErr}`);
       
-      // 2. Save Item with Image URL
       const priceClean = parseInt(formData.price.replace(/\D/g, ''));
       if (isNaN(priceClean)) {
         throw new Error('Harga tidak valid. Harap masukkan angka.');
       }
 
-      // 3. Deduct coins if not free
       if (!hasFreeQuota) {
         const deducted = await deductWalletBalance(user.id, 30, `Pasang iklan barang: ${formData.title} (30 hari)`);
         if (!deducted) {
@@ -161,20 +164,17 @@ export default function SellItem() {
         seller_id: user.id,
         price: priceClean,
         image: url || '',
-        status: 'active', // Automatically approve the item
+        status: 'active',
       });
-
 
       if (result.success) {
         sonnerToast.success('Barang berhasil dipublikasikan!');
-        const basePath = "/dashboard";
-        setTimeout(() => navigate(`${basePath}/my-items`), 1500);
+        setTimeout(() => navigate('/dashboard/my-items'), 1500);
       } else {
         throw new Error(result.error || 'Gagal menyimpan data barang.');
       }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Terjadi kesalahan sistem.';
-      sonnerToast.error(message);
+    } catch (error: any) {
+      sonnerToast.error(error.message || 'Terjadi kesalahan sistem.');
     } finally {
       setIsLoading(false);
     }
@@ -201,11 +201,18 @@ export default function SellItem() {
         message={quotaMessage}
         role={user?.role}
       />
+      
       <div className="flex items-center gap-4">
-        <BackButton to="/dashboard" className="mb-0" />
-        <h1 className="text-2xl font-display font-bold text-foreground">Pasang Iklan Barang Baru</h1>
+        <BackButton to="/dashboard/my-items" className="mb-0" />
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Jual Barang</h1>
+          <p className="text-muted-foreground text-sm">Lengkapi detail barang yang ingin Anda jual di marketplace.</p>
+          <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-wider border border-primary/10">
+            <CheckCircle2 className="w-3 h-3" />
+            Masa Aktif Iklan: {adDuration} Hari
+          </div>
+        </div>
       </div>
-
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
@@ -267,23 +274,17 @@ export default function SellItem() {
             <div className="space-y-2">
               <div className="flex items-center justify-between px-1">
                 <label className="text-sm font-semibold">Lokasi</label>
-                <a 
-                  href={formData.location
-                    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location)}`
-                    : undefined}
-                  onClick={!formData.location ? (e) => e.preventDefault() : undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-disabled={!formData.location}
-                  className={`text-[10px] flex items-center gap-1 font-bold uppercase transition-opacity ${
-                    formData.location
-                      ? 'text-primary hover:underline cursor-pointer'
-                      : 'text-muted-foreground opacity-40 cursor-not-allowed pointer-events-none'
-                  }`}
-                >
-                  <MapPin className="w-3 h-3" />
-                  Cek di Maps
-                </a>
+                {formData.location && (
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] flex items-center gap-1 font-bold uppercase text-primary hover:underline cursor-pointer"
+                  >
+                    <MapPin className="w-3 h-3" />
+                    Cek di Maps
+                  </a>
+                )}
               </div>
               <input 
                 name="location"
@@ -291,8 +292,6 @@ export default function SellItem() {
                 onChange={handleChange}
                 required
                 type="text" 
-                inputMode="text"
-                autoComplete="street-address"
                 placeholder="e.g. Depok, Sleman" 
                 className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
@@ -312,7 +311,6 @@ export default function SellItem() {
             />
           </div>
         </div>
-
 
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
           <h3 className="font-display font-bold text-lg border-b border-border pb-4">Media</h3>
@@ -362,12 +360,12 @@ export default function SellItem() {
             <div className="p-3 rounded-xl border border-primary/50 bg-primary/5 text-xs font-medium text-primary">
               <p className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                Otomatis Aktif selama 30 Hari
+                Otomatis Aktif selama {adDuration} Hari
               </p>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1 italic">
               {hasFreeQuota 
-                ? "* Upload pertama GRATIS (30 hari)." 
+                ? `* Upload pertama GRATIS (${adDuration} hari).` 
                 : `* Iklan berikutnya: Potong 30 koin dari saldo. Saldo Anda: ${userCoins} Koin.`
               }
             </p>

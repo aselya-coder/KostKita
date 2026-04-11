@@ -38,7 +38,6 @@ export interface KosListing {
   images: string[];
   amenities: string[];
   rating: number;
-  isPremium: boolean;
   ownerName?: string;
   ownerPhone: string;
   description: string;
@@ -283,7 +282,6 @@ export const mockKosListings: KosListing[] = [
     ],
     amenities: ["WiFi", "AC", "Kamar Mandi Dalam", "Parkir"],
     rating: 4.8,
-    isPremium: true,
     ownerPhone: "6281234567890",
     description: "Kos nyaman sangat dekat dengan kampus UI Depok dengan fasilitas lengkap. Lingkungan aman dan tenang, cocok untuk mahasiswa.",
     rules: ["Tidak boleh membawa hewan", "Jam malam 23:00", "Tidak merokok di dalam kamar"],
@@ -302,7 +300,6 @@ export const mockKosListings: KosListing[] = [
     ],
     amenities: ["WiFi", "Kamar Mandi Dalam", "Dapur Bersama"],
     rating: 4.5,
-    isPremium: false,
     ownerPhone: "6281234567890",
     description: "Kos putri bersih dan nyaman sangat dekat dengan kampus UGM. Akses mudah ke kampus dan pusat kota.",
     rules: ["Khusus putri", "Jam malam 22:00", "Tamu lawan jenis di ruang tamu saja"],
@@ -321,7 +318,6 @@ export const mockKosListings: KosListing[] = [
     ],
     amenities: ["WiFi", "AC", "Kamar Mandi Dalam", "Parkir", "Laundry", "CCTV"],
     rating: 4.9,
-    isPremium: true,
     ownerPhone: "6281234567890",
     description: "Kos eksekutif full furnished sangat dekat dengan kampus ITB. Fasilitas premium dengan keamanan 24 jam.",
     rules: ["Tidak boleh membawa hewan", "Deposit 1 bulan"],
@@ -339,7 +335,6 @@ export const mockKosListings: KosListing[] = [
     ],
     amenities: ["Kamar Mandi Dalam", "Parkir Motor"],
     rating: 4.0,
-    isPremium: false,
     ownerPhone: "6285566778899",
     description: "Kos sederhana dan terjangkau dekat Unpad Jatinangor. Cocok untuk mahasiswa hemat.",
     rules: ["Bayar di muka", "Tidak boleh memasak di kamar"],
@@ -357,7 +352,6 @@ export const mockKosListings: KosListing[] = [
     ],
     amenities: ["WiFi", "AC", "Kamar Mandi Dalam", "Laundry"],
     rating: 4.6,
-    isPremium: false,
     ownerPhone: "6287788990011",
     description: "Kos modern dekat Undip Tembalang. Desain minimalis dengan fasilitas lengkap.",
     rules: ["Jam malam 23:00", "Tidak merokok"],
@@ -375,7 +369,6 @@ export const mockKosListings: KosListing[] = [
     ],
     amenities: ["WiFi", "AC", "Kamar Mandi Dalam", "Parkir", "Rooftop"],
     rating: 4.7,
-    isPremium: true,
     ownerPhone: "6282233445566",
     description: "Kos premium di area strategis Gejayan dekat UGM dan UNY.",
     rules: ["Deposit 1 bulan", "Tidak boleh membawa hewan"],
@@ -391,7 +384,6 @@ export const mockKosListings: KosListing[] = [
     images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80"],
     amenities: ["WiFi", "AC"],
     rating: 0,
-    isPremium: false,
     ownerPhone: "6281234567890",
     description: "Kos baru yang sedang menunggu persetujuan admin.",
     rules: ["No rules yet"],

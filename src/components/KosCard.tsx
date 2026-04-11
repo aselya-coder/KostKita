@@ -32,12 +32,6 @@ export function KosCard({ kos }: KosCardProps) {
             loading="lazy"
           />
           <div className="absolute top-3 left-3 flex flex-col gap-1">
-            {kos.isPremium && (
-              <div className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold flex items-center gap-1">
-                <Star className="w-3 h-3" />
-                Premium
-              </div>
-            )}
             {sanitizePhone(kos.ownerPhone || "") && (
               <div className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold flex items-center gap-1 shadow">
                 <MessageCircle className="w-3 h-3" />

@@ -39,11 +39,11 @@ import UserManagement from "@/pages/dashboard/UserManagement";
 import EditKos from "@/pages/dashboard/admin/EditKos";
 import KosManagement from "@/pages/dashboard/KosManagement";
 import MarketplaceModeration from "@/pages/dashboard/MarketplaceModeration";
-import AdminAdvertisements from "@/pages/dashboard/admin/Advertisements";
 import Reports from "@/pages/dashboard/Reports";
 import ActivityLog from "@/pages/dashboard/admin/ActivityLog";
 import CoinPackages from "@/pages/dashboard/admin/CoinPackages";
 import SystemSettings from "@/pages/dashboard/SystemSettings";
+import AdManagement from "@/pages/dashboard/AdManagement";
 import TopupUsers from "@/pages/dashboard/admin/TopupUsers";
 
 // Route Protection
@@ -111,17 +111,18 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="kos" element={<KosManagement />} />
-              <Route path="advertisements" element={<AdminAdvertisements />} />
               <Route path="marketplace" element={<MarketplaceModeration />} />
               <Route path="reports" element={<Reports />} />
               <Route path="activity-log" element={<ActivityLog />} />
               <Route path="coin-packages" element={<CoinPackages />} />
               <Route path="topup-users" element={<TopupUsers />} />
               <Route path="system-settings" element={<SystemSettings />} />
+              <Route path="ad-management" element={<AdManagement />} />
               <Route path="edit-kos/:id" element={<EditKos />} />
             </Route>
 
             {/* Redirect old dashboard paths */}
+            <Route path="/admin/advertisements" element={<Navigate to="/admin/ad-management" replace />} />
             <Route path="/owner-dashboard/*" element={<Navigate to="/dashboard" replace />} />
             <Route path="/admin-dashboard/*" element={<Navigate to="/admin" replace />} />
 

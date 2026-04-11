@@ -9,9 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Zap, TrendingUp } from "lucide-react";
-import { getWalletBalance, CoinPackage } from "@/services/coin";
+import { Loader2, Zap, TrendingUp, CheckCircle2 } from "lucide-react";
+import { getWalletBalance } from "@/services/coin";
 import { supabase } from "@/lib/supabase";
+import { getSystemConfigs } from "@/services/settings";
 
 interface AdvertiseKosModalProps {
   isOpen: boolean;
@@ -20,42 +21,6 @@ interface AdvertiseKosModalProps {
   ownerId: string;
 }
 
-interface AdvertisePackage {
-  id: string;
-  name: string;
-  duration_days: number;
-  coin_cost: number;
-  boost_level: number;
-  description: string;
-}
-
-const ADVERTISE_PACKAGES: AdvertisePackage[] = [
-  {
-    id: '1',
-    name: 'Boost Standar',
-    duration_days: 7,
-    coin_cost: 7,
-    boost_level: 1,
-    description: 'Tampilkan kos Anda di bagian atas selama 7 hari'
-  },
-  {
-    id: '2',
-    name: 'Boost Premium',
-    duration_days: 30,
-    coin_cost: 30,
-    boost_level: 2,
-    description: 'Tingkatkan visibilitas selama 1 bulan dengan badge premium'
-  },
-  {
-    id: '3',
-    name: 'Boost Eksklusif',
-    duration_days: 60,
-    coin_cost: 60,
-    boost_level: 3,
-    description: 'Promosi maksimal selama 2 bulan dengan featured placement'
-  }
-];
-
 export const AdvertiseKosModal: React.FC<AdvertiseKosModalProps> = ({
   isOpen,
   onClose,
@@ -63,18 +28,28 @@ export const AdvertiseKosModal: React.FC<AdvertiseKosModalProps> = ({
   ownerId,
 }) => {
   const [walletBalance, setWalletBalance] = useState(0);
-  const [selectedPackage, setSelectedPackage] = useState<AdvertisePackage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [adDuration, setAdDuration] = useState(30);
+  const [adCoinCost, setAdCoinCost] = useState(30);
 
-  const loadWalletBalance = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const balance = await getWalletBalance(ownerId);
+      const [balance, configs] = await Promise.all([
+        getWalletBalance(ownerId),
+        getSystemConfigs()
+      ]);
       setWalletBalance(balance);
+      
+      const duration = parseInt(configs['ad_active_duration'] || '30');
+      const costPerDay = parseInt(configs['ad_cost_per_day'] || '1');
+      
+      setAdDuration(duration);
+      setAdCoinCost(duration * costPerDay);
     } catch (err) {
-      console.error("Failed to load wallet balance:", err);
-      toast.error("Gagal memuat saldo koin");
+      console.error("Failed to load modal data:", err);
+      toast.error("Gagal memuat data koin dan konfigurasi");
     } finally {
       setIsLoading(false);
     }
@@ -82,18 +57,13 @@ export const AdvertiseKosModal: React.FC<AdvertiseKosModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      loadWalletBalance();
+      loadData();
     }
-  }, [isOpen, loadWalletBalance]);
+  }, [isOpen, loadData]);
 
   const handleAdvertise = async () => {
-    if (!selectedPackage) {
-      toast.error("Pilih paket promosi terlebih dahulu");
-      return;
-    }
-
-    if (walletBalance < selectedPackage.coin_cost) {
-      toast.error("Saldo koin tidak cukup");
+    if (walletBalance < adCoinCost) {
+      toast.error(`Saldo koin tidak cukup. Minimal ${adCoinCost} koin diperlukan.`);
       return;
     }
 
@@ -102,24 +72,24 @@ export const AdvertiseKosModal: React.FC<AdvertiseKosModalProps> = ({
       // Deduct coins from wallet
       const { error: updateError } = await supabase
         .from('wallets')
-        .update({ balance: walletBalance - selectedPackage.coin_cost })
+        .update({ balance: walletBalance - adCoinCost })
         .eq('user_id', ownerId);
 
       if (updateError) throw updateError;
 
       // Record the advertising transaction
       const end_date = new Date();
-      end_date.setDate(end_date.getDate() + selectedPackage.duration_days);
+      end_date.setDate(end_date.getDate() + adDuration);
 
       const { error: adError } = await supabase
         .from('kos_advertisements')
         .insert({
           kos_id: kosId,
           owner_id: ownerId,
-          package_id: selectedPackage.id,
-          boost_level: selectedPackage.boost_level,
-          coin_cost: selectedPackage.coin_cost,
-          duration_days: selectedPackage.duration_days,
+          package_id: `boost-${adDuration}`,
+          boost_level: 1,
+          coin_cost: adCoinCost,
+          duration_days: adDuration,
           start_date: new Date().toISOString(),
           end_date: end_date.toISOString(),
           is_active: true,
@@ -138,19 +108,18 @@ export const AdvertiseKosModal: React.FC<AdvertiseKosModalProps> = ({
       await supabase.from('coin_logs').insert({
         user_id: ownerId,
         type: 'debit',
-        amount: selectedPackage.coin_cost,
-        description: `Promosi kos - ${selectedPackage.name} (${selectedPackage.duration_days} hari)`
+        amount: adCoinCost,
+        description: `Promosi kos - Boost ${adDuration} Hari`
       });
 
-      // Update kos premium status
+      // Update kos listing status or metadata if needed
       await supabase
         .from('kos_listings')
-        .update({ is_premium: true })
+        .update({ status: 'approved' }) 
         .eq('id', kosId);
 
-      toast.success(`Promosi ${selectedPackage.name} berhasil! Kos Anda akan ditampilkan di bagian atas.`);
-      setWalletBalance(walletBalance - selectedPackage.coin_cost);
-      setSelectedPackage(null);
+      toast.success(`Promosi berhasil! Kos Anda akan mendapatkan prioritas tampilan selama ${adDuration} hari.`);
+      setWalletBalance(walletBalance - adCoinCost);
       onClose();
     } catch (err) {
       console.error("Failed to advertise kos:", err);
@@ -162,140 +131,95 @@ export const AdvertiseKosModal: React.FC<AdvertiseKosModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px] rounded-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mb-4 mx-auto">
-            <Zap className="w-6 h-6 text-yellow-600" />
-          </div>
-          <DialogTitle className="text-center text-xl font-display font-bold">
-            Promosikan Kos Anda
-          </DialogTitle>
-          <DialogDescription className="text-center">
-            Tingkatkan visibilitas kos dengan promosi berbayar menggunakan koin
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="py-6 space-y-6">
-          {/* Wallet Balance */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              Saldo Koin Anda
-            </p>
-            <p className="text-2xl font-bold text-primary">
-              {isLoading ? '...' : walletBalance.toLocaleString('id-ID')} 💎
-            </p>
-            <Button
-              variant="link"
-              className="text-xs mt-2 h-auto p-0"
-              onClick={() => {
-                onClose();
-                // Navigate to top up page
-              }}
-            >
-              Tambah Koin →
-            </Button>
-          </div>
-
-          {/* Advertising Packages */}
-          <div className="space-y-3">
-            <p className="text-sm font-semibold">Pilih Paket Promosi</p>
-            <div className="grid grid-cols-1 gap-3">
-              {ADVERTISE_PACKAGES.map((pkg) => {
-                const isAffordable = walletBalance >= pkg.coin_cost;
-                const isSelected = selectedPackage?.id === pkg.id;
-
-                return (
-                  <div
-                    key={pkg.id}
-                    onClick={() => isAffordable && setSelectedPackage(pkg)}
-                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      isSelected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/30'
-                    } ${!isAffordable ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-sm">{pkg.name}</h3>
-                          {pkg.boost_level === 3 && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
-                              TERBAIK
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-2">{pkg.description}</p>
-                        <div className="flex items-center gap-4 text-xs">
-                          <span className="text-muted-foreground">
-                            📅 {pkg.duration_days} hari
-                          </span>
-                          <span className="text-muted-foreground">
-                            <TrendingUp className="w-3 h-3 inline mr-1" />
-                            Level {pkg.boost_level}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg text-primary">
-                          {pkg.coin_cost}
-                        </p>
-                        <p className="text-xs text-muted-foreground">💎 koin</p>
-                        {!isAffordable && (
-                          <p className="text-xs text-red-600 font-semibold mt-1">
-                            Saldo kurang
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+      <DialogContent className="sm:max-w-[500px] rounded-2xl overflow-hidden p-0 border-none shadow-2xl">
+        <div className="bg-primary p-8 text-primary-foreground relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+          <div className="relative z-10">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
+              <Zap className="w-6 h-6 text-white" />
             </div>
-          </div>
-
-          {/* Benefits */}
-          <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
-            <p className="text-xs font-semibold text-blue-900 uppercase tracking-wider mb-2">
-              Manfaat Promosi
-            </p>
-            <ul className="text-xs text-blue-900 space-y-1">
-              <li>✓ Tampilkan di bagian atas daftar pencarian</li>
-              <li>✓ Peningkatan visibilitas hingga 5x lebih tinggi</li>
-              <li>✓ Mendapat badge "Promosi" di listing</li>
-              <li>✓ Prioritas dalam hasil rekomendasi</li>
-            </ul>
+            <DialogTitle className="text-2xl font-display font-bold mb-2">
+              Promosikan Kos Anda
+            </DialogTitle>
+            <DialogDescription className="text-primary-foreground/80 text-sm">
+              Tingkatkan visibilitas kos Anda di hasil pencarian teratas selama {adDuration} hari ke depan.
+            </DialogDescription>
           </div>
         </div>
 
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="rounded-xl flex-1"
-          >
-            Batal
-          </Button>
-          <Button
-            type="button"
-            onClick={handleAdvertise}
-            disabled={isSubmitting || !selectedPackage || walletBalance < (selectedPackage?.coin_cost || Infinity)}
-            className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground flex-1 font-bold shadow-lg shadow-primary/20"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Memproses...
-              </>
-            ) : (
-              <>
-                <Zap className="w-4 h-4 mr-2" />
-                Promosikan Sekarang
-              </>
-            )}
-          </Button>
-        </DialogFooter>
+        <div className="p-8 space-y-8 bg-card">
+          {/* Wallet Balance */}
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-secondary/50 border border-border">
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Saldo Anda</p>
+              <p className="text-xl font-bold text-foreground flex items-center gap-1.5">
+                {isLoading ? '...' : walletBalance.toLocaleString('id-ID')}
+                <span className="text-sm text-primary">Koin</span>
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 font-bold text-xs rounded-lg">
+              TOP UP
+            </Button>
+          </div>
+
+          {/* Single Promotion Package */}
+          <div className="relative p-6 rounded-2xl border-2 border-primary bg-primary/5 shadow-sm">
+            <div className="absolute -top-3 left-4 px-3 py-1 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-wider">
+              Rekomendasi
+            </div>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="font-bold text-lg text-foreground">Boost {adDuration} Hari</h3>
+                <p className="text-xs text-muted-foreground">Visibilitas prioritas & posisi teratas</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-primary">{adCoinCost}</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">Koin</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {[
+                "Prioritas di hasil pencarian",
+                "Badge khusus pada iklan",
+                `Masa aktif ${adDuration} hari penuh`,
+                "Statistik performa detail"
+              ].map((text, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                  {text}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-3">
+            <Button 
+              onClick={handleAdvertise} 
+              disabled={isSubmitting || isLoading || walletBalance < adCoinCost}
+              className="w-full py-7 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  Aktifkan Promosi Sekarang
+                  <TrendingUp className="w-5 h-5 ml-2" />
+                </>
+              )}
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="w-full py-4 text-muted-foreground hover:text-foreground text-sm font-medium"
+            >
+              Nanti Saja
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

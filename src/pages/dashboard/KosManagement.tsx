@@ -27,12 +27,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { logUserActivity } from "@/services/activity";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { getSystemConfigs } from "@/services/settings";
 
 export default function KosManagement() {
   const { user } = useAuth();
   const [listings, setListings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [adDuration, setAdDuration] = useState("30");
 
   const calculateRemainingDays = (expiresAt: string | null) => {
     if (!expiresAt) return null;
@@ -74,21 +76,30 @@ export default function KosManagement() {
 
   const fetchListings = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('kos_listings')
-      .select(`
-        *,
-        profiles!owner_id (name)
-      `)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching listings:', error);
-      toast.error("Gagal mengambil data kos");
-    } else {
-      setListings(data as any || []);
+    try {
+      const [listingsRes, configs] = await Promise.all([
+        supabase
+          .from('kos_listings')
+          .select(`
+            *,
+            profiles!owner_id (name)
+          `)
+          .order('created_at', { ascending: false }),
+        getSystemConfigs()
+      ]);
+
+      if (listingsRes.error) throw listingsRes.error;
+      
+      setListings(listingsRes.data as any || []);
+      if (configs['ad_active_duration']) {
+        setAdDuration(configs['ad_active_duration']);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error("Gagal mengambil data");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -135,7 +146,7 @@ export default function KosManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-display font-bold text-foreground">Manajemen Iklan Kos</h1>
-          <p className="text-muted-foreground text-xs md:text-sm">Pantau semua iklan kos. Iklan otomatis aktif dan akan nonaktif setelah 30 hari.</p>
+          <p className="text-muted-foreground text-xs md:text-sm">Pantau semua iklan kos. Iklan otomatis aktif dan akan nonaktif setelah {adDuration} hari.</p>
         </div>
       </div>
 

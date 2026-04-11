@@ -72,12 +72,13 @@ export function DashboardSidebar() {
 
   return (
     <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card">
-      <div className="p-6">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Home className="w-4 h-4 text-primary-foreground" />
+      {/* Logo */}
+      <div className="mb-10 px-6 pt-6">
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
+            <Home className="w-6 h-6 text-primary-foreground" />
           </div>
-          <span className="font-display font-bold text-xl tracking-tight text-foreground">
+          <span className="text-2xl font-bold font-display tracking-tight text-foreground">
             KosKita
           </span>
         </Link>

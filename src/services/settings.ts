@@ -33,7 +33,8 @@ export const getSystemConfigs = async (): Promise<Record<string, string>> => {
       'min_topup': '5',
       'max_topup': '100',
       'auto_approve_ads': 'true',
-      'user_reports_enabled': 'true'
+      'user_reports_enabled': 'true',
+      'ad_active_duration': '30'
     };
   }
 };

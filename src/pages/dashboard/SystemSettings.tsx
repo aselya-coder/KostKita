@@ -61,7 +61,6 @@ export default function SystemSettings() {
       items: [
         { id: 'coin_price', label: "Harga per Koin (IDR)", type: "number", description: "Harga dasar 1 koin dalam Rupiah." },
         { id: 'ad_cost_per_day', label: "Biaya Iklan per Hari (Koin)", type: "number", description: "Jumlah koin yang didebet setiap hari untuk iklan aktif." },
-        { id: 'free_ad_duration', label: "Durasi Iklan Gratis (Hari)", type: "number", description: "Lama waktu iklan pertama gratis untuk user baru." },
       ]
     },
     {

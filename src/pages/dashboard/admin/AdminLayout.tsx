@@ -15,6 +15,7 @@ import {
   X,
   Globe,
   Zap,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,6 +41,7 @@ const AdminLayout = () => {
     { href: "/admin/users", label: "User Management", icon: Users },
     { href: "/admin/kos", label: "Kos Management", icon: Building2 },
     { href: "/admin/marketplace", label: "Marketplace", icon: ShoppingBag },
+    { href: "/admin/ad-management", label: "Ad Settings", icon: Megaphone },
     { href: "/admin/topup-users", label: "Topup Users", icon: Coins },
     { href: "/admin/reports", label: "Reports", icon: ShieldAlert },
     { href: "/admin/activity-log", label: "Activity Log", icon: BarChart },
