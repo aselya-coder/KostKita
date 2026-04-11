@@ -12,7 +12,8 @@ import { notifyAdmins } from '@/services/notifications';
 import { toast as sonnerToast } from "sonner";
 import { QuotaAlertModal } from "@/components/QuotaAlertModal";
 import { getUserDashboardStats } from '@/services/dashboard';
-import { getWalletBalance, deductWalletBalance } from '@/services/wallet';
+import { getWalletBalance } from '@/services/wallet';
+import { processListingPayment } from '@/services/coin';
 import { getSystemConfigs } from "@/services/settings";
 
 export default function SellItem() {
@@ -152,11 +153,18 @@ export default function SellItem() {
         throw new Error('Harga tidak valid. Harap masukkan angka.');
       }
 
-      if (!hasFreeQuota) {
-        const deducted = await deductWalletBalance(user.id, 30, `Pasang iklan barang: ${formData.title} (30 hari)`);
-        if (!deducted) {
-          throw new Error('Gagal memotong saldo koin. Silakan top up koin Anda.');
-        }
+      // 3. Deduct coins if not free
+      // Use atomic RPC for payment processing
+      const paymentResult = await processListingPayment(user.id, parseInt(adDuration));
+      
+      if (!paymentResult.success) {
+        throw new Error(paymentResult.message || 'Gagal memproses pembayaran koin.');
+      }
+
+      if (paymentResult.is_free) {
+        sonnerToast.info('Anda mendapatkan jatah iklan GRATIS!');
+      } else {
+        sonnerToast.success(`Koin berhasil dipotong: ${paymentResult.cost} Koin`);
       }
 
       const result = await createMarketplaceItem({

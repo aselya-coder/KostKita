@@ -74,8 +74,18 @@ DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view own wallet') THEN
         CREATE POLICY "Users can view own wallet" ON public.wallets FOR SELECT USING (auth.uid() = user_id);
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert own wallet') THEN
+        CREATE POLICY "Users can insert own wallet" ON public.wallets FOR INSERT WITH CHECK (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update own wallet') THEN
+        CREATE POLICY "Users can update own wallet" ON public.wallets FOR UPDATE USING (auth.uid() = user_id);
+    END IF;
+
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view own coin logs') THEN
         CREATE POLICY "Users can view own coin logs" ON public.coin_logs FOR SELECT USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert own coin logs') THEN
+        CREATE POLICY "Users can insert own coin logs" ON public.coin_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view active coin packages') THEN
         CREATE POLICY "Anyone can view active coin packages" ON public.coin_packages FOR SELECT USING (is_active = true);
@@ -122,9 +132,14 @@ BEGIN
     -- 5. Logic Iklan Berbayar (1 Koin/Hari)
     v_total_cost := p_duration_days * 1;
     
+    -- Ensure wallet exists
+    INSERT INTO public.wallets (user_id, balance)
+    VALUES (p_user_id, 0)
+    ON CONFLICT (user_id) DO NOTHING;
+    
     SELECT balance INTO v_balance FROM public.wallets WHERE user_id = p_user_id;
     
-    IF v_balance IS NULL OR v_balance < v_total_cost THEN
+    IF v_balance < v_total_cost THEN
         RETURN jsonb_build_object('success', false, 'message', 'Koin tidak cukup, silakan top up terlebih dahulu');
     END IF;
 
@@ -137,6 +152,11 @@ BEGIN
     RETURN jsonb_build_object('success', true, 'is_free', false, 'cost', v_total_cost, 'duration', p_duration_days, 'message', 'Upload menggunakan ' || v_total_cost || ' koin');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant permissions for RPC
+GRANT EXECUTE ON FUNCTION public.process_listing_upload(UUID, INT) TO anon;
+GRANT EXECUTE ON FUNCTION public.process_listing_upload(UUID, INT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.process_listing_upload(UUID, INT) TO service_role;
 
 -- FUNCTION: Update Wallet on Success Topup
 CREATE OR REPLACE FUNCTION public.update_wallet_on_success(
@@ -163,6 +183,9 @@ BEGIN
     VALUES (p_user_id, 'credit', v_coin_amount, 'Top up koin via pembayaran');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.update_wallet_on_success(UUID, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.update_wallet_on_success(UUID, UUID) TO service_role;
 
 -- FUNCTION: Auto Expire Cron Logic (To be called by Cron)
 CREATE OR REPLACE FUNCTION public.handle_expired_listings()

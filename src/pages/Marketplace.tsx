@@ -8,19 +8,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
-const categories = ["Semua", "Buku", "Elektronik", "Furnitur", "Kendaraan"];
-
 const Marketplace = () => {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("Semua");
   const [items, setItems] = useState<MarketplaceItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchItems = async () => {
       setIsLoading(true);
-      const data = await getMarketplaceItems(category);
+      const data = await getMarketplaceItems(); // No category needed
       setItems(data);
       setIsLoading(false);
     };
@@ -46,7 +43,7 @@ const Marketplace = () => {
         }
       }, 300);
     };
-  }, [category]);
+  }, []); // No category dependency
 
   const filteredItems = useMemo(() => {
     if (!query) {
@@ -83,7 +80,7 @@ const Marketplace = () => {
       </div>
 
       {/* Search */}
-      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-surface ring-1 ring-foreground/5 mb-4">
+      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-surface ring-1 ring-foreground/5 mb-6">
         <Search className="w-4 h-4 text-muted-foreground" />
         <input
           type="text"
@@ -97,23 +94,6 @@ const Marketplace = () => {
             <X className="w-4 h-4" />
           </button>
         )}
-      </div>
-
-      {/* Categories */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {categories.map((c) => (
-          <button
-            key={c}
-            onClick={() => setCategory(c)}
-            className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              c === category
-                ? "bg-primary text-primary-foreground"
-                : "bg-surface ring-1 ring-foreground/10 text-foreground hover:bg-secondary"
-            }`}
-          >
-            {c}
-          </button>
-        ))}
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">
@@ -150,7 +130,7 @@ const Marketplace = () => {
           </p>
           <Button 
             variant="outline" 
-            onClick={() => { setQuery(""); setCategory("Semua"); }}
+            onClick={() => { setQuery(""); }}
             className="mt-6 rounded-xl border-primary/20 text-primary hover:bg-primary/5"
           >
             Reset Pencarian

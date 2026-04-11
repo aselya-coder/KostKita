@@ -3,7 +3,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { createKosListing } from '@/services/forms';
 import { uploadMultipleFiles } from '@/services/storage';
 import { getUserDashboardStats } from '@/services/dashboard';
-import { getWalletBalance, deductWalletBalance } from '@/services/wallet';
+import { getWalletBalance } from '@/services/wallet';
+import { processListingPayment } from '@/services/coin';
 
 import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
@@ -185,11 +186,17 @@ export default function AddKosPage() {
       const roomsClean = parseInt(formData.availableRooms);
 
       // 3. Deduct coins if not free
-      if (!hasFreeQuota) {
-        const deducted = await deductWalletBalance(user.id, 30, `Pasang iklan kos: ${formData.title} (30 hari)`);
-        if (!deducted) {
-          throw new Error('Gagal memotong saldo koin. Silakan top up koin Anda.');
-        }
+      // Use atomic RPC for payment processing
+      const paymentResult = await processListingPayment(user.id, parseInt(adDuration));
+      
+      if (!paymentResult.success) {
+        throw new Error(paymentResult.message || 'Gagal memproses pembayaran koin.');
+      }
+
+      if (paymentResult.is_free) {
+        toast.info('Anda mendapatkan jatah iklan GRATIS!');
+      } else {
+        toast.success(`Koin berhasil dipotong: ${paymentResult.cost} Koin`);
       }
 
       const listingData = {

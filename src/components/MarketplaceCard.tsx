@@ -28,9 +28,6 @@ export function MarketplaceCard({ item }: MarketplaceCardProps) {
             loading="lazy"
           />
           <div className="absolute top-3 left-3 flex flex-col gap-1">
-            <div className="px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs font-medium text-foreground hover:bg-background transition-colors">
-              {item.category}
-            </div>
             {sanitizePhone(item.sellerPhone || "") && (
               <div className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold flex items-center gap-1 shadow">
                 <MessageCircle className="w-3 h-3" />

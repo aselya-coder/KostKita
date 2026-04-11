@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 import { Camera, X, Plus, Loader2, ShoppingBag, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getProfile } from '@/services/profile';
+import { processListingPayment } from '@/services/coin';
+import { getSystemConfigs } from '@/services/settings';
 
 export default function AddItemPage() {
   const { user } = useAuth();
@@ -23,6 +25,10 @@ export default function AddItemPage() {
   const [loadingStatus, setLoadingStatus] = useState<string>('');
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
+  // Masa aktif iklan dinamis dari pengaturan sistem
+  const [adDuration, setAdDuration] = useState("30");
+
   const [formData, setFormData] = useState({
     title: '',
     price: '',
@@ -38,6 +44,20 @@ export default function AddItemPage() {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const configs = await getSystemConfigs();
+        if (configs['ad_active_duration']) {
+          setAdDuration(configs['ad_active_duration']);
+        }
+      } catch (error) {
+        console.error("Error loading config:", error);
+      }
+    };
+    loadConfig();
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -85,26 +105,40 @@ export default function AddItemPage() {
         return;
       }
 
-      // 1. Upload Image to Supabase Storage
-      setLoadingStatus('Mengupload foto barang (Step 1/2)...');
-      const fileName = `${Date.now()}-${image.name.replace(/\s/g, '_')}`;
-      const path = `${user.id}/${fileName}`;
-      const { url, error } = await uploadFile('item-images', path, image);
-
-      if (error) {
-        console.error('Storage error (Item):', error);
-        throw new Error(`Gagal upload foto: ${error}`);
-      }
+      // 1. Process coin payment (Student also pays after first ad)
+      setLoadingStatus('Memproses pembayaran koin...');
+      const paymentResult = await processListingPayment(user.id, parseInt(adDuration));
       
-      console.log('Image uploaded successfully:', url);
-      setUploadProgress(70);
-      setLoadingStatus('Menyimpan data barang (Step 2/2)...');
-
-      // 2. Save Item with Image URL
-      const priceClean = parseInt(formData.price.replace(/\D/g, ''));
-      if (isNaN(priceClean)) {
-        throw new Error('Harga tidak valid. Harap masukkan angka.');
+      if (!paymentResult.success) {
+        throw new Error(paymentResult.message || 'Gagal memproses pembayaran koin.');
       }
+
+      if (paymentResult.is_free) {
+         toast.info('Anda mendapatkan jatah iklan GRATIS!');
+       } else {
+         toast.success(`Koin berhasil dipotong: ${paymentResult.cost} Koin`);
+       }
+ 
+       // 2. Upload Image to Supabase Storage
+       setLoadingStatus('Mengupload foto barang (Step 1/2)...');
+       const fileName = `${Date.now()}-${image.name.replace(/\s/g, '_')}`;
+       const path = `${user.id}/${fileName}`;
+       const { url, error } = await uploadFile('item-images', path, image);
+
+       if (error) {
+         console.error('Storage error (Item):', error);
+         throw new Error(`Gagal upload foto: ${error}`);
+       }
+       
+       console.log('Image uploaded successfully:', url);
+       setUploadProgress(70);
+       setLoadingStatus('Menyimpan data barang (Step 2/2)...');
+
+       // 3. Save Item with Image URL
+       const priceClean = parseInt(formData.price.replace(/\D/g, ''));
+       if (isNaN(priceClean)) {
+         throw new Error('Harga tidak valid. Harap masukkan angka.');
+       }
 
       const itemData = {
         ...formData,

@@ -175,10 +175,6 @@ const ItemDetail = () => {
 
         <div className="space-y-6">
           <div>
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface text-xs font-medium text-muted-foreground mb-3 ring-1 ring-foreground/5">
-              <Tag className="w-3 h-3" />
-              {item.category}
-            </span>
             <h1 className="font-display font-bold text-2xl text-foreground">{item.title}</h1>
             <p className="text-3xl text-price text-foreground mt-2">{formatPrice(item.price)}</p>
           </div>
