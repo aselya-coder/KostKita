@@ -15,9 +15,9 @@ export function MarketplaceCard({ item }: MarketplaceCardProps) {
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      className="group relative rounded-2xl bg-card shadow-card hover:shadow-card-hover ring-1 ring-foreground/5 overflow-hidden transition-shadow duration-300"
+      className="group relative rounded-[2rem] bg-card border border-border shadow-sm hover:shadow-2xl hover:shadow-primary/5 ring-1 ring-foreground/5 overflow-hidden transition-all duration-300"
     >
       <Link to={`/marketplace/${item.id}`}>
         <div className="relative aspect-square overflow-hidden">

@@ -156,22 +156,23 @@ export default function UserOverview() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <WalletCard 
             balance={wallet?.balance || 0} 
             totalEarnings={wallet?.totalEarnings} 
-            className="h-full"
+            className="h-full min-h-[240px]"
           />
         </div>
         
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
           <StatsCard 
             title="Pesan Chat" 
             value={isLoading ? '...' : stats.unreadMessagesCount} 
             icon={MessageCircle} 
             description="Pesan belum dibaca"
             to="/dashboard/chat"
+            className="h-full"
             trend={stats.unreadMessagesCount > 0 ? { value: stats.unreadMessagesCount, isUp: true } : undefined}
           />
           <StatsCard 
@@ -180,6 +181,7 @@ export default function UserOverview() {
             icon={Calendar} 
             description={user?.role === 'owner' ? "Pemesanan masuk" : "Pemesanan saya"}
             to="/dashboard/bookings"
+            className="h-full"
           />
           <StatsCard 
             title="Iklan Kos" 
@@ -187,24 +189,28 @@ export default function UserOverview() {
             icon={Building2} 
             description="Total iklan kos"
             to="/dashboard/my-kos"
+            className="h-full"
           />
           <StatsCard 
             title="Inquiries" 
             value={isLoading ? '...' : stats.inquiriesCount} 
             icon={MessageSquare} 
             to="/dashboard/inquiries"
+            className="h-full"
           />
           <StatsCard 
             title="Barang Saya" 
             value={isLoading ? '...' : stats.myListingsCount} 
             icon={ShoppingBag} 
             to="/dashboard/my-items"
+            className="h-full"
           />
           <StatsCard 
             title="Favorit" 
             value={isLoading ? '...' : stats.favoritesCount} 
             icon={Heart} 
             to="/dashboard/favorites"
+            className="h-full"
           />
         </div>
       </div>
@@ -243,8 +249,14 @@ export default function UserOverview() {
               </div>
             ))}
             {myKos.length === 0 && (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                Belum ada kos yang terdaftar.
+              <div className="p-12 text-center">
+                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Building2 className="w-8 h-8 text-muted-foreground/40" />
+                </div>
+                <p className="text-sm text-muted-foreground">Belum ada kos yang terdaftar.</p>
+                <Button asChild variant="link" className="mt-2 text-primary" size="sm">
+                  <Link to="/dashboard/add-kos">Tambah Kos Sekarang</Link>
+                </Button>
               </div>
             )}
           </div>
@@ -276,8 +288,14 @@ export default function UserOverview() {
               </div>
             ))}
             {myItems.length === 0 && (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                Belum ada barang yang dijual.
+              <div className="p-12 text-center">
+                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ShoppingBag className="w-8 h-8 text-muted-foreground/40" />
+                </div>
+                <p className="text-sm text-muted-foreground">Belum ada barang yang dijual.</p>
+                <Button asChild variant="link" className="mt-2 text-primary" size="sm">
+                  <Link to="/dashboard/sell-item">Mulai Jual Barang</Link>
+                </Button>
               </div>
             )}
           </div>

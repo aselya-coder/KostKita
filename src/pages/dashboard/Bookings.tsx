@@ -210,28 +210,28 @@ export default function BookingsPage() {
       {bookings.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
           {bookings.map((booking) => (
-            <div key={booking.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
-              <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Building2 className="w-6 h-6 text-primary" />
+            <div key={booking.id} className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group">
+              <div className="p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                <div className="flex items-start gap-6">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <Building2 className="w-8 h-8 text-primary" />
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-lg text-foreground">{booking.kosTitle}</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h3 className="font-bold text-xl text-foreground tracking-tight">{booking.kosTitle}</h3>
                       {getStatusBadge(booking.status)}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" />
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full">
+                        <Calendar className="w-4 h-4 text-primary" />
                         Masuk: {new Date(booking.checkInDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </span>
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4" />
+                      <span className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full">
+                        <Clock className="w-4 h-4 text-primary" />
                         Durasi: {booking.durationMonths} Bulan
                       </span>
                       {user?.role === 'owner' && (
-                        <span className="flex items-center gap-1.5 text-primary font-medium">
+                        <span className="flex items-center gap-2 bg-primary/5 text-primary px-3 py-1 rounded-full font-bold">
                           <User className="w-4 h-4" />
                           Pemesan: {booking.userName}
                         </span>
@@ -240,55 +240,55 @@ export default function BookingsPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Pembayaran</p>
-                    <p className="text-xl font-bold text-primary">{formatPrice(booking.totalPrice)}</p>
+                <div className="flex flex-col lg:items-end gap-4 shrink-0">
+                  <div className="lg:text-right">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Total Pembayaran</p>
+                    <p className="text-2xl font-display font-bold text-primary tracking-tight">{formatPrice(booking.totalPrice)}</p>
                   </div>
                   
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-3 flex-wrap">
                     {getWhatsAppLink(booking) && (
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 rounded-lg"
+                        className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 rounded-xl px-4 font-bold"
                         onClick={() => handleOpenWhatsApp(booking)}
                       >
-                        <MessageCircle className="w-4 h-4 mr-1.5" /> Chat WA
+                        <MessageCircle className="w-4 h-4 mr-2" /> Chat WA
                       </Button>
                     )}
                     {user?.role !== 'owner' && (booking.status === 'pending' || booking.status === 'approved') && (
                       <Button 
                         size="sm"
                         variant="outline"
-                        className="text-red-600 border-red-200 hover:bg-red-50 rounded-lg"
+                        className="text-red-600 border-red-200 hover:bg-red-50 rounded-xl px-4 font-bold"
                         onClick={() => handleCancelBooking(booking)}
                       >
-                        <XCircle className="w-4 h-4 mr-1.5" /> Batalkan
+                        <XCircle className="w-4 h-4 mr-2" /> Batalkan
                       </Button>
                     )}
                     {user?.role === 'owner' && booking.status === 'pending' && (
-                      <>
+                      <div className="flex items-center gap-2">
                         <Button 
                           size="sm" 
                           variant="outline" 
-                          className="text-red-600 border-red-200 hover:bg-red-50 rounded-lg"
+                          className="text-red-600 border-red-200 hover:bg-red-50 rounded-xl px-4 font-bold"
                           onClick={() => handleUpdateStatus(booking, 'rejected')}
                         >
-                          <XCircle className="w-4 h-4 mr-1.5" /> Tolak
+                          <XCircle className="w-4 h-4 mr-2" /> Tolak
                         </Button>
                         <Button 
                           size="sm" 
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-4 shadow-lg shadow-emerald-200 font-bold"
                           onClick={() => handleUpdateStatus(booking, 'approved')}
                         >
-                          <CheckCircle2 className="w-4 h-4 mr-1.5" /> Setujui
+                          <CheckCircle2 className="w-4 h-4 mr-2" /> Setujui
                         </Button>
-                      </>
+                      </div>
                     )}
-                    <Button asChild variant="ghost" size="sm" className="rounded-lg">
+                    <Button asChild variant="ghost" size="sm" className="rounded-xl px-4 text-xs font-bold hover:bg-secondary">
                       <Link to={`/kos/${booking.kosId}`}>
-                        Detail Properti <ExternalLink className="w-3 h-3 ml-1.5" />
+                        Detail Properti <ExternalLink className="w-3 h-3 ml-2" />
                       </Link>
                     </Button>
                   </div>
@@ -296,9 +296,14 @@ export default function BookingsPage() {
               </div>
               
               {booking.message && (
-                <div className="px-6 py-3 bg-secondary/30 border-t border-border flex items-start gap-3">
-                  <AlertCircle className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <p className="text-xs text-muted-foreground italic">"{booking.message}"</p>
+                <div className="px-8 py-4 bg-secondary/30 border-t border-border flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center shrink-0 border border-border shadow-sm">
+                    <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Pesan Tambahan</p>
+                    <p className="text-sm text-muted-foreground italic font-medium">"{booking.message}"</p>
+                  </div>
                 </div>
               )}
             </div>
