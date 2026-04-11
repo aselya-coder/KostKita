@@ -37,6 +37,7 @@ export default function MyMarketplaceItems() {
     fetchMyItems();
 
     // REALTIME: Listen for changes in marketplace_items
+    let mounted = true;
     const channel = supabase
       .channel('my-items-changes')
       .on('postgres_changes', { 
@@ -45,9 +46,16 @@ export default function MyMarketplaceItems() {
         table: 'marketplace_items', 
         filter: `seller_id=eq.${user?.id}` 
       }, () => fetchMyItems())
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          if (!mounted && channel) {
+            supabase.removeChannel(channel);
+          }
+        }
+      });
 
     return () => {
+      mounted = false;
       if (channel) {
         supabase.removeChannel(channel);
       }

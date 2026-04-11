@@ -48,12 +48,20 @@ const Index = () => {
     fetchMarketplace();
 
     // REALTIME: Listen for changes using a single channel
+    let mounted = true;
     const channel = supabase.channel('home-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings' }, () => fetchKos())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_items' }, () => fetchMarketplace())
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          if (!mounted && channel) {
+            supabase.removeChannel(channel);
+          }
+        }
+      });
 
     return () => {
+      mounted = false;
       if (channel) {
         supabase.removeChannel(channel);
       }

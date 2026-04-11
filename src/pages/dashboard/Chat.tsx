@@ -62,15 +62,25 @@ export default function ChatPage() {
     fetchConversations();
     
     // Subscribe to new conversations/updates
+    let mounted = true;
     const channel = supabase
       .channel('conversations-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => {
         fetchConversations();
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          if (!mounted && channel) {
+            supabase.removeChannel(channel);
+          }
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      mounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [user]);
 
@@ -93,6 +103,7 @@ export default function ChatPage() {
       fetchMessages(selectedConversation.id);
 
       // Subscribe to new messages for this conversation
+      let mounted = true;
       const channel = supabase
         .channel(`messages-${selectedConversation.id}`)
         .on('postgres_changes', { 
@@ -115,10 +126,19 @@ export default function ChatPage() {
           }
           scrollToBottom();
         })
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            if (!mounted && channel) {
+              supabase.removeChannel(channel);
+            }
+          }
+        });
 
       return () => {
-        supabase.removeChannel(channel);
+        mounted = false;
+        if (channel) {
+          supabase.removeChannel(channel);
+        }
       };
     } else {
       setMessages([]);

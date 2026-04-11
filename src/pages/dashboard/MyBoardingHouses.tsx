@@ -26,6 +26,7 @@ export default function MyBoardingHouses() {
   useEffect(() => {
     fetchMyKos();
 
+    let mounted = true;
     const channel = supabase
       .channel('my-kos-changes')
       .on('postgres_changes', { 
@@ -34,9 +35,16 @@ export default function MyBoardingHouses() {
         table: 'kos_listings', 
         filter: `owner_id=eq.${user?.id}` 
       }, () => fetchMyKos())
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          if (!mounted && channel) {
+            supabase.removeChannel(channel);
+          }
+        }
+      });
 
     return () => {
+      mounted = false;
       if (channel) {
         supabase.removeChannel(channel);
       }

@@ -22,16 +22,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 1. Initial session check
     const checkSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
+        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+        if (error) {
+          if (mounted) setIsLoading(false);
+          return;
+        }
 
-        if (session?.user) {
-          const initialUser = mapSupabaseUser(session.user);
+        if (currentUser) {
+          const initialUser = mapSupabaseUser(currentUser);
           if (mounted) {
             setUser(initialUser);
-            setIsLoading(false);
           }
-          fetchUserProfile(session.user);
+          fetchUserProfile(currentUser);
         } else {
           if (mounted) setIsLoading(false);
         }
@@ -61,12 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // 3. Profile changes listener (REALTIME)
-    let profileSubscription: any = null;
+    let profileChannel: any = null;
     
     const setupProfileListener = async () => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (currentUser && mounted) {
-        profileSubscription = supabase
+        profileChannel = supabase
           .channel(`profile-updates-${currentUser.id}`)
           .on(
             'postgres_changes',
@@ -94,7 +96,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
           )
-          .subscribe();
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              // Double check if still mounted
+              if (!mounted && profileChannel) {
+                supabase.removeChannel(profileChannel);
+              }
+            }
+          });
       }
     };
 
@@ -103,8 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mounted = false;
       subscription.unsubscribe();
-      if (profileSubscription) {
-        supabase.removeChannel(profileSubscription);
+      if (profileChannel) {
+        supabase.removeChannel(profileChannel);
       }
     };
   }, []);

@@ -10,8 +10,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
   auth: {
     persistSession: true,
-    storage: window.sessionStorage, // Use sessionStorage instead of localStorage for automatic logout on browser close
+    storage: window.sessionStorage,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   }
 });

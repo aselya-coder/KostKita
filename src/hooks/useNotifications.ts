@@ -38,15 +38,25 @@ export function useNotifications() {
     fetchNotifications();
     if (!user) return;
 
+    let mounted = true;
     const channel = supabase
       .channel(`notifications-${user.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
         fetchNotifications();
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          if (!mounted && channel) {
+            supabase.removeChannel(channel);
+          }
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      mounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [user]);
 

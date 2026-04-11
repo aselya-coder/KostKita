@@ -43,6 +43,7 @@ const ItemDetail = () => {
     fetchItem();
 
     if (id) {
+      let mounted = true;
       const channel = supabase
         .channel(`item-detail:${id}`)
         .on(
@@ -56,9 +57,16 @@ const ItemDetail = () => {
             }
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            if (!mounted && channel) {
+              supabase.removeChannel(channel);
+            }
+          }
+        });
 
       return () => {
+        mounted = false;
         if (channel) {
           supabase.removeChannel(channel);
         }
