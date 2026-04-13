@@ -11,7 +11,8 @@ export const createKosListing = async (listing: any) => {
     const durationDays = parseInt(configs['ad_active_duration'] || '30');
     const autoApprove = configs['auto_approve_ads'] === 'true';
     
-    const expiresAt = new Date();
+    const now = new Date();
+    const expiresAt = new Date(now);
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
     const { data, error } = await supabase
@@ -19,6 +20,7 @@ export const createKosListing = async (listing: any) => {
       .insert([{
         ...listing,
         status: autoApprove ? 'approved' : 'pending',
+        created_at: now.toISOString(),
         expires_at: expiresAt.toISOString()
       }])
       .select()
@@ -51,7 +53,8 @@ export const createMarketplaceItem = async (item: any) => {
     const durationDays = parseInt(configs['ad_active_duration'] || '30');
     const autoApprove = configs['auto_approve_ads'] === 'true';
 
-    const expiresAt = new Date();
+    const now = new Date();
+    const expiresAt = new Date(now);
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
     const { data, error } = await supabase
@@ -59,6 +62,7 @@ export const createMarketplaceItem = async (item: any) => {
       .insert([{
         ...item,
         status: autoApprove ? 'active' : 'pending',
+        created_at: now.toISOString(),
         expires_at: expiresAt.toISOString()
       }])
       .select()

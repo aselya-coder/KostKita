@@ -48,7 +48,8 @@ export interface KosListing {
   isFreeFirstAd?: boolean;
   adDurationDays?: number;
   coinCostPerDay?: number;
-  expiryDate?: string;
+  expires_at?: string;
+  created_at?: string;
 }
 
 export interface MarketplaceItem {
@@ -63,12 +64,13 @@ export interface MarketplaceItem {
   sellerName: string;
   location: string;
   description: string;
-  createdAt: string;
+  createdAt?: string;
+  created_at?: string;
   status?: "active" | "sold" | "removed" | "pending" | "expired" | "archived";
   isFreeFirstAd?: boolean;
   adDurationDays?: number;
   coinCostPerDay?: number;
-  expiryDate?: string;
+  expires_at?: string;
 }
 
 export interface CoinPackage {

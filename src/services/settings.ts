@@ -66,6 +66,19 @@ export const updateMultipleConfigs = async (configs: Record<string, string>) => 
       .upsert(updates);
 
     if (error) throw error;
+
+    // If ad_active_duration is changed, update ALL active listings
+    if (configs['ad_active_duration']) {
+      const newDuration = parseInt(configs['ad_active_duration']);
+      if (!isNaN(newDuration)) {
+        // We use an RPC to safely update all active listings expiration dates
+        // This calculates the new expires_at based on their created_at date
+        await supabase.rpc('update_all_active_listings_duration', {
+          p_new_duration_days: newDuration
+        });
+      }
+    }
+
     return { success: true };
   } catch (error) {
     console.error('Error updating multiple configs:', error);

@@ -119,7 +119,7 @@ export const handlePaymentWebhook = async (userId: string, planId: string, trans
   // 2. Call RPC to update wallet and log
   const { error: rpcError } = await supabase.rpc('update_wallet_on_success', {
     p_user_id: userId,
-    p_plan_id: planId
+    p_package_id: planId
   });
 
   if (rpcError) throw rpcError;

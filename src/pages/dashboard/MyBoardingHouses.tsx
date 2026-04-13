@@ -9,6 +9,8 @@ import { BackButton } from "@/components/BackButton";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { calculateRemainingDays } from "@/utils/date";
+import { Clock } from "lucide-react";
 
 export default function MyBoardingHouses() {
   const { user } = useAuth();
@@ -85,6 +87,7 @@ export default function MyBoardingHouses() {
                 <tr>
                   <th className="px-8 py-5">Properti</th>
                   <th className="px-8 py-5">Harga</th>
+                  <th className="px-8 py-5">Masa Aktif</th>
                   <th className="px-8 py-5">Status</th>
                   <th className="px-8 py-5 text-right">Aksi</th>
                 </tr>
@@ -112,6 +115,24 @@ export default function MyBoardingHouses() {
                     </td>
                     <td className="px-8 py-5 whitespace-nowrap">
                       <p className="font-bold text-foreground text-lg tracking-tight">Rp {kos.price.toLocaleString('id-ID')}</p>
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      {kos.expires_at ? (
+                        <div className="flex items-center gap-2">
+                          <Clock className={cn(
+                            "w-3.5 h-3.5",
+                            calculateRemainingDays(kos.expires_at) <= 3 ? "text-red-500" : "text-primary"
+                          )} />
+                          <span className={cn(
+                            "font-medium",
+                            calculateRemainingDays(kos.expires_at) <= 3 ? "text-red-600" : "text-foreground"
+                          )}>
+                            {calculateRemainingDays(kos.expires_at)} Hari Lagi
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground italic">Tanpa batas</span>
+                      )}
                     </td>
                     <td className="px-8 py-5 whitespace-nowrap">
                       <span className={cn(

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { calculateRemainingDays } from "@/utils/date";
 import { type KosListing, formatPrice } from "@/data/mockData";
 import { BackButton } from "@/components/BackButton";
 import { 
@@ -36,13 +37,7 @@ export default function KosManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [adDuration, setAdDuration] = useState("30");
 
-  const calculateRemainingDays = (expiresAt: string | null) => {
-    if (!expiresAt) return null;
-    const end = new Date(expiresAt);
-    const now = new Date();
-    const diffTime = end.getTime() - now.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
+
 
   const deactivateListing = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menonaktifkan kos ini? Pengguna tidak akan bisa melihat kos ini di pencarian.")) return;
@@ -117,10 +112,10 @@ export default function KosManagement() {
     };
   }, []);
 
-  const filteredListings = listings.filter(l => 
-     l.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     l.profiles?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+  const filteredListings = listings.filter(k => 
+    k.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    k.profiles?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
     const deleteListing = async (id: string) => {
       if (confirm("Hapus kos ini secara permanen dari database? Tindakan ini tidak dapat dibatalkan.")) {

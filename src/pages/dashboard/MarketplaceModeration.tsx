@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { calculateRemainingDays } from "@/utils/date";
 import { formatPrice } from "@/data/mockData";
 import { BackButton } from "@/components/BackButton";
 import { 
@@ -38,14 +39,6 @@ export default function MarketplaceModeration() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [adDuration, setAdDuration] = useState("30");
-
-  const calculateRemainingDays = (expiresAt: string | null) => {
-    if (!expiresAt) return null;
-    const end = new Date(expiresAt);
-    const now = new Date();
-    const diffTime = end.getTime() - now.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
 
   const fetchItems = async () => {
     setIsLoading(true);

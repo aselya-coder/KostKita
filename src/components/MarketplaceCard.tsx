@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import { type MarketplaceItem, formatPrice } from "@/data/mockData";
 import { useFavorites } from "@/hooks/useFavorites";
 import { sanitizePhone } from "@/utils/whatsapp";
+import { calculateRemainingDays } from "@/utils/date";
+import { Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MarketplaceCardProps {
   item: MarketplaceItem;
@@ -32,6 +35,15 @@ export function MarketplaceCard({ item }: MarketplaceCardProps) {
               <div className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold flex items-center gap-1 shadow">
                 <MessageCircle className="w-3 h-3" />
                 WA Ready
+              </div>
+            )}
+            {item.expires_at && (
+              <div className={cn(
+                "px-2 py-0.5 rounded-full text-white text-[10px] font-bold flex items-center gap-1 shadow",
+                calculateRemainingDays(item.expires_at) <= 3 ? "bg-red-600/90 animate-pulse" : "bg-primary/90"
+              )}>
+                <Clock className="w-3 h-3" />
+                {calculateRemainingDays(item.expires_at)} Hari Lagi
               </div>
             )}
           </div>

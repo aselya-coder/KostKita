@@ -6,6 +6,9 @@ import { type KosListing, formatPrice } from "@/data/mockData";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getAmenityIcon } from "@/utils/amenityIcons";
 import { sanitizePhone } from "@/utils/whatsapp";
+import { calculateRemainingDays } from "@/utils/date";
+import { Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface KosCardProps {
   kos: KosListing;
@@ -36,6 +39,15 @@ export function KosCard({ kos }: KosCardProps) {
               <div className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold flex items-center gap-1 shadow">
                 <MessageCircle className="w-3 h-3" />
                 WA Ready
+              </div>
+            )}
+            {kos.expires_at && (
+              <div className={cn(
+                "px-2 py-0.5 rounded-full text-white text-[10px] font-bold flex items-center gap-1 shadow",
+                calculateRemainingDays(kos.expires_at) <= 3 ? "bg-red-600/90 animate-pulse" : "bg-primary/90"
+              )}>
+                <Clock className="w-3 h-3" />
+                {calculateRemainingDays(kos.expires_at)} Hari Lagi
               </div>
             )}
           </div>

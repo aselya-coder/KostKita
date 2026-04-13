@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Tag, MapPin, Edit2, Trash2, Eye, ShoppingBag } from "lucide-react";
+import { Plus, Tag, MapPin, Edit2, Trash2, Eye, ShoppingBag, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/data/mockData";
 import { Link } from "react-router-dom";
@@ -9,6 +9,7 @@ import { BackButton } from "@/components/BackButton";
 import { supabase } from "@/lib/supabase";
 import { logUserActivity } from "@/services/activity";
 import { toast } from "sonner";
+import { calculateRemainingDays } from "@/utils/date";
 
 export default function MyMarketplaceItems() {
   const { user } = useAuth();
@@ -110,9 +111,8 @@ export default function MyMarketplaceItems() {
                 <thead className="bg-secondary/50 text-muted-foreground uppercase text-[9px] md:text-[10px] font-bold tracking-widest">
                   <tr>
                     <th className="px-6 py-5">Barang</th>
-                    <th className="px-6 py-5">Kategori</th>
                     <th className="px-6 py-5">Harga</th>
-                    <th className="px-6 py-5">Kondisi</th>
+                    <th className="px-6 py-5">Masa Aktif</th>
                     <th className="px-6 py-5">Status</th>
                     <th className="px-6 py-5 text-right">Aksi</th>
                   </tr>
@@ -143,14 +143,26 @@ export default function MyMarketplaceItems() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-5 whitespace-nowrap">
-                        <span className="capitalize font-medium">{item.category}</span>
-                      </td>
                       <td className="px-6 py-5 font-bold text-base whitespace-nowrap tracking-tight">
                         {formatPrice(item.price)}
                       </td>
-                      <td className="px-6 py-5 text-muted-foreground whitespace-nowrap">
-                        {item.condition}
+                      <td className="px-6 py-5 whitespace-nowrap">
+                        {item.expires_at ? (
+                          <div className="flex items-center gap-2">
+                            <Clock className={cn(
+                              "w-3.5 h-3.5",
+                              calculateRemainingDays(item.expires_at) <= 3 ? "text-red-500" : "text-primary"
+                            )} />
+                            <span className={cn(
+                              "font-medium",
+                              calculateRemainingDays(item.expires_at) <= 3 ? "text-red-600" : "text-foreground"
+                            )}>
+                              {calculateRemainingDays(item.expires_at)} Hari Lagi
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground italic">Tanpa batas</span>
+                        )}
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap">
                         <span className={cn(
