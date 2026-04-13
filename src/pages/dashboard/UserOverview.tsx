@@ -124,11 +124,20 @@ export default function UserOverview() {
                 Welcome back, {user?.name}!
               </h1>
               <div className="flex flex-col md:flex-row items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
-                  {user?.role === "admin" ? "Administrator" : "User"}
+                <span className={cn(
+                  "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                  user?.role === "admin" ? "bg-purple-100 text-purple-600 border border-purple-200" :
+                  user?.role === "owner" ? "bg-blue-100 text-blue-600 border border-blue-200" :
+                  "bg-emerald-100 text-emerald-600 border border-emerald-200"
+                )}>
+                  {user?.role === "admin" ? "Administrator" : 
+                   user?.role === "owner" ? "Pemilik Kos" : 
+                   "Pencari Kos"}
                 </span>
                 <p className="text-sm text-muted-foreground">
-                  Kelola kos, barang marketplace, dan aktivitas akun Anda di sini.
+                  {user?.role === "owner" 
+                    ? "Kelola iklan kos, transaksi, dan pesan dari calon penyewa Anda."
+                    : "Cari kos impian, kelola barang marketplace, dan pantau aktivitas Anda."}
                 </p>
               </div>
             </div>
@@ -146,12 +155,14 @@ export default function UserOverview() {
                 Jual Barang
               </Link>
             </Button>
-            <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-95" size="lg">
-              <Link to="/dashboard/add-kos">
-                <Plus className="w-4 h-4 mr-2" />
-                Tambah Kos
-              </Link>
-            </Button>
+            {user?.role === "owner" && (
+              <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-95" size="lg">
+                <Link to="/dashboard/add-kos">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Tambah Kos
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -183,21 +194,33 @@ export default function UserOverview() {
             to="/dashboard/bookings"
             className="h-full"
           />
-          <StatsCard 
-            title="Iklan Kos" 
-            value={isLoading ? '...' : stats.propertiesCount} 
-            icon={Building2} 
-            description="Total iklan kos"
-            to="/dashboard/my-kos"
-            className="h-full"
-          />
-          <StatsCard 
-            title="Inquiries" 
-            value={isLoading ? '...' : stats.inquiriesCount} 
-            icon={MessageSquare} 
-            to="/dashboard/inquiries"
-            className="h-full"
-          />
+          {user?.role === "owner" ? (
+            <>
+              <StatsCard 
+                title="Iklan Kos" 
+                value={isLoading ? '...' : stats.propertiesCount} 
+                icon={Building2} 
+                description="Total iklan kos"
+                to="/dashboard/my-kos"
+                className="h-full"
+              />
+              <StatsCard 
+                title="Inquiries" 
+                value={isLoading ? '...' : stats.inquiriesCount} 
+                icon={MessageSquare} 
+                to="/dashboard/inquiries"
+                className="h-full"
+              />
+            </>
+          ) : (
+            <StatsCard 
+              title="Favorit" 
+              value={isLoading ? '...' : stats.favoritesCount} 
+              icon={Heart} 
+              to="/dashboard/favorites"
+              className="h-full"
+            />
+          )}
           <StatsCard 
             title="Barang Saya" 
             value={isLoading ? '...' : stats.myListingsCount} 
@@ -205,64 +228,62 @@ export default function UserOverview() {
             to="/dashboard/my-items"
             className="h-full"
           />
-          <StatsCard 
-            title="Favorit" 
-            value={isLoading ? '...' : stats.favoritesCount} 
-            icon={Heart} 
-            to="/dashboard/favorites"
-            className="h-full"
-          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="p-6 border-b border-border flex items-center justify-between">
-            <h3 className="font-display font-semibold text-foreground">Kos Terbaru</h3>
-            <Link to="/dashboard/my-kos" className="text-sm font-medium text-primary hover:underline">
-              Lihat Semua
-            </Link>
-          </div>
-          <div className="divide-y border-border">
-            {myKos.slice(0, 3).map((kos) => (
-              <div key={kos.id} className="p-4 flex items-center gap-4 hover:bg-secondary/50 transition-colors">
-                <img src={kos.images[0]} alt={kos.title} className="w-12 h-12 rounded-lg object-cover" />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-foreground truncate">{kos.title}</h4>
-                  <p className="text-xs text-muted-foreground">{kos.location}</p>
+        {user?.role === "owner" && (
+          <div className="bg-card rounded-2xl border border-border overflow-hidden">
+            <div className="p-6 border-b border-border flex items-center justify-between">
+              <h3 className="font-display font-semibold text-foreground">Kos Terbaru</h3>
+              <Link to="/dashboard/my-kos" className="text-sm font-medium text-primary hover:underline">
+                Lihat Semua
+              </Link>
+            </div>
+            <div className="divide-y border-border">
+              {myKos.slice(0, 3).map((kos) => (
+                <div key={kos.id} className="p-4 flex items-center gap-4 hover:bg-secondary/50 transition-colors">
+                  <img src={kos.images[0]} alt={kos.title} className="w-12 h-12 rounded-lg object-cover" />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-foreground truncate">{kos.title}</h4>
+                    <p className="text-xs text-muted-foreground">{kos.location}</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
+                      <Link to={`/kos/${kos.id}`}>
+                        <Eye className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDeleteKos(kos.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
-                    <Link to={`/kos/${kos.id}`}>
-                      <Eye className="w-4 h-4" />
-                    </Link>
+              ))}
+              {myKos.length === 0 && (
+                <div className="p-12 text-center">
+                  <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Building2 className="w-8 h-8 text-muted-foreground/40" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Belum ada kos yang terdaftar.</p>
+                  <Button asChild variant="link" className="mt-2 text-primary" size="sm">
+                    <Link to="/dashboard/add-kos">Tambah Kos Sekarang</Link>
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => handleDeleteKos(kos.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
                 </div>
-              </div>
-            ))}
-            {myKos.length === 0 && (
-              <div className="p-12 text-center">
-                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Building2 className="w-8 h-8 text-muted-foreground/40" />
-                </div>
-                <p className="text-sm text-muted-foreground">Belum ada kos yang terdaftar.</p>
-                <Button asChild variant="link" className="mt-2 text-primary" size="sm">
-                  <Link to="/dashboard/add-kos">Tambah Kos Sekarang</Link>
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+        <div className={cn(
+          "bg-card rounded-2xl border border-border overflow-hidden",
+          user?.role !== "owner" && "lg:col-span-2"
+        )}>
           <div className="p-6 border-b border-border flex items-center justify-between">
             <h3 className="font-display font-semibold text-foreground">Barang Marketplace Terbaru</h3>
             <Link to="/dashboard/my-items" className="text-sm font-medium text-primary hover:underline">

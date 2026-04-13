@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { User, Mail, Phone, MapPin, Calendar, Shield, Camera, Loader2, QrCode, ImagePlus } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Shield, Camera, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BackButton } from "@/components/BackButton";
 import { uploadFile } from "@/services/storage";
 import { updateUserProfile } from "@/services/profile";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export default function Profile() {
@@ -14,10 +13,6 @@ export default function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isUploadingQris, setIsUploadingQris] = useState(false);
-  const qrisInputRef = useRef<HTMLInputElement>(null);
-  const [qrisUrl, setQrisUrl] = useState<string | null>(null);
-
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [location, setLocation] = useState(user?.location || "");
@@ -31,12 +26,6 @@ export default function Profile() {
       setLocation(user.location || "");
       setAbout(user.about || "");
     }
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    const { data } = supabase.storage.from('avatars').getPublicUrl(`${user.id}/qris.png`);
-    if (data?.publicUrl) setQrisUrl(data.publicUrl);
   }, [user]);
 
   if (!user) return null;
@@ -87,27 +76,6 @@ export default function Profile() {
 
   const basePath = user.role === "admin" ? "/admin" : "/dashboard";
 
-  const handleQrisChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user) return;
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setIsUploadingQris(true);
-      // Always upload/overwrite to a stable path so semua user bisa akses URL tetap
-      const path = `${user.id}/qris.png`;
-      const { url, error } = await uploadFile('avatars', path, file);
-      if (error) {
-        toast.error("Gagal mengunggah gambar QRIS");
-        setIsUploadingQris(false);
-        return;
-      }
-      if (url) {
-        setQrisUrl(url);
-        toast.success("QRIS berhasil diperbarui");
-      }
-      setIsUploadingQris(false);
-    }
-  };
-
   return (
     <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
       <BackButton to={basePath} className="mb-0" />
@@ -156,43 +124,6 @@ export default function Profile() {
               <span className="text-xs md:text-sm font-medium">{new Date(user.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
           </div>
-
-          {user.role === "admin" && (
-            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-              <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">QRIS Image</h4>
-              <div className="space-y-4">
-                <div className="aspect-square rounded-xl bg-secondary/50 border border-border flex items-center justify-center overflow-hidden">
-                  {qrisUrl ? (
-                    <img src={qrisUrl} alt="QRIS" className="w-full h-full object-contain p-4" />
-                  ) : (
-                    <div className="text-center text-muted-foreground text-xs flex flex-col items-center">
-                      <QrCode className="w-8 h-8 mb-2" />
-                      Belum ada QRIS
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    onClick={() => qrisInputRef.current?.click()}
-                    disabled={isUploadingQris}
-                    className="rounded-xl"
-                  >
-                    {isUploadingQris ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ImagePlus className="w-4 h-4 mr-2" />}
-                    {qrisUrl ? "Ganti QRIS" : "Unggah QRIS"}
-                  </Button>
-                  <input
-                    ref={qrisInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleQrisChange}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">QRIS ini akan ditampilkan pada halaman pembayaran untuk metode QRIS.</p>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Right Column - Forms */}

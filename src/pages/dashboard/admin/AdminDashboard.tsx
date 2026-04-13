@@ -1,12 +1,15 @@
-import { Users, Building2, ShoppingBag, ShieldAlert, Settings, Coins, CreditCard, TrendingUp, Globe, Zap, Megaphone } from "lucide-react";
+import { Users, Building2, ShoppingBag, ShieldAlert, Settings, Coins, CreditCard, TrendingUp, Globe, Zap, Megaphone, RefreshCw } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getAdminDashboardStats, getTopupUsersReport } from "@/services/dashboard";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -22,42 +25,59 @@ const AdminDashboard = () => {
     coinsUsed: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [topupUsers, setTopupUsers] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [usageData, setUsageData] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-      
-      try {
-        setIsLoading(true);
-        const data = await getAdminDashboardStats();
-        setStats({
-          totalUsers: data.totalUsers,
-          totalKos: data.totalKos,
-          totalItems: data.totalItems,
-          totalActiveAds: data.totalActiveAds,
-          totalRevenue: data.totalRevenue,
-          topUpRevenue: data.topUpRevenue,
-          adminFeeRevenue: data.adminFeeRevenue,
-          coinsSold: data.coinsSold,
-          coinsUsed: data.coinsUsed,
-        });
-        setRevenueData(data.revenueData);
-        setUsageData(data.usageData);
+  const fetchData = useCallback(async (silent = false) => {
+    if (!user) return;
+    
+    try {
+      if (!silent) setIsLoading(true);
+      else setIsRefreshing(true);
 
-        // Fetch topup users from Supabase
-        const topupData = await getTopupUsersReport();
-        setTopupUsers(topupData.slice(0, 5));
-      } catch (error) {
-        console.error("Failed to fetch admin stats:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
+      const data = await getAdminDashboardStats();
+      setStats({
+        totalUsers: data.totalUsers,
+        totalKos: data.totalKos,
+        totalItems: data.totalItems,
+        totalActiveAds: data.totalActiveAds,
+        totalRevenue: data.totalRevenue,
+        topUpRevenue: data.topUpRevenue,
+        adminFeeRevenue: data.adminFeeRevenue,
+        coinsSold: data.coinsSold,
+        coinsUsed: data.coinsUsed,
+      });
+      setRevenueData(data.revenueData);
+      setUsageData(data.usageData);
+
+      const topupData = await getTopupUsersReport();
+      setTopupUsers(topupData.slice(0, 5));
+    } catch (error) {
+      console.error("Failed to fetch admin stats:", error);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchData();
+
+    // REALTIME: Listen for changes in key tables to refresh dashboard
+    const channel = supabase
+      .channel('admin-dashboard-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchData(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kos_listings' }, () => fetchData(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => fetchData(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'coin_logs' }, () => fetchData(true))
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -77,9 +97,12 @@ const AdminDashboard = () => {
             </div>
             
             <div className="space-y-1">
-              <h1 className="text-xl md:text-3xl font-display font-bold text-foreground">
-                Admin Panel: {user?.name}!
-              </h1>
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <h1 className="text-xl md:text-3xl font-display font-bold text-foreground">
+                  Admin Panel: {user?.name}!
+                </h1>
+                {isRefreshing && <RefreshCw className="w-4 h-4 animate-spin text-primary" />}
+              </div>
               <div className="flex flex-col md:flex-row items-center gap-2">
                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] md:text-[10px] font-bold uppercase tracking-wider">
                   Administrator
@@ -92,6 +115,16 @@ const AdminDashboard = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 md:gap-3">
+            <Button 
+              onClick={() => fetchData()} 
+              variant="outline" 
+              className="rounded-xl border-border shadow-sm flex-1 md:flex-none" 
+              size="sm"
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
+              Refresh
+            </Button>
             <Button asChild variant="outline" className="rounded-xl border-border shadow-sm flex-1 md:flex-none" size="sm">
               <Link to="/">
                 <Globe className="w-4 h-4 mr-2" />

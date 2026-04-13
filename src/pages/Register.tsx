@@ -5,13 +5,15 @@ import { Building2, GraduationCap, Home, ArrowRight, User, Mail, Lock, Phone } f
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
 
 const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    password: ""
+    password: "",
+    role: "student" as "student" | "owner"
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -25,15 +27,18 @@ const Register = () => {
     }));
   };
 
+  const handleRoleChange = (role: "student" | "owner") => {
+    setFormData(prev => ({ ...prev, role }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     
-    // Set default role to 'user' for everyone
     const result = await signup(formData.email, formData.password, {
       name: formData.name,
-      role: "user",
+      role: formData.role,
       phone: formData.phone,
     });
 
@@ -80,6 +85,35 @@ const Register = () => {
                 {error}
               </motion.div>
             )}
+            <div className="grid grid-cols-2 gap-4 mb-2">
+              <button
+                type="button"
+                onClick={() => handleRoleChange("student")}
+                className={cn(
+                  "flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2",
+                  formData.role === "student" 
+                    ? "border-primary bg-primary/5 text-primary" 
+                    : "border-border bg-surface text-muted-foreground hover:border-border/80"
+                )}
+              >
+                <GraduationCap className={cn("w-6 h-6", formData.role === "student" ? "text-primary" : "text-muted-foreground")} />
+                <span className="text-xs font-bold">Pencari Kos</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRoleChange("owner")}
+                className={cn(
+                  "flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2",
+                  formData.role === "owner" 
+                    ? "border-primary bg-primary/5 text-primary" 
+                    : "border-border bg-surface text-muted-foreground hover:border-border/80"
+                )}
+              >
+                <Building2 className={cn("w-6 h-6", formData.role === "owner" ? "text-primary" : "text-muted-foreground")} />
+                <span className="text-xs font-bold">Pemilik Kos</span>
+              </button>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-bold text-foreground ml-1">Nama Lengkap</label>
               <div className="relative">

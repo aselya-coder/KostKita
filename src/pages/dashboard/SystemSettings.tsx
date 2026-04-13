@@ -48,12 +48,25 @@ export default function SystemSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validasi tipe file
+    if (!file.type.startsWith('image/')) {
+      toast.error("Hanya menerima file gambar (JPG, PNG, atau JPEG).");
+      return;
+    }
+
+    // Validasi ukuran file (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Ukuran file maksimal adalah 2MB.");
+      return;
+    }
+
     try {
       setIsUploading(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `system/qris.${fileExt}`;
+      const fileName = `system/qris_${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
+      // Upload ke storage (menggunakan bucket 'avatars' yang sudah ada atau sesuaikan)
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
@@ -64,7 +77,7 @@ export default function SystemSettings() {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Save directly to DB so it takes effect immediately
+      // Simpan path gambar ke database melalui config
       await updateSystemConfig('qris_image_url', publicUrl);
       
       updateConfig('qris_image_url', publicUrl);
@@ -74,6 +87,8 @@ export default function SystemSettings() {
       toast.error("Gagal mengunggah gambar QRIS.");
     } finally {
       setIsUploading(false);
+      // Reset input value agar bisa upload file yang sama lagi jika perlu
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 

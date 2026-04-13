@@ -150,6 +150,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             about: profile.about || prev.about,
           };
         });
+      } else if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist, create it from metadata
+        const metadata = targetUser.user_metadata;
+        const newProfile = {
+          id: targetUser.id,
+          email: targetUser.email,
+          name: metadata?.name || "User",
+          role: metadata?.role || "user",
+          phone: metadata?.phone || "",
+          avatar_url: metadata?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${targetUser.id}`,
+          location: metadata?.location || "",
+          about: metadata?.about || "",
+        };
+
+        const { data: createdProfile, error: createError } = await supabase
+          .from("profiles")
+          .insert(newProfile)
+          .select()
+          .single();
+
+        if (!createError && createdProfile) {
+          setUser(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              name: createdProfile.name,
+              role: createdProfile.role,
+              phone: createdProfile.phone,
+              location: createdProfile.location,
+              avatar: createdProfile.avatar_url,
+              about: createdProfile.about,
+            };
+          });
+        }
       }
     } catch (err) {
       console.warn("Background profile fetch failed:", err);

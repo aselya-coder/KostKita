@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { getWalletBalance, addWalletBalance } from "@/services/wallet";
+import { getSystemConfigs } from "@/services/settings";
 import { 
   initiatePayment, 
   type InitiatePaymentResponse, 
@@ -65,7 +66,19 @@ export default function PaymentCheckout() {
   const [serverRedirectUrl, setServerRedirectUrl] = useState<string | null>(null);
   const [serverQrisPayload, setServerQrisPayload] = useState<string | null>(null);
   const [serverQrisImageUrl, setServerQrisImageUrl] = useState<string | null>(null);
+  const [systemQrisImageUrl, setSystemQrisImageUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    // Load system config for QRIS Image
+    const loadSystemQris = async () => {
+      const configs = await getSystemConfigs();
+      if (configs['qris_image_url']) {
+        setSystemQrisImageUrl(configs['qris_image_url']);
+      }
+    };
+    loadSystemQris();
+  }, []);
 
   useEffect(() => {
     if (!user || !trxId) {
@@ -470,22 +483,29 @@ export default function PaymentCheckout() {
                 {selected?.group === "QRIS" && (
                   <div className="space-y-8 py-4">
                     <div className="max-w-[280px] mx-auto bg-white p-6 rounded-3xl border-4 border-secondary shadow-lg relative">
-                      {serverQrisImageUrl ? (
+                      {serverQrisImageUrl || systemQrisImageUrl ? (
                         <img
-                          src={`${serverQrisImageUrl}?t=${Date.now()}`}
+                          src={`${serverQrisImageUrl || systemQrisImageUrl}?t=${Date.now()}`}
                           alt="QRIS"
                           className="w-full aspect-square object-contain"
-                          key={serverQrisImageUrl}
+                          key={serverQrisImageUrl || systemQrisImageUrl}
+                        />
+                      ) : serverQrisPayload ? (
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(serverQrisPayload)}`}
+                          alt="QRIS"
+                          className="w-full aspect-square object-contain"
+                          key={serverQrisPayload}
                         />
                       ) : (
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(serverQrisPayload || getQRPayload(trx))}`}
-                          alt="QRIS"
-                          className="w-full aspect-square object-contain"
-                          key={serverQrisPayload || 'default'}
-                        />
+                        <div className="w-full aspect-square flex flex-col items-center justify-center bg-secondary/20 rounded-2xl gap-3 text-center p-4">
+                          <XCircle className="w-10 h-10 text-muted-foreground/40" />
+                          <p className="text-xs font-medium text-muted-foreground italic">QRIS belum tersedia. Silakan pilih metode pembayaran lain.</p>
+                        </div>
                       )}
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-[10px] font-bold tracking-widest">QRIS</div>
+                      {(serverQrisImageUrl || systemQrisImageUrl || serverQrisPayload) && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-[10px] font-bold tracking-widest">QRIS</div>
+                      )}
                     </div>
                     <div className="text-center space-y-4">
                       <div className="inline-flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-4 py-2 rounded-full">

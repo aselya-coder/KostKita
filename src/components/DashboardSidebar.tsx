@@ -49,16 +49,30 @@ export function DashboardSidebar() {
       ];
     }
 
+    if (role === "owner") {
+      return [
+        { title: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
+        { title: "Pemesanan Masuk", href: "/dashboard/bookings", icon: CalendarCheck },
+        { title: "Chat", href: "/dashboard/chat", icon: MessageCircle },
+        { title: "Kos Saya", href: "/dashboard/my-kos", icon: Building2 },
+        { title: "Tambah Kos", href: "/dashboard/add-kos", icon: PlusCircle },
+        { title: "Marketplace Saya", href: "/dashboard/my-items", icon: ShoppingBag },
+        { title: "Jual Barang", href: "/dashboard/sell-item", icon: PlusCircle },
+        { title: "Top Up Koin", href: "/dashboard/topup", icon: Coins },
+        { title: "Profil", href: "/dashboard/profile", icon: User },
+        { title: "Pengaturan", href: "/dashboard/settings", icon: SettingsIcon },
+      ];
+    }
+
+    // Default for student/user
     return [
       { title: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
-      { title: "Pemesanan", href: "/dashboard/bookings", icon: CalendarCheck },
+      { title: "Pemesanan Saya", href: "/dashboard/bookings", icon: CalendarCheck },
       { title: "Chat", href: "/dashboard/chat", icon: MessageCircle },
-      { title: "Kos Saya", href: "/dashboard/my-kos", icon: Building2 },
-      { title: "Tambah Kos", href: "/dashboard/add-kos", icon: PlusCircle },
       { title: "Marketplace Saya", href: "/dashboard/my-items", icon: ShoppingBag },
       { title: "Jual Barang", href: "/dashboard/sell-item", icon: PlusCircle },
-      { title: "Top Up Koin", href: "/dashboard/topup", icon: Coins },
       { title: "Favorit", href: "/dashboard/favorites", icon: Heart },
+      { title: "Top Up Koin", href: "/dashboard/topup", icon: Coins },
       { title: "Profil", href: "/dashboard/profile", icon: User },
       { title: "Pengaturan", href: "/dashboard/settings", icon: SettingsIcon },
     ];

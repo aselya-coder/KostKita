@@ -18,6 +18,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -133,10 +134,10 @@ export default function CoinPackagesPage() {
   const openEditModal = (pkg: AdminCoinPackage) => {
     setCurrentPackage(pkg);
     setForm({
-      name: pkg.name,
-      coinAmount: pkg.coinAmount,
-      price: pkg.price,
-      isActive: pkg.isActive,
+      name: pkg.name || "",
+      coinAmount: pkg.coinAmount ?? "",
+      price: pkg.price ?? "",
+      isActive: pkg.isActive ?? true,
     });
     setIsModalOpen(true);
   };
@@ -224,11 +225,11 @@ export default function CoinPackagesPage() {
         <DialogContent className="sm:max-w-[425px] rounded-2xl">
           <DialogHeader>
             <DialogTitle>{currentPackage ? "Edit Paket Koin" : "Tambah Paket Koin Baru"}</DialogTitle>
-            <p id="dialog-description" className="text-sm text-muted-foreground">
+            <DialogDescription>
               {currentPackage ? "Perbarui informasi paket koin yang sudah ada." : "Buat paket koin baru untuk sistem top-up."}
-            </p>
+            </DialogDescription>
           </DialogHeader>
-          <form aria-describedby="dialog-description" onSubmit={handleSavePackage} className="grid gap-4 py-4">
+          <form onSubmit={handleSavePackage} className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
                 Nama
@@ -250,7 +251,7 @@ export default function CoinPackagesPage() {
                 id="coinAmount"
                 name="coinAmount"
                 type="number"
-                value={form.coinAmount}
+                value={form.coinAmount === 0 ? "0" : (form.coinAmount || "")}
                 onChange={handleFormChange}
                 className="col-span-3 rounded-xl"
                 min={1}
@@ -266,7 +267,7 @@ export default function CoinPackagesPage() {
                 id="price"
                 name="price"
                 type="number"
-                value={form.price}
+                value={form.price === 0 ? "0" : (form.price || "")}
                 onChange={handleFormChange}
                 className="col-span-3 rounded-xl"
                 min={0}
