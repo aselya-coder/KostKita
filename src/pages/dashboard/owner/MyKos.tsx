@@ -51,6 +51,7 @@ export default function MyKos() {
         }
       }, 300);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleDelete = async (id: string) => {
@@ -120,12 +121,12 @@ export default function MyKos() {
                       <td className="px-4 md:px-6 py-4">
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider",
-                          kos.expiryDate && new Date(kos.expiryDate) < new Date() ? "bg-red-50 text-red-600" :
+                          kos.expires_at && new Date(kos.expires_at) < new Date() ? "bg-red-50 text-red-600" :
                           kos.status === "approved" ? "bg-emerald-50 text-emerald-600" :
                           kos.status === "pending" ? "bg-amber-50 text-amber-600" :
                           "bg-red-50 text-red-600"
                         )}>
-                          {kos.expiryDate && new Date(kos.expiryDate) < new Date() ? "expired" : kos.status}
+                          {kos.expires_at && new Date(kos.expires_at) < new Date() ? "expired" : kos.status}
                         </span>
                       </td>
                       <td className="px-4 md:px-6 py-4 text-right">

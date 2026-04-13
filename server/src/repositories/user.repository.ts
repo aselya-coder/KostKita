@@ -1,5 +1,5 @@
 import prisma from '../config/prisma.js';
-import { Role } from '@prisma/client';
+type Role = string;
 
 export class UserRepository {
   async findById(id: string) {

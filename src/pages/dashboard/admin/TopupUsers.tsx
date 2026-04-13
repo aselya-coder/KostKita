@@ -39,7 +39,8 @@ export default function TopupUsersPage() {
     fetchData();
   }, [user]);
 
-  const formatPhoneForWA = (phone: string) => {
+  const formatPhoneForWA = (phone: string | undefined | null) => {
+    if (!phone) return "";
     let sanitized = phone.replace(/\D/g, '');
     if (sanitized.startsWith('0')) sanitized = '62' + sanitized.slice(1);
     else if (sanitized.startsWith('8')) sanitized = '62' + sanitized;

@@ -143,6 +143,7 @@ export default function AddItemPage() {
       const itemData = {
         ...formData,
         seller_id: user.id,
+        seller_name: profileData?.name || user.name,
         price: priceClean,
         image: url || '',
         status: 'active', // Automatically approve the item

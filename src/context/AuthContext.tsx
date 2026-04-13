@@ -22,12 +22,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 1. Initial session check
     const checkSession = async () => {
       try {
-        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+        const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           if (mounted) setIsLoading(false);
           return;
         }
 
+        const currentUser = session?.user;
         if (currentUser) {
           const initialUser = mapSupabaseUser(currentUser);
           if (mounted) {
@@ -66,7 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let profileChannel: any = null;
     
     const setupProfileListener = async () => {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = session?.user;
       if (currentUser && mounted) {
         profileChannel = supabase
           .channel(`profile-updates-${currentUser.id}`)
@@ -122,8 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // If no user provided, get current user from Supabase
     let targetUser = supabaseUser;
     if (!targetUser) {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      targetUser = currentUser || undefined;
+      const { data: { session } } = await supabase.auth.getSession();
+      targetUser = session?.user || undefined;
     }
     
     if (!targetUser) return;

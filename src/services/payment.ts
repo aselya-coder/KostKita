@@ -127,7 +127,7 @@ export const createTopupRequest = async (userId: string, packageId: string, role
     );
 
     // Return app checkout URL for local/dev flow (avoid unreachable mock domain)
-    const appBase = process.env.APP_BASE_URL || 'http://localhost:8080';
+    const appBase = import.meta.env.VITE_APP_BASE_URL || window.location.origin;
     const paymentUrl = `${appBase}/dashboard/topup/checkout?trx=${transaction.data.id}`;
 
     return {
@@ -161,15 +161,22 @@ export type InitiatePaymentResponse = {
   redirectUrl?: string;
   vaNumber?: string;
   qrisPayload?: string;
+  qrisImageUrl?: string;
   expiresAt?: string;
 };
 
 export const initiatePayment = async (userId: string, role: 'USER' | 'ADMIN', transactionId: string, method: 'QRIS' | 'EWALLET' | 'VA', provider?: string) => {
+  // Get latest configs (bypass cache) to check for custom QRIS payload/image
+  const configs = await getSystemConfigs(true);
+  const dbQrisPayload = configs['qris_payload'];
+  const dbQrisImageUrl = configs['qris_image_url'];
+
   // Since we don't have a real payment gateway backend, we simulate the response
   const mockResponses: Record<string, InitiatePaymentResponse> = {
     'QRIS': { 
       method: 'QRIS', 
-      qrisPayload: '00020101021226660014ID.CO.QRIS.WWW01189360050300000768120215ID10202214433220303UMI51440014ID.CO.QRIS.WWW0215ID10202214433220303UMI5204599953033605802ID5911MAJU JAYA6005DEPOK61051642462070703A016304D9C2',
+      qrisPayload: dbQrisPayload,
+      qrisImageUrl: dbQrisImageUrl,
       expiresAt: new Date(Date.now() + 30 * 60000).toISOString()
     },
     'VA': { 

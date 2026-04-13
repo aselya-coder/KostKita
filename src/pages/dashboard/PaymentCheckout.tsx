@@ -61,11 +61,10 @@ export default function PaymentCheckout() {
   const [selected, setSelected] = useState<Method | null>(null);
   const [countdown, setCountdown] = useState(15 * 60);
   const [balance, setBalance] = useState<number | null>(null);
-  const [adminQrisUrl, setAdminQrisUrl] = useState<string | null>(null);
-  const [qrisLoadFailed, setQrisLoadFailed] = useState(false);
   const [serverVA, setServerVA] = useState<string | null>(null);
   const [serverRedirectUrl, setServerRedirectUrl] = useState<string | null>(null);
   const [serverQrisPayload, setServerQrisPayload] = useState<string | null>(null);
+  const [serverQrisImageUrl, setServerQrisImageUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -195,21 +194,6 @@ export default function PaymentCheckout() {
     }
   };
 
-  useEffect(() => {
-    const loadAdminQris = async () => {
-      try {
-        const { data, error } = await supabase.from("profiles").select("id").eq("role", "admin").limit(1).maybeSingle();
-        if (!error && data?.id) {
-          const { data: pub } = supabase.storage.from("avatars").getPublicUrl(`${data.id}/qris.png`);
-          if (pub?.publicUrl) setAdminQrisUrl(pub.publicUrl);
-        }
-      } catch {
-        // ignore
-      }
-    };
-    loadAdminQris();
-  }, []);
-
   const timeText = useMemo(() => {
     const m = Math.floor(countdown / 60).toString().padStart(2, "0");
     const s = (countdown % 60).toString().padStart(2, "0");
@@ -303,6 +287,7 @@ export default function PaymentCheckout() {
       setServerVA(resp.vaNumber || null);
       setServerRedirectUrl(resp.redirectUrl || null);
       setServerQrisPayload(resp.qrisPayload || null);
+      setServerQrisImageUrl(resp.qrisImageUrl || null);
       
       setCurrentPhase("process");
 
@@ -339,6 +324,7 @@ export default function PaymentCheckout() {
   }, [currentPhase, user]);
 
   const getQRPayload = (t: Transaction) => {
+    if (serverQrisPayload) return serverQrisPayload;
     return `KOSKITA|TRX|${t.externalId || t.id}|AMOUNT|${t.amount + adminFee}`;
   };
 
@@ -484,11 +470,21 @@ export default function PaymentCheckout() {
                 {selected?.group === "QRIS" && (
                   <div className="space-y-8 py-4">
                     <div className="max-w-[280px] mx-auto bg-white p-6 rounded-3xl border-4 border-secondary shadow-lg relative">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(serverQrisPayload || getQRPayload(trx))}`}
-                        alt="QRIS"
-                        className="w-full aspect-square object-contain"
-                      />
+                      {serverQrisImageUrl ? (
+                        <img
+                          src={`${serverQrisImageUrl}?t=${Date.now()}`}
+                          alt="QRIS"
+                          className="w-full aspect-square object-contain"
+                          key={serverQrisImageUrl}
+                        />
+                      ) : (
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(serverQrisPayload || getQRPayload(trx))}`}
+                          alt="QRIS"
+                          className="w-full aspect-square object-contain"
+                          key={serverQrisPayload || 'default'}
+                        />
+                      )}
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-[10px] font-bold tracking-widest">QRIS</div>
                     </div>
                     <div className="text-center space-y-4">

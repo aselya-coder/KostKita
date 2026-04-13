@@ -131,6 +131,7 @@ export default function AddKosPage() {
       setImages(prev => [...prev, ...files]);
       const newPreviews = files.map(file => URL.createObjectURL(file));
       setPreviewUrls(prev => [...prev, ...newPreviews]);
+      e.target.value = '';
     }
   };
 
@@ -345,6 +346,8 @@ export default function AddKosPage() {
               <Input 
                 name="price" 
                 type="text" 
+                inputMode="numeric"
+                pattern="[0-9.]*"
                 placeholder="1.500.000" 
                 value={formData.price} 
                 onChange={(e) => {

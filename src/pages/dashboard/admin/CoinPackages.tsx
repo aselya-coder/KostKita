@@ -30,8 +30,8 @@ export default function CoinPackagesPage() {
   const [currentPackage, setCurrentPackage] = useState<AdminCoinPackage | null>(null);
   const [form, setForm] = useState({
     name: "",
-    coinAmount: 0,
-    price: 0,
+    coinAmount: "" as string | number,
+    price: "" as string | number,
     isActive: true,
   });
 
@@ -54,9 +54,22 @@ export default function CoinPackagesPage() {
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
+    
+    if (type === "number") {
+      // Allow empty string to avoid NaN in the input
+      if (value === "") {
+        setForm(prev => ({ ...prev, [name]: "" }));
+        return;
+      }
+      
+      const numValue = parseFloat(value);
+      setForm(prev => ({ ...prev, [name]: isNaN(numValue) ? "" : numValue }));
+      return;
+    }
+
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : type === "number" ? parseFloat(value) : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -64,19 +77,34 @@ export default function CoinPackagesPage() {
     e.preventDefault();
     if (!user || user.role !== "admin") return;
 
+    // Validate numbers before saving
+    const coinAmount = typeof form.coinAmount === 'string' ? parseInt(form.coinAmount) : form.coinAmount;
+    const price = typeof form.price === 'string' ? parseInt(form.price) : form.price;
+
+    if (isNaN(coinAmount) || isNaN(price)) {
+      toast.error("Mohon isi jumlah koin dan harga dengan benar.");
+      return;
+    }
+
     try {
+      const payload = {
+        ...form,
+        coinAmount,
+        price
+      };
+
       if (currentPackage) {
         // Update existing package
-        await updateAdminCoinPackage(user.id, "ADMIN", currentPackage.id, form);
+        await updateAdminCoinPackage(user.id, "ADMIN", currentPackage.id, payload);
         toast.success("Paket koin berhasil diperbarui.");
       } else {
         // Create new package
-        await createAdminCoinPackage(user.id, "ADMIN", form);
+        await createAdminCoinPackage(user.id, "ADMIN", payload);
         toast.success("Paket koin berhasil ditambahkan.");
       }
       setIsModalOpen(false);
       setCurrentPackage(null);
-      setForm({ name: "", coinAmount: 0, price: 0, isActive: true });
+      setForm({ name: "", coinAmount: "", price: "", isActive: true });
       fetchPackages();
     } catch (error: any) {
       toast.error(error.message || "Gagal menyimpan paket koin.");
@@ -98,7 +126,7 @@ export default function CoinPackagesPage() {
 
   const openCreateModal = () => {
     setCurrentPackage(null);
-    setForm({ name: "", coinAmount: 0, price: 0, isActive: true });
+    setForm({ name: "", coinAmount: "", price: "", isActive: true });
     setIsModalOpen(true);
   };
 
@@ -196,11 +224,11 @@ export default function CoinPackagesPage() {
         <DialogContent className="sm:max-w-[425px] rounded-2xl">
           <DialogHeader>
             <DialogTitle>{currentPackage ? "Edit Paket Koin" : "Tambah Paket Koin Baru"}</DialogTitle>
-            <p className="text-sm text-muted-foreground">
+            <p id="dialog-description" className="text-sm text-muted-foreground">
               {currentPackage ? "Perbarui informasi paket koin yang sudah ada." : "Buat paket koin baru untuk sistem top-up."}
             </p>
           </DialogHeader>
-          <form onSubmit={handleSavePackage} className="grid gap-4 py-4">
+          <form aria-describedby="dialog-description" onSubmit={handleSavePackage} className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
                 Nama

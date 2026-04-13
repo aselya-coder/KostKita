@@ -142,28 +142,29 @@ export default function AdManagement() {
                       <div className="flex items-center gap-2">
                         <input 
                           type="number"
-                          value={configs['ad_active_duration'] || '30'}
+                          value={configs['ad_active_duration'] ?? ''}
                           onChange={(e) => handleUpdateConfig('ad_active_duration', e.target.value)}
                           className="w-24 px-4 py-2 rounded-xl bg-surface border border-border text-center font-bold text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                           min="1"
+                          placeholder="30"
                         />
                         <span className="text-sm font-medium text-muted-foreground">Hari</span>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed italic">
-                      Kebijakan durasi tayang iklan di seluruh platform saat ini ditetapkan selama <span className="font-bold">{configs['ad_active_duration'] || '30'} hari</span>. Setelah mencapai batas waktu ini, iklan kos maupun barang marketplace akan <span className="text-red-500 font-bold italic">otomatis dinonaktifkan</span> oleh sistem untuk menjaga relevansi data.
+                      Kebijakan durasi tayang iklan di seluruh platform saat ini ditetapkan selama <span className="font-bold">{configs['ad_active_duration'] || '0'} hari</span>. Setelah mencapai batas waktu ini, iklan kos maupun barang marketplace akan <span className="text-red-500 font-bold italic">otomatis dinonaktifkan</span> oleh sistem untuk menjaga relevansi data.
                     </p>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Zap className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-amber-900 mb-1 italic">Penting: Dampak Perubahan Global</h4>
-                    <p className="text-xs text-amber-800/80 leading-relaxed">
-                      Perubahan pada pengaturan ini akan <span className="font-bold underline">langsung diterapkan</span> pada setiap iklan baru yang dibuat. Iklan yang sudah berjalan tidak akan terpengaruh secara retrospektif.
+                    <h4 className="text-sm font-bold text-primary mb-1 italic">Dampak Perubahan Global</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Perubahan pada pengaturan ini akan <span className="font-bold underline">langsung diterapkan</span> pada setiap iklan baru maupun <span className="font-bold">iklan yang sedang berjalan</span> secara otomatis.
                     </p>
                   </div>
                 </div>

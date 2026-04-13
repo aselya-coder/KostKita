@@ -57,10 +57,24 @@ export const createMarketplaceItem = async (item: any) => {
     const expiresAt = new Date(now);
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
+    const sellerNameFromItem =
+      typeof item?.seller_name === 'string' ? item.seller_name.trim() : '';
+
+    let resolvedSellerName = sellerNameFromItem;
+    if (!resolvedSellerName && item?.seller_id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', item.seller_id)
+        .maybeSingle();
+      resolvedSellerName = typeof profile?.name === 'string' ? profile.name.trim() : '';
+    }
+
     const { data, error } = await supabase
       .from('marketplace_items')
       .insert([{
         ...item,
+        ...(resolvedSellerName ? { seller_name: resolvedSellerName } : {}),
         status: autoApprove ? 'active' : 'pending',
         created_at: now.toISOString(),
         expires_at: expiresAt.toISOString()
@@ -86,5 +100,4 @@ export const createMarketplaceItem = async (item: any) => {
     return { success: false, error: error.message };
   }
 };
-
 

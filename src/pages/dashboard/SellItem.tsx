@@ -134,7 +134,7 @@ export default function SellItem() {
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, name')
         .eq('id', user.id)
         .single();
       
@@ -170,6 +170,7 @@ export default function SellItem() {
       const result = await createMarketplaceItem({
         ...formData,
         seller_id: user.id,
+        seller_name: profile?.name || user.name,
         price: priceClean,
         image: url || '',
         status: 'active',

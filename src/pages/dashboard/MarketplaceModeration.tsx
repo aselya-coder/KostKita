@@ -52,8 +52,36 @@ export default function MarketplaceModeration() {
       ]);
 
       if (itemsRes.error) throw itemsRes.error;
-      
-      setItems(itemsRes.data || []);
+
+      const rawItems = itemsRes.data || [];
+      const sellerIds = [...new Set(rawItems.map((i: any) => i.seller_id).filter(Boolean))];
+
+      let profileMap: Record<string, { name?: string }> = {};
+      if (sellerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', sellerIds);
+
+        profileMap = {};
+        profiles?.forEach((p: any) => {
+          profileMap[p.id] = { name: p.name };
+        });
+      }
+
+      const hydratedItems = rawItems.map((i: any) => {
+        const profileName = profileMap[i.seller_id]?.name;
+        const sellerName = typeof i.seller_name === 'string' && i.seller_name.trim()
+          ? i.seller_name.trim()
+          : (typeof profileName === 'string' && profileName.trim() ? profileName.trim() : null);
+
+        return {
+          ...i,
+          ...(sellerName ? { seller_name: sellerName } : {})
+        };
+      });
+
+      setItems(hydratedItems);
       if (configs['ad_active_duration']) {
         setAdDuration(configs['ad_active_duration']);
       }
@@ -80,10 +108,11 @@ export default function MarketplaceModeration() {
     };
   }, []);
 
-  const filteredItems = items.filter(i => 
-    i.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    i.seller_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredItems = items.filter(i => {
+    const q = searchQuery.toLowerCase();
+    const sellerName = (i.seller_name || '').toLowerCase();
+    return i.title?.toLowerCase().includes(q) || sellerName.includes(q);
+  });
 
   const deactivateItem = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menonaktifkan iklan barang ini?")) return;
@@ -193,6 +222,7 @@ export default function MarketplaceModeration() {
                   filteredItems.map((item) => {
                     const remainingDays = calculateRemainingDays(item.expires_at || item.expiry_date);
                     const isExpired = remainingDays !== null && remainingDays <= 0;
+                    const sellerName = item.seller_name || "Unknown";
 
                     return (
                       <tr key={item.id} className="hover:bg-secondary/20 transition-colors">
@@ -206,7 +236,7 @@ export default function MarketplaceModeration() {
                           </div>
                         </td>
                         <td className="px-4 md:px-6 py-4 font-medium truncate max-w-[100px] md:max-w-none">
-                          {item.seller_name || "Unknown"}
+                          {sellerName}
                         </td>
                         <td className="px-4 md:px-6 py-4 whitespace-nowrap font-medium text-foreground">
                           {formatPrice(item.price)}

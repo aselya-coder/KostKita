@@ -27,7 +27,24 @@ export default function MyMarketplaceItems() {
     if (error) {
       console.error('Error fetching items:', error);
     } else {
-      setMyItems(data || []);
+      const items = data || [];
+      setMyItems(items);
+
+      const idsToBackfill = items
+        .filter((i: any) => !i.seller_name || String(i.seller_name).trim() === '')
+        .map((i: any) => i.id)
+        .filter(Boolean);
+
+      if (idsToBackfill.length > 0) {
+        const resolvedSellerName = user.name;
+        if (resolvedSellerName && resolvedSellerName.trim()) {
+          await supabase
+            .from('marketplace_items')
+            .update({ seller_name: resolvedSellerName.trim() })
+            .in('id', idsToBackfill)
+            .eq('seller_id', user.id);
+        }
+      }
     }
     setIsLoading(false);
   };
@@ -61,6 +78,7 @@ export default function MyMarketplaceItems() {
         supabase.removeChannel(channel);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleDelete = async (id: string) => {

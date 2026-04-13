@@ -52,7 +52,7 @@ export const getMarketplaceItems = async (category?: string, sellerId?: string):
       category: i.category || 'Lainnya',
       condition: i.condition || 'Bekas',
       sellerPhone: profileMap[i.seller_id]?.phone || '',
-      sellerName: profileMap[i.seller_id]?.name || 'Penjual',
+      sellerName: i.seller_name || profileMap[i.seller_id]?.name || 'Penjual',
       location: i.location || '',
       description: i.description || '',
       createdAt: i.created_at,
@@ -66,13 +66,7 @@ export const getMarketplaceItems = async (category?: string, sellerId?: string):
 export const getItemById = async (id: string): Promise<MarketplaceItem | null> => {
   const { data, error } = await supabase
     .from('marketplace_items')
-    .select(`
-      *,
-      profiles (
-        name,
-        phone
-      )
-    `)
+    .select('*')
     .eq('id', id)
     .single();
 
@@ -82,6 +76,12 @@ export const getItemById = async (id: string): Promise<MarketplaceItem | null> =
   }
 
   const i: any = data;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, phone')
+    .eq('id', i.seller_id)
+    .maybeSingle();
+
   return {
     id: i.id,
     sellerId: i.seller_id,
@@ -90,8 +90,8 @@ export const getItemById = async (id: string): Promise<MarketplaceItem | null> =
     image: i.image || '',
     category: i.category || 'Lainnya',
     condition: i.condition || 'Bekas',
-    sellerPhone: i.profiles?.phone || '',
-    sellerName: i.profiles?.name || 'Penjual',
+    sellerPhone: profile?.phone || '',
+    sellerName: i.seller_name || profile?.name || 'Penjual',
     location: i.location || '',
     description: i.description || '',
     createdAt: i.created_at,

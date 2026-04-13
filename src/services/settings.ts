@@ -7,11 +7,16 @@ export interface SystemConfig {
   updated_at?: string;
 }
 
-export const getSystemConfigs = async (): Promise<Record<string, string>> => {
+export const getSystemConfigs = async (bypassCache: boolean = false): Promise<Record<string, string>> => {
   try {
-    const { data, error } = await supabase
-      .from('system_configs')
-      .select('*');
+    let query = supabase.from('system_configs').select('*');
+    
+    // Simple way to avoid potential Supabase client-side caching
+    if (bypassCache) {
+      query = query.neq('key', 'non_existent_key_to_force_fetch');
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
@@ -34,7 +39,9 @@ export const getSystemConfigs = async (): Promise<Record<string, string>> => {
       'max_topup': '100',
       'auto_approve_ads': 'true',
       'user_reports_enabled': 'true',
-      'ad_active_duration': '30'
+      'ad_active_duration': '30',
+      'qris_payload': '00020101021226660014ID.CO.QRIS.WWW01189360050300000768120215ID10202214433220303UMI51440014ID.CO.QRIS.WWW0215ID10202214433220303UMI5204599953033605802ID5911MAJU JAYA6005DEPOK61051642462070703A016304D9C2',
+      'qris_image_url': ''
     };
   }
 };
