@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { MapPin, Heart, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { memo } from "react";
 import { type MarketplaceItem, formatPrice } from "@/data/mockData";
 import { useFavorites } from "@/hooks/useFavorites";
 import { sanitizePhone } from "@/utils/whatsapp";
@@ -12,7 +13,7 @@ interface MarketplaceCardProps {
   item: MarketplaceItem;
 }
 
-export function MarketplaceCard({ item }: MarketplaceCardProps) {
+export const MarketplaceCard = memo(({ item }: MarketplaceCardProps) => {
   const { isFavorite, toggleFavorite } = useFavorites('item');
   const liked = isFavorite(item.id);
 
@@ -29,6 +30,7 @@ export function MarketplaceCard({ item }: MarketplaceCardProps) {
             alt={item.title}
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             loading="lazy"
+            decoding="async"
           />
           <div className="absolute top-3 left-3 flex flex-col gap-1">
             {sanitizePhone(item.sellerPhone || "") && (
@@ -84,4 +86,4 @@ export function MarketplaceCard({ item }: MarketplaceCardProps) {
       </div>
     </motion.div>
   );
-}
+});

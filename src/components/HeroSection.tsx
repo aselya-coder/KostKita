@@ -18,6 +18,10 @@ export function HeroSection() {
         src={heroBg}
         alt="Indonesian campus neighborhood"
         className="absolute inset-0 w-full h-full object-cover"
+        // @ts-expect-error - fetchpriority is valid HTML but missing in older React types
+        fetchpriority="high"
+        loading="eager"
+        decoding="async"
       />
       <div className="absolute inset-0 bg-foreground/50" />
 

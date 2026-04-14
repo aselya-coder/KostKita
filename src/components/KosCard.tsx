@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Heart, MapPin, Star, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { type KosListing, formatPrice } from "@/data/mockData";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getAmenityIcon } from "@/utils/amenityIcons";
@@ -14,7 +14,7 @@ interface KosCardProps {
   kos: KosListing;
 }
 
-export function KosCard({ kos }: KosCardProps) {
+export const KosCard = memo(({ kos }: KosCardProps) => {
   const { isFavorite, toggleFavorite } = useFavorites('kos');
   const [imgIdx, setImgIdx] = useState(0);
 
@@ -33,6 +33,7 @@ export function KosCard({ kos }: KosCardProps) {
             alt={kos.title}
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             loading="lazy"
+            decoding="async"
           />
           <div className="absolute top-3 left-3 flex flex-col gap-1">
             {sanitizePhone(kos.ownerPhone || "") && (
@@ -119,4 +120,4 @@ export function KosCard({ kos }: KosCardProps) {
       </div>
     </motion.div>
   );
-}
+});

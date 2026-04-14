@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -13,38 +14,32 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import AdminLayout from "@/pages/dashboard/admin/AdminLayout";
 
-// Page Imports
-import Home from "@/pages/Index";
-import KosDetail from "@/pages/KosDetail";
-import SearchResults from "@/pages/SearchKos";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import NotFound from "@/pages/NotFound";
-import Favorites from "@/pages/Favorites";
-import Marketplace from "@/pages/Marketplace";
-import ItemDetail from "@/pages/ItemDetail";
-import Contact from "@/pages/Contact";
-import FAQ from "@/pages/FAQ";
-import Owner from "@/pages/Owner";
-import AddKos from "@/pages/dashboard/owner/AddKos";
-import OwnerEditKos from "@/pages/dashboard/owner/EditKos";
-import UserOverview from "@/pages/dashboard/UserOverview";
-import MyBoardingHouses from "@/pages/dashboard/MyBoardingHouses";
-import Profile from "@/pages/dashboard/Profile";
-import Settings from "@/pages/dashboard/Settings";
+// Lazy Page Imports
+const Home = lazy(() => import("@/pages/Index"));
+const KosDetail = lazy(() => import("@/pages/KosDetail"));
+const SearchResults = lazy(() => import("@/pages/SearchKos"));
+const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const Favorites = lazy(() => import("@/pages/Favorites"));
+const Marketplace = lazy(() => import("@/pages/Marketplace"));
+const ItemDetail = lazy(() => import("@/pages/ItemDetail"));
+const Contact = lazy(() => import("@/pages/Contact"));
+const FAQ = lazy(() => import("@/pages/FAQ"));
+const Owner = lazy(() => import("@/pages/Owner"));
 
 // Admin Pages
-import AdminDashboard from "@/pages/dashboard/admin/AdminDashboard";
-import UserManagement from "@/pages/dashboard/UserManagement";
-import EditKos from "@/pages/dashboard/admin/EditKos";
-import KosManagement from "@/pages/dashboard/KosManagement";
-import MarketplaceModeration from "@/pages/dashboard/MarketplaceModeration";
-import Reports from "@/pages/dashboard/Reports";
-import ActivityLog from "@/pages/dashboard/admin/ActivityLog";
-import CoinPackages from "@/pages/dashboard/admin/CoinPackages";
-import SystemSettings from "@/pages/dashboard/SystemSettings";
-import AdManagement from "@/pages/dashboard/AdManagement";
-import TopupUsers from "@/pages/dashboard/admin/TopupUsers";
+const AdminDashboard = lazy(() => import("@/pages/dashboard/admin/AdminDashboard"));
+const UserManagement = lazy(() => import("@/pages/dashboard/UserManagement"));
+const EditKos = lazy(() => import("@/pages/dashboard/admin/EditKos"));
+const KosManagement = lazy(() => import("@/pages/dashboard/KosManagement"));
+const MarketplaceModeration = lazy(() => import("@/pages/dashboard/MarketplaceModeration"));
+const Reports = lazy(() => import("@/pages/dashboard/Reports"));
+const ActivityLog = lazy(() => import("@/pages/dashboard/admin/ActivityLog"));
+const CoinPackages = lazy(() => import("@/pages/dashboard/admin/CoinPackages"));
+const SystemSettings = lazy(() => import("@/pages/dashboard/SystemSettings"));
+const AdManagement = lazy(() => import("@/pages/dashboard/AdManagement"));
+const TopupUsers = lazy(() => import("@/pages/dashboard/admin/TopupUsers"));
 
 // Route Protection
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -52,6 +47,13 @@ import { AdminRoute } from "./components/AdminRoute";
 import { OwnerRoute } from "./components/OwnerRoute";
 
 const queryClient = new QueryClient();
+
+// Loading component for Suspense
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-surface">
+    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 // Layout for public pages that includes Navbar and Footer
 const PublicLayout = () => (
@@ -73,61 +75,63 @@ const App = () => (
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
-          <Routes>
-            {/* Public Routes */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/kos/:id" element={<KosDetail />} />
-              <Route path="/search" element={<SearchResults />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/marketplace/:id" element={<ItemDetail />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/owner" element={<Owner />} />
-              <Route path="/favorites" element={<Favorites />} />
-            </Route>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public Routes */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/kos/:id" element={<KosDetail />} />
+                <Route path="/search" element={<SearchResults />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/marketplace/:id" element={<ItemDetail />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/owner" element={<Owner />} />
+                <Route path="/favorites" element={<Favorites />} />
+              </Route>
 
-            {/* Unified Dashboard for Students and Owners */}
-            <Route 
-              path="/dashboard/*"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            />
+              {/* Unified Dashboard for Students and Owners */}
+              <Route 
+                path="/dashboard/*"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Admin Routes */}
-            <Route 
-              path="/admin" 
-              element={
-                <AdminRoute>
-                  <AdminLayout />
-                </AdminRoute>
-              }
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="kos" element={<KosManagement />} />
-              <Route path="marketplace" element={<MarketplaceModeration />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="activity-log" element={<ActivityLog />} />
-              <Route path="coin-packages" element={<CoinPackages />} />
-              <Route path="topup-users" element={<TopupUsers />} />
-              <Route path="system-settings" element={<SystemSettings />} />
-              <Route path="ad-management" element={<AdManagement />} />
-              <Route path="edit-kos/:id" element={<EditKos />} />
-            </Route>
+              {/* Admin Routes */}
+              <Route 
+                path="/admin" 
+                element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                }
+              >
+                <Route index element={<AdminDashboard />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="kos" element={<KosManagement />} />
+                <Route path="marketplace" element={<MarketplaceModeration />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="activity-log" element={<ActivityLog />} />
+                <Route path="coin-packages" element={<CoinPackages />} />
+                <Route path="topup-users" element={<TopupUsers />} />
+                <Route path="system-settings" element={<SystemSettings />} />
+                <Route path="ad-management" element={<AdManagement />} />
+                <Route path="edit-kos/:id" element={<EditKos />} />
+              </Route>
 
-            {/* Redirect old dashboard paths */}
-            <Route path="/admin/advertisements" element={<Navigate to="/admin/ad-management" replace />} />
-            <Route path="/owner-dashboard/*" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/admin-dashboard/*" element={<Navigate to="/admin" replace />} />
+              {/* Redirect old dashboard paths */}
+              <Route path="/admin/advertisements" element={<Navigate to="/admin/ad-management" replace />} />
+              <Route path="/owner-dashboard/*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/admin-dashboard/*" element={<Navigate to="/admin" replace />} />
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
