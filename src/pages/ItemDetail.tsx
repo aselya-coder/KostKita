@@ -96,7 +96,7 @@ const ItemDetail = () => {
   const sanitizedPhone = sanitizePhone(item.sellerPhone || "");
   const hasPhone = !!sanitizedPhone;
   const waLink = hasPhone 
-    ? buildWaLink(sanitizedPhone, `Hi ${item.sellerName}, saya tertarik dengan ${item.title} di KosKita. Apakah masih tersedia?`)
+    ? buildWaLink(sanitizedPhone, `Hi ${item.sellerName}, saya tertarik dengan "${item.title}" di KosKita.\nApakah masih tersedia?`)
     : "#";
 
   const handleInquiry = async () => {

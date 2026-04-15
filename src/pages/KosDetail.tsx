@@ -118,10 +118,14 @@ const KosDetail = () => {
 
   const liked = isFavorite(kos.id);
 
+  // Generate URL yang clean menggunakan window.location.origin
+  const baseUrl = window.location.origin;
+  const cleanKosUrl = `${baseUrl}/kos/${kos.id}`;
+
   const sanitizedPhone = sanitizePhone(kos.ownerPhone || "");
   const hasPhone = !!sanitizedPhone;
   const waLink = hasPhone 
-    ? buildWaLink(sanitizedPhone, `Hi, saya tertarik dengan ${kos.title} di KosKita. Apakah masih tersedia?`)
+    ? buildWaLink(sanitizedPhone, `Hi, saya tertarik dengan Kos "${kos.title}" di KosKita.\nLink: ${cleanKosUrl}\nApakah masih tersedia?`)
     : "#";
 
   const handleInquiry = async () => {
@@ -199,7 +203,7 @@ const KosDetail = () => {
         toast.success("Permintaan pemesanan berhasil dikirim!");
         setIsBookingModalOpen(false);
         if (hasPhone) {
-          const waText = `Halo ${kos.ownerName},\n\nSaya ingin memesan kamar di *${kos.title}* via KosKita.\n\n*Detail Pesanan:*\n- Tanggal Masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}\n- Durasi Sewa: ${duration} Bulan\n- Total Estimasi: ${formatPrice(kos.price * duration)}\n\nMohon informasi selanjutnya. Terima kasih!`;
+          const waText = `Halo ${kos.ownerName},\n\nSaya ingin memesan kamar di *${kos.title}* via KosKita.\nLink: ${cleanKosUrl}\n\n*Detail Pesanan:*\n- Tanggal Masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}\n- Durasi Sewa: ${duration} Bulan\n- Total Estimasi: ${formatPrice(kos.price * duration)}\n\nMohon informasi selanjutnya. Terima kasih!`;
           const waUrl = buildWaLink(sanitizedPhone, waText);
           try {
             await logUserActivity(user.id, 'Klik WhatsApp Booking', kos.title, `/kos/${kos.id}`);
