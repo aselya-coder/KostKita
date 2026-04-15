@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { type KosListing, type MarketplaceItem } from '@/data/mockData';
 import { logUserActivity } from './activity';
 import { getSystemConfigs } from './settings';
+import { generateProductPath } from '@/utils/slug';
 
 // KOS LISTINGS
 export const createKosListing = async (listing: any) => {
@@ -34,7 +35,7 @@ export const createKosListing = async (listing: any) => {
         data.owner_id,
         'Memasang kos baru',
         data.title,
-        `/kos/${data.id}`
+        generateProductPath('kos', data.title, data.id)
       );
     }
 
@@ -90,7 +91,7 @@ export const createMarketplaceItem = async (item: any) => {
         data.seller_id,
         'Menjual barang baru',
         data.title,
-        `/item/${data.id}`
+        generateProductPath('item', data.title, data.id)
       );
     }
 

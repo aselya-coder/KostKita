@@ -1,5 +1,5 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, MessageCircle, Tag, User, Heart, Flag, Send } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import { MapPin, MessageCircle, User, Heart, Flag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type MarketplaceItem, formatPrice } from "@/data/mockData";
 import { getItemById } from "@/services/marketplace";
@@ -11,13 +11,13 @@ import { ReportModal } from "@/components/ReportModal";
 import { supabase } from "@/lib/supabase";
 import { createNotification } from "@/services/notifications";
 import { getOrCreateConversation, sendMessage } from "@/services/chat";
-import { toast } from "sonner";
 import { sanitizePhone, buildWaLink } from "@/utils/whatsapp";
 import { logUserActivity } from "@/services/activity";
+import { generateProductLink, extractIdFromSlug, generateProductPath } from "@/utils/slug";
 
 const ItemDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id: rawId } = useParams();
+  const id = extractIdFromSlug(rawId || "");
   const { user } = useAuth();
   const [item, setItem] = useState<MarketplaceItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,10 +93,12 @@ const ItemDetail = () => {
 
   const liked = isFavorite(item.id);
 
+  const cleanItemUrl = item ? generateProductLink('item', item.title, item.id) : "";
+
   const sanitizedPhone = sanitizePhone(item.sellerPhone || "");
   const hasPhone = !!sanitizedPhone;
   const waLink = hasPhone 
-    ? buildWaLink(sanitizedPhone, `Hi ${item.sellerName}, saya tertarik dengan "${item.title}" di KosKita.\nApakah masih tersedia?`)
+    ? buildWaLink(sanitizedPhone, `Hi ${item.sellerName}, saya tertarik dengan "${item.title}" di KosKita.\nLink: ${cleanItemUrl}\nApakah masih tersedia?`)
     : "#";
 
   const handleInquiry = async () => {
@@ -117,7 +119,7 @@ const ItemDetail = () => {
         const result = await getOrCreateConversation(user.id, item.sellerId);
         if (result.success) {
           // Send a message to internal chat to log the interest
-          await sendMessage(result.data.id, user.id, `Halo, saya baru saja menghubungi Anda melalui WhatsApp mengenai barang "${item.title}".`);
+          await sendMessage(result.data.id, user.id, `Halo, saya baru saja menghubungi Anda melalui WhatsApp mengenai barang "${item.title}".\nLink: ${cleanItemUrl}`);
         }
       } catch (err) {
         console.error("Error bridging to internal chat:", err);
@@ -127,7 +129,7 @@ const ItemDetail = () => {
     // Redirect to WhatsApp
     if (hasPhone) {
       try {
-        await logUserActivity(user.id, 'Klik WhatsApp Marketplace', item.title, `/marketplace/${item.id}`);
+        await logUserActivity(user.id, 'Klik WhatsApp Marketplace', item.title, generateProductPath('item', item.title, item.id));
       } catch {}
       window.open(waLink, '_blank');
     }

@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getWalletData } from "@/services/wallet";
+import { generateProductPath } from "@/utils/slug";
 
 export default function UserOverview() {
   const { user } = useAuth();
@@ -102,30 +103,30 @@ export default function UserOverview() {
   }, [user]);
 
   return (
-    <div className="space-y-8">
-      <div className="bg-card rounded-3xl border border-border p-8 shadow-sm relative overflow-hidden group">
+    <div className="space-y-6 md:space-y-8">
+      <div className="bg-card rounded-2xl md:rounded-3xl border border-border p-5 md:p-8 shadow-sm relative overflow-hidden group">
         {/* Background Decorative Element */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl transition-all group-hover:bg-primary/10" />
         
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6 text-center md:text-left">
-          <div className="flex flex-col md:flex-row items-center gap-5">
-            <div className="relative">
-              <Avatar className="w-20 h-20 border-4 border-background shadow-xl">
+        <div className="relative flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-center md:items-start xl:items-center gap-5">
+            <div className="relative shrink-0">
+              <Avatar className="w-16 h-16 md:w-20 md:h-20 border-4 border-background shadow-xl">
                 <AvatarImage src={user?.avatar} alt={user?.name} className="object-cover" />
-                <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                <AvatarFallback className="bg-primary/10 text-primary text-xl md:text-2xl font-bold">
                   {user?.name?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-background rounded-full shadow-sm" title="Online" />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-emerald-500 border-4 border-background rounded-full shadow-sm" title="Online" />
             </div>
             
-            <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">
+            <div className="space-y-1 text-center md:text-left">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-display font-bold text-foreground">
                 Welcome back, {user?.name}!
               </h1>
-              <div className="flex flex-col md:flex-row items-center gap-2">
+              <div className="flex flex-col md:flex-row items-center md:items-start xl:items-center gap-2">
                 <span className={cn(
-                  "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                  "px-2.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider shrink-0",
                   user?.role === "admin" ? "bg-purple-100 text-purple-600 border border-purple-200" :
                   user?.role === "owner" ? "bg-blue-100 text-blue-600 border border-blue-200" :
                   "bg-emerald-100 text-emerald-600 border border-emerald-200"
@@ -134,7 +135,7 @@ export default function UserOverview() {
                    user?.role === "owner" ? "Pemilik Kos" : 
                    "Pencari Kos"}
                 </span>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {user?.role === "owner" 
                     ? "Kelola iklan kos, transaksi, dan pesan dari calon penyewa Anda."
                     : "Cari kos impian, kelola barang marketplace, dan pantau aktivitas Anda."}
@@ -143,20 +144,20 @@ export default function UserOverview() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
-            <Button asChild variant="outline" className="rounded-xl border-border shadow-sm" size="lg">
+          <div className="flex flex-wrap items-center justify-center xl:justify-end gap-2 md:gap-3">
+            <Button asChild variant="outline" className="rounded-xl border-border shadow-sm flex-1 sm:flex-none" size="sm md:lg">
               <Link to="/dashboard/profile">
                 Edit Profile
               </Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-xl border-border shadow-sm" size="lg">
+            <Button asChild variant="outline" className="rounded-xl border-border shadow-sm flex-1 sm:flex-none" size="sm md:lg">
               <Link to="/dashboard/sell-item">
                 <ShoppingBag className="w-4 h-4 mr-2" />
                 Jual Barang
               </Link>
             </Button>
             {user?.role === "owner" && (
-              <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-95" size="lg">
+              <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-95 w-full sm:w-auto" size="sm md:lg">
                 <Link to="/dashboard/add-kos">
                   <Plus className="w-4 h-4 mr-2" />
                   Tambah Kos
@@ -172,11 +173,11 @@ export default function UserOverview() {
           <WalletCard 
             balance={wallet?.balance || 0} 
             totalEarnings={wallet?.totalEarnings} 
-            className="h-full min-h-[240px]"
+            className="h-full min-h-[200px] md:min-h-[240px]"
           />
         </div>
         
-        <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
           <StatsCard 
             title="Pesan Chat" 
             value={isLoading ? '...' : stats.unreadMessagesCount} 
@@ -250,7 +251,7 @@ export default function UserOverview() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
-                      <Link to={`/kos/${kos.id}`}>
+                      <Link to={generateProductPath('kos', kos.title, kos.id)}>
                         <Eye className="w-4 h-4" />
                       </Link>
                     </Button>
@@ -298,14 +299,21 @@ export default function UserOverview() {
                   <h4 className="text-sm font-medium text-foreground truncate">{item.title}</h4>
                   <p className="text-xs text-muted-foreground">{formatPrice(item.price)}</p>
                 </div>
-                <span className={cn(
-                  "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                  item.status === "active" ? "bg-emerald-50 text-emerald-600 border border-emerald-200" :
-                  item.status === "sold" ? "bg-secondary text-muted-foreground border border-border" :
-                  "bg-amber-50 text-amber-600 border border-amber-200"
-                )}>
-                  {item.status || "Active"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                    item.status === "active" ? "bg-emerald-50 text-emerald-600 border border-emerald-200" :
+                    item.status === "sold" ? "bg-secondary text-muted-foreground border border-border" :
+                    "bg-amber-50 text-amber-600 border border-amber-200"
+                  )}>
+                    {item.status || "Active"}
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
+                    <Link to={generateProductPath('item', item.title, item.id)}>
+                      <Eye className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             ))}
             {myItems.length === 0 && (

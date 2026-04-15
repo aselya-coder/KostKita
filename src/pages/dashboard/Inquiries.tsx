@@ -8,6 +8,7 @@ import { MessageCircle, Phone, Home, Clock, Trash2, CheckCircle2 } from "lucide-
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { generateProductLink } from "@/utils/slug";
 
 export default function Inquiries() {
   const { user } = useAuth();
@@ -190,7 +191,7 @@ export default function Inquiries() {
                         )}
                       </div>
                       <a 
-                        href={`https://wa.me/${iq.senderPhone}?text=${encodeURIComponent(`Halo ${iq.senderName}, saya owner dari ${iq.propertyName}...`)}`}
+                        href={`https://wa.me/${iq.senderPhone}?text=${encodeURIComponent(`Halo ${iq.senderName}, saya owner dari ${iq.propertyName}.\nLink: ${generateProductLink('kos', iq.propertyName, iq.propertyId)}\nSaya ingin menanggapi pertanyaan Anda: "${iq.message}"`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all flex items-center gap-2 border border-emerald-100 shadow-sm"

@@ -9,6 +9,7 @@ import { sanitizePhone } from "@/utils/whatsapp";
 import { calculateRemainingDays } from "@/utils/date";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { generateProductPath } from "@/utils/slug";
 
 interface KosCardProps {
   kos: KosListing;
@@ -26,7 +27,7 @@ export const KosCard = memo(({ kos }: KosCardProps) => {
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className="group relative rounded-[2rem] bg-card border border-border shadow-sm hover:shadow-2xl hover:shadow-primary/5 ring-1 ring-foreground/5 overflow-hidden transition-all duration-300"
     >
-      <Link to={`/kos/${kos.id}`}>
+      <Link to={generateProductPath('kos', kos.title, kos.id)}>
         <div className="relative aspect-[4/3] overflow-hidden">
           <img
             src={kos.images[imgIdx]}
@@ -80,19 +81,19 @@ export const KosCard = memo(({ kos }: KosCardProps) => {
         />
       </motion.button>
 
-      <div className="p-4">
-        <Link to={`/kos/${kos.id}`} className="block">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-lg text-price text-foreground">
+      <div className="p-3 md:p-4">
+        <Link to={generateProductPath('kos', kos.title, kos.id)} className="block">
+          <div className="flex items-center justify-between mb-0.5 md:mb-1">
+            <span className="text-base md:text-lg text-price text-foreground">
               {formatPrice(kos.price)}
-              <span className="text-sm font-normal text-muted-foreground">/bln</span>
+              <span className="text-[10px] md:text-sm font-normal text-muted-foreground">/bln</span>
             </span>
-            <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Star className="w-3.5 h-3.5 fill-accent text-accent" />
+            <span className="flex items-center gap-1 text-xs md:text-sm text-muted-foreground">
+              <Star className="w-3 md:w-3.5 h-3 md:h-3.5 fill-accent text-accent" />
               {kos.rating}
             </span>
           </div>
-          <h3 className="font-display font-semibold text-base leading-snug tracking-tight truncate text-foreground">
+          <h3 className="font-display font-semibold text-sm md:text-base leading-snug tracking-tight truncate text-foreground">
             {kos.title}
           </h3>
         </Link>
@@ -101,9 +102,9 @@ export const KosCard = memo(({ kos }: KosCardProps) => {
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="flex items-center gap-1 text-sm text-muted-foreground mt-1 hover:text-primary transition-colors w-fit"
+          className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground mt-1.5 md:mt-2 hover:text-primary transition-colors truncate"
         >
-          <MapPin className="w-3.5 h-3.5" />
+          <MapPin className="w-3 h-3" />
           {kos.location}
         </a>
         <div className="flex items-center gap-3 mt-3">

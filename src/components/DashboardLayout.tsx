@@ -15,7 +15,7 @@ export function DashboardLayout() {
   
   return (
     <div className="min-h-screen bg-surface flex">
-      <DashboardSidebar />
+      <DashboardSidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <DashboardHeader onMobileMenuOpen={() => setMobileMenuOpen(true)} />

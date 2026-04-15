@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { createNotification } from "@/services/notifications";
 import { supabase } from "@/lib/supabase";
 import { sanitizePhone, buildWaLink } from "@/utils/whatsapp";
+import { generateProductLink } from "@/utils/slug";
 
 export default function BookingsPage() {
   const { user } = useAuth();
@@ -154,9 +155,11 @@ export default function BookingsPage() {
     const p = sanitizePhone(phone);
     if (!p) return null;
 
+    const cleanKosUrl = generateProductLink('kos', booking.kosTitle, booking.kosId);
+
     const message = user?.role === 'owner'
-      ? `Halo ${name}, saya pemilik kos *${booking.kosTitle}* di KosKita. Saya ingin membicarakan mengenai pesanan booking Anda.`
-      : `Halo ${name}, saya ingin menanyakan status booking saya untuk *${booking.kosTitle}* di KosKita.`;
+      ? `Halo ${name}, saya pemilik kos *${booking.kosTitle}* di KosKita.\nLink: ${cleanKosUrl}\nSaya ingin membicarakan mengenai pesanan booking Anda.`
+      : `Halo ${name}, saya ingin menanyakan status booking saya untuk *${booking.kosTitle}* di KosKita.\nLink: ${cleanKosUrl}`;
 
     return buildWaLink(p, message);
   };

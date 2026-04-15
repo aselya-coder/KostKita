@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { QuotaAlertModal } from '@/components/QuotaAlertModal';
 import { getProfile } from '@/services/profile';
 import { getSystemConfigs } from '@/services/settings';
+import { generateProductPath } from '@/utils/slug';
 
 export default function AddKosPage() {
   const { user } = useAuth();
@@ -222,11 +223,9 @@ export default function AddKosPage() {
         throw new Error(result.error);
       }
 
-
-
-
       toast.success(`Iklan kos berhasil dipublikasikan selama ${adDuration} hari!`);
-      navigate('/dashboard/my-kos');
+      // Redirect to the new slugged link
+      navigate(generateProductPath('kos', result.data.title, result.data.id));
 
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Terjadi kesalahan sistem. Silakan coba lagi.';

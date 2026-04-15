@@ -155,6 +155,7 @@ export interface Inquiry {
   ownerId: string;
   senderName: string;
   senderPhone: string;
+  propertyId: string;
   propertyName: string;
   message: string;
   time: string;
@@ -401,6 +402,7 @@ export const mockInquiries: Inquiry[] = [
     ownerId: "u2",
     senderName: "Budi Mahasiswa",
     senderPhone: "6289876543210",
+    propertyId: "1",
     propertyName: "Kos Harmoni Residence",
     message: "Halo, apakah kamar kos masih tersedia untuk bulan depan?",
     time: "10 menit yang lalu",
@@ -411,6 +413,7 @@ export const mockInquiries: Inquiry[] = [
     ownerId: "u2",
     senderName: "Ani Safitri",
     senderPhone: "6287654321098",
+    propertyId: "2",
     propertyName: "Kos Putri Melati",
     message: "Saya ingin tanya apakah boleh membawa laptop dan rice cooker?",
     time: "1 jam yang lalu",
@@ -421,6 +424,7 @@ export const mockInquiries: Inquiry[] = [
     ownerId: "u2",
     senderName: "Dedi Kurniawan",
     senderPhone: "6285432109876",
+    propertyId: "3",
     propertyName: "Kos Eksekutif Sudirman",
     message: "Apakah harga sudah termasuk biaya listrik dan WiFi?",
     time: "3 jam yang lalu",
@@ -431,6 +435,7 @@ export const mockInquiries: Inquiry[] = [
     ownerId: "u2",
     senderName: "Rina Amelia",
     senderPhone: "6283210987654",
+    propertyId: "1",
     propertyName: "Kos Harmoni Residence",
     message: "Boleh survei lokasi besok sore jam 4?",
     time: "1 hari yang lalu",

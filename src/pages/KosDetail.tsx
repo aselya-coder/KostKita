@@ -33,9 +33,11 @@ import {
   Clock,
 } from "lucide-react";
 import { sanitizePhone, buildWaLink } from "@/utils/whatsapp";
+import { generateProductLink, extractIdFromSlug, generateProductPath } from "@/utils/slug";
 
 const KosDetail = () => {
-  const { id } = useParams();
+  const { id: rawId } = useParams();
+  const id = extractIdFromSlug(rawId || "");
   const navigate = useNavigate();
   const { user } = useAuth();
   const [kos, setKos] = useState<KosListing | null>(null);
@@ -118,9 +120,8 @@ const KosDetail = () => {
 
   const liked = isFavorite(kos.id);
 
-  // Generate URL yang clean menggunakan window.location.origin
-  const baseUrl = window.location.origin;
-  const cleanKosUrl = `${baseUrl}/kos/${kos.id}`;
+  // Generate URL yang cantik untuk dibagikan
+  const cleanKosUrl = kos ? generateProductLink('kos', kos.title, kos.id) : "";
 
   const sanitizedPhone = sanitizePhone(kos.ownerPhone || "");
   const hasPhone = !!sanitizedPhone;
@@ -152,7 +153,7 @@ const KosDetail = () => {
     // Redirect to WhatsApp
     if (hasPhone) {
       try {
-        await logUserActivity(user.id, 'Klik WhatsApp Kos', kos.title, `/kos/${kos.id}`);
+        await logUserActivity(user.id, 'Klik WhatsApp Kos', kos.title, generateProductPath('kos', kos.title, kos.id));
       } catch {}
       window.open(waLink, '_blank');
     }
@@ -195,7 +196,7 @@ const KosDetail = () => {
           try {
             const conv = await getOrCreateConversation(user.id, kos.ownerId);
             if (conv.success) {
-              const bookingMsg = `Halo ${kos.ownerName}, saya telah mengajukan booking untuk "${kos.title}" di KosKita.\nTanggal masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}\nDurasi: ${duration} bulan\nTotal: ${formatPrice(kos.price * duration)}`;
+              const bookingMsg = `Halo ${kos.ownerName}, saya telah mengajukan booking untuk "${kos.title}" di KosKita.\nLink: ${cleanKosUrl}\nTanggal masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}\nDurasi: ${duration} bulan\nTotal: ${formatPrice(kos.price * duration)}`;
               await sendMessage(conv.data.id, user.id, bookingMsg);
             }
           } catch {}
@@ -206,7 +207,7 @@ const KosDetail = () => {
           const waText = `Halo ${kos.ownerName},\n\nSaya ingin memesan kamar di *${kos.title}* via KosKita.\nLink: ${cleanKosUrl}\n\n*Detail Pesanan:*\n- Tanggal Masuk: ${new Date(bookingDate).toLocaleDateString('id-ID')}\n- Durasi Sewa: ${duration} Bulan\n- Total Estimasi: ${formatPrice(kos.price * duration)}\n\nMohon informasi selanjutnya. Terima kasih!`;
           const waUrl = buildWaLink(sanitizedPhone, waText);
           try {
-            await logUserActivity(user.id, 'Klik WhatsApp Booking', kos.title, `/kos/${kos.id}`);
+            await logUserActivity(user.id, 'Klik WhatsApp Booking', kos.title, generateProductPath('kos', kos.title, kos.id));
           } catch {}
           window.open(waUrl, '_blank');
         }
@@ -456,13 +457,13 @@ const KosDetail = () => {
                       <Clock className="w-4 h-4 text-primary" />
                       Durasi Sewa (Bulan)
                     </label>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                       {[1, 3, 6, 12].map((m) => (
                         <button
                           key={m}
                           type="button"
                           onClick={() => setDuration(m)}
-                          className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-all ${
+                          className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all ${
                             duration === m 
                               ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20' 
                               : 'bg-surface border-border text-muted-foreground hover:border-primary/50'
@@ -489,7 +490,7 @@ const KosDetail = () => {
                 <Button 
                   type="submit" 
                   disabled={isSubmittingBooking}
-                  className="w-full py-6 rounded-2xl font-bold text-lg bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-600/20"
+                  className="w-full py-6 rounded-2xl font-bold text-sm sm:text-base md:text-lg bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 px-2"
                 >
                   {isSubmittingBooking ? (
                     <Loader2 className="w-6 h-6 animate-spin" />

@@ -8,6 +8,7 @@ import { sanitizePhone } from "@/utils/whatsapp";
 import { calculateRemainingDays } from "@/utils/date";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { generateProductPath } from "@/utils/slug";
 
 interface MarketplaceCardProps {
   item: MarketplaceItem;
@@ -23,7 +24,7 @@ export const MarketplaceCard = memo(({ item }: MarketplaceCardProps) => {
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className="group relative rounded-[2rem] bg-card border border-border shadow-sm hover:shadow-2xl hover:shadow-primary/5 ring-1 ring-foreground/5 overflow-hidden transition-all duration-300"
     >
-      <Link to={`/marketplace/${item.id}`}>
+      <Link to={generateProductPath('item', item.title, item.id)}>
         <div className="relative aspect-square overflow-hidden">
           <img
             src={item.image}
@@ -63,25 +64,25 @@ export const MarketplaceCard = memo(({ item }: MarketplaceCardProps) => {
           }`}
         />
       </motion.button>
-      <div className="p-4">
-        <Link to={`/marketplace/${item.id}`}>
-          <span className="text-lg text-price text-foreground">{formatPrice(item.price)}</span>
-          <h3 className="font-display font-semibold text-sm leading-snug tracking-tight truncate mt-1 text-foreground">
+      <div className="p-3 md:p-4">
+        <Link to={generateProductPath('item', item.title, item.id)}>
+          <span className="text-base md:text-lg text-price text-foreground">{formatPrice(item.price)}</span>
+          <h3 className="font-display font-semibold text-xs md:text-sm leading-snug tracking-tight truncate mt-0.5 md:mt-1 text-foreground">
             {item.title}
           </h3>
         </Link>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center justify-between mt-1.5 md:mt-2">
           <a
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+            className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground hover:text-primary transition-colors truncate"
           >
             <MapPin className="w-3 h-3" />
             {item.location}
           </a>
-          <span className="text-xs text-muted-foreground">{item.condition}</span>
+          <span className="text-[10px] md:text-xs text-muted-foreground shrink-0">{item.condition}</span>
         </div>
       </div>
     </motion.div>

@@ -15,6 +15,7 @@ import { getUserDashboardStats } from '@/services/dashboard';
 import { getWalletBalance } from '@/services/wallet';
 import { processListingPayment } from '@/services/coin';
 import { getSystemConfigs } from "@/services/settings";
+import { generateProductPath } from "@/utils/slug";
 
 export default function SellItem() {
   const navigate = useNavigate();
@@ -178,7 +179,8 @@ export default function SellItem() {
 
       if (result.success) {
         sonnerToast.success('Barang berhasil dipublikasikan!');
-        setTimeout(() => navigate('/dashboard/my-items'), 1500);
+        // Redirect to the new slugged link
+        setTimeout(() => navigate(generateProductPath('item', result.data.title, result.data.id)), 1500);
       } else {
         throw new Error(result.error || 'Gagal menyimpan data barang.');
       }

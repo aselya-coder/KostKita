@@ -7,6 +7,7 @@ export const getInquiries = async (ownerId: string): Promise<Inquiry[]> => {
     .select(`
       *,
       kos_listings (
+        id,
         title
       )
     `)
@@ -23,6 +24,7 @@ export const getInquiries = async (ownerId: string): Promise<Inquiry[]> => {
     ownerId: iq.owner_id,
     senderName: iq.sender_name || 'Tamu',
     senderPhone: iq.sender_phone || '',
+    propertyId: iq.kos_listings?.id || '',
     propertyName: iq.kos_listings?.title || 'Kos Kita',
     message: iq.message || '',
     time: new Date(iq.created_at).toLocaleDateString('id-ID', {
